@@ -1,5 +1,3 @@
-A compilation of surfactant literature, displayed in a website: http://jvoytek9.pythonanywhere.com/ to aid in data visualization of current literature.
-
 Features:
 --3-D graph
 --Comparative 3-D graphs with tables corresponding to data being displayed
