@@ -6,6 +6,7 @@ import dash
 from dash.dependencies import Input, Output
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_bootstrap_components as dbc
 import dash_table as dt
 import plotly.graph_objs as go
 
@@ -22,7 +23,7 @@ worksheet = connection.open("Surfactant_Database").sheet1
 dv = get_as_dataframe(worksheet)
 dv = dv.loc[:, ~dv.columns.str.contains('^Unnamed')]
 
-app = dash.Dash(__name__, meta_tags=[
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], meta_tags=[
     {
         'name' : 'image',
         'property' : 'og:image',
@@ -31,18 +32,30 @@ app = dash.Dash(__name__, meta_tags=[
 ])
 server = app.server
 app.config.suppress_callback_exceptions = True
-app.title = "Surfactants"
+app.title = "Foam Database"
 
 if 'DYNO' in os.environ:
     app_name = os.environ['DASH_APP_NAME']
 else:
     app_name = 'dash-3dscatterplot'
 
-dv.fillna("None", inplace=True)
+dv.dropna(
+    axis=0,
+    how='all',
+    thresh=None,
+    subset=None,
+    inplace=True
+)
 
+dv.fillna("None", inplace=True)
 app.layout = html.Div([
+    dcc.Location(id='url', refresh=False),
+    html.Div(id='page-content'),
+])
+
+home = html.Div([
     html.Div(
-        [html.Div([html.P("Surfactant Database")],
+        [html.Div([html.P("Foam Database")],
                   style={'text-align':"center", 'position':"absolute", 'width':'15%', 'top':0, 'left':0, 'right':0,
                   'bottom':0, "padding-top": 40, 'color':"white", "font-size":40}),
 
@@ -126,8 +139,10 @@ app.layout = html.Div([
             ], style={"text-align":"center", "position":"relative", "display": "block", "margin-left": "auto",
                     "margin-right": "auto", "width": "80%", "left":0, "bottom":10, "backgroundColor": 'white', "border-radius":3}),
 
-         ], id="wrapper", style={"z-axis":1,"left":0, "display": "inline-block", "margin-left": "auto",
+         ], id="wrapper", style={"left":0, "display": "inline-block", "margin-left": "auto",
                 "margin-right": "auto","margin-top": "auto", "width": "15%", "padding-top":180}),
+
+    dcc.Link('About', href='/about',style={'position':'absolute','top':5, 'left':5,"color":"white"}),
 
     html.Div(
         dcc.Tabs(id="tabs", children=[
@@ -208,6 +223,7 @@ app.layout = html.Div([
                                     id='comp1table',
                                     page_current=0,
                                     page_size=75,
+                                    export_format='xlsx',
                                     style_cell={'whiteSpace': 'normal','height': 'auto','font-size':12, "text-align":"left"},
                                     style_data={'whiteSpace': 'normal','height': 'auto'},
                                     style_data_conditional=[
@@ -226,6 +242,7 @@ app.layout = html.Div([
                                     page_current=0,
                                     page_size=75,
                                     columns=[{'id': c, 'name': c} for c in dv.columns[7:]],
+                                    export_format='xlsx',
                                     style_cell={'whiteSpace': 'normal','height': 'auto','font-size':12, "text-align":"left"},
                                     style_data={'whiteSpace': 'normal','height': 'auto',},
                                     style_data_conditional=[
@@ -243,6 +260,66 @@ app.layout = html.Div([
                 ],style={'position':"absolute", 'top':'100%',"text-align":"center","font-size":18,'width':"100%"})
 
 ],style={'position':"absolute", 'top':0, 'left':0,'backgroundColor': '#0066CC', 'width':"100%", 'height':"100%"})
+
+about = html.Div([
+    html.Div(
+        dcc.Tabs(id="tabs", children=[
+            dcc.Tab(label='About Us', children=[
+                html.Br(),
+                html.H1("Team"),
+                html.Div([
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardImg(src="/assets/Ren.png", top=True,style={"height":"25vh","width":"100%"}),
+                            dbc.CardBody(
+                                [
+                                    html.H5("Dr.Fei Ren", className="card-title"),
+                                    html.A("renfei@temple.edu", href="mailto: renfei@temple.edu"),
+                                ])
+                        ])),
+
+                        dbc.Col(dbc.Card([
+                            dbc.CardImg(src="/assets/Thakore.png", top=True,style={"height":"25vh","width":"100%"}),
+                            dbc.CardBody(
+                                [
+                                    html.H5("Virensinh Thakore", className="card-title"),
+                                    html.A("thakorev@temple.edu", href="mailto: thakorev@temple.edu"),
+                                ])
+                        ]))
+                    ],style={"margin-left":"auto","margin-right":"auto","width":"60%"}),
+
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardImg(src="/assets/Voytek.jpg", top=True,style={"height":"25vh","width":"100%"}),
+                            dbc.CardBody(
+                                [
+                                    html.H5("Josh Voytek", className="card-title"),
+                                    html.A("josh.voytek@temple.edu", href="mailto: josh.voytek@temple.edu"),
+                                ])
+                        ])),
+                    ],style={"margin-left":"auto","margin-right":"auto","width":"30%"})],
+                style={"width":"100%"})
+
+                
+            ]),
+            dcc.Tab(label='About The Project', children=[
+                html.Br(),
+                html.H1("Project"),
+            ]),
+        ]),
+    style={"height": "100%","width":"50%","margin-left":"auto","margin-right":"auto",'backgroundColor': 'white','text-align':'center'}),
+    
+    dcc.Link('Home', href='/',style={'position':'absolute','top':5, 'left':5,"color":"white"}),
+
+],style={"position":"absolute","left":0,"top":0,'backgroundColor': '#0066CC', 'width':"100%", 'height':"100%"})
+
+@app.callback(dash.dependencies.Output('page-content', 'children'),
+              [dash.dependencies.Input('url', 'pathname')])
+def display_page(pathname):
+    if pathname == '/about':
+        return about
+    else:
+        return home
 
 @app.callback(
     Output('controls-container', 'style'),
