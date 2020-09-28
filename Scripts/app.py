@@ -1,4 +1,5 @@
 import os
+from datetime import date
 import gspread
 from gspread_dataframe import get_as_dataframe
 from oauth2client.service_account import ServiceAccountCredentials
@@ -23,12 +24,14 @@ worksheet = connection.open("Surfactant_Database").sheet1
 dv = get_as_dataframe(worksheet)
 dv = dv.loc[:, ~dv.columns.str.contains('^Unnamed')]
 
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], meta_tags=[
-    {
-        'name' : 'image',
-        'property' : 'og:image',
-        'content' : 'assets/thumbnail.PNG'
-    }
+app = dash.Dash(__name__, 
+                external_stylesheets=[dbc.themes.BOOTSTRAP], 
+                meta_tags=[
+                    {
+                        'name' : 'image',
+                        'property' : 'og:image',
+                        'content' : 'assets/thumbnail.PNG'
+                    }
 ])
 server = app.server
 app.config.suppress_callback_exceptions = True
@@ -38,6 +41,9 @@ if 'DYNO' in os.environ:
     app_name = os.environ['DASH_APP_NAME']
 else:
     app_name = 'dash-3dscatterplot'
+
+today = date.today()
+today = today.strftime("%m/%d/%Y")
 
 dv.dropna(
     axis=0,
@@ -54,264 +60,314 @@ app.layout = html.Div([
 ])
 
 home = html.Div([
-    html.Div(
-        [html.Div([html.P("Foam Database")],
-                  style={'text-align':"center", 'position':"absolute", 'width':'15%', 'top':0, 'left':0, 'right':0,
-                  'bottom':0, "padding-top": 40, 'color':"white", "font-size":40}),
+    dbc.Row([
+        dbc.Col([
+            html.Br(),
+            html.Div([html.H1("Foam Database")],
+                style={'text-align':"center", "margin-right":"auto","margin-left":"auto", 'color':"white","width": "80%"}),
 
-         html.Div(dcc.Dropdown(id="select-xaxis", placeholder = "Select x-axis", value = "Temperature (C)",
-            options=[{'label': i.title(), 'value': i}  for i in dv.columns[7:]], clearable=False),
-                  style={"display": "block", "margin-left": "auto", "margin-right": "auto", "width": "80%"}),
-
-         html.Div(dcc.Dropdown(id="select-yaxis", placeholder = "Select y-axis", value = "Pressure (Psi)",
-            options=[{'label': i.title(), 'value': i} for i in dv.columns[7:]], clearable=False),
-                  style={"display": "block", "margin-left": "auto", "margin-right": "auto", "width": "80%"}),
-
-         html.Div(dcc.Dropdown(id="select-zaxis", placeholder = "Select z-axis", value = "Halflife (Min)",
-            options=[{'label': i.title(), 'value': i} for i in dv.columns[7:]], clearable=False),
-                  style={"display": "block", "margin-left": "auto", "margin-right": "auto", "width": "80%","padding-bottom":10}),
-
-        html.Div([
             html.Div([
-                html.Div([dcc.RadioItems(
-                    id='toggle',
-                    options=[{'label': i, 'value': i} for i in ['Show More', 'Show Less']],
-                    value='Show Less'
-                )],style={"text-align":"center","font-size":14})
-            ],style={"height":20}),
-
-            html.Div(id='controls-container', children=[
-
-                html.Details([
-                    html.Summary("Gasses"),
-                html.Div(dcc.Checklist(
-                                id = 'gasses',
-                                options= [{'label': gas, 'value': gas} for gas in list(dict.fromkeys(dv['Gas']))],
-                                value = list(dict.fromkeys(dv['Gas'])),
-                                labelStyle={'display': 'block'})),
-                ],style={"padding-top":15}),
-
-                html.Details([
-                    html.Summary("Surfactants"),
-                html.Div(dcc.Checklist(
-                                id = 'surfactants',
-                                options= [{'label': surfactant, 'value': surfactant} for surfactant in list(dict.fromkeys(dv['Surfactant']))],
-                                value = list(dict.fromkeys(dv['Surfactant'])),
-                                labelStyle={'display': 'block'})),
-                ],style={"padding-top":15}),
-
-                html.Details([
-                    html.Summary("Surfactant Concentrations"),
-                html.Div(dcc.Checklist(
-                                id = 'sconc',
-                                options= [{'label': sc, 'value': sc} for sc in list(dict.fromkeys(dv['Surfactant Concentration']))],
-                                value = list(dict.fromkeys(dv['Surfactant Concentration'])),
-                                labelStyle={'display': 'block'})),
-                ],style={"padding-top":15}),
-
-                html.Details([
-                    html.Summary("Additives"),
-                html.Div(dcc.Checklist(
-                                id = 'additives',
-                                options= [{'label': ad, 'value': ad} for ad in list(dict.fromkeys(dv['Additive']))],
-                                value = list(dict.fromkeys(dv['Additive'])),
-                                labelStyle={'display': 'block'})),
-                ],style={"padding-top":15}),
-
-                html.Details([
-                    html.Summary("Additive Concentrations"),
-                html.Div(dcc.Checklist(
-                                id = 'aconc',
-                                options= [{'label': adc, 'value': adc} for adc in list(dict.fromkeys(dv['Additive Concentration']))],
-                                value = list(dict.fromkeys(dv['Additive Concentration'])),
-                                labelStyle={'display': 'block'})),
-                ],style={"padding-top":15}),
-
-                html.Details([
-                    html.Summary("Liquid Phase"),
-                html.Div(dcc.Checklist(
-                                id = 'lp',
-                                options= [{'label': li, 'value': li} for li in list(dict.fromkeys(dv['LiquidPhase']))],
-                                value = list(dict.fromkeys(dv['LiquidPhase'])),
-                                labelStyle={'display': 'block'})),
-                ],style={"padding-top":15}),
-                ],style={"display":"none"}),
-            ], style={"text-align":"center", "position":"relative", "display": "block", "margin-left": "auto",
-                    "margin-right": "auto", "width": "80%", "left":0, "bottom":10, "backgroundColor": 'white', "border-radius":3}),
-
-         ], id="wrapper", style={"left":0, "display": "inline-block", "margin-left": "auto",
-                "margin-right": "auto","margin-top": "auto", "width": "15%", "padding-top":180}),
-
-    dcc.Link('About', href='/about',style={'position':'absolute','top':5, 'left':5,"color":"white"}),
-
-    html.Div(
-        dcc.Tabs(id="tabs", children=[
-            dcc.Tab(label='3-Dimensions', children=[
-                html.Div([dcc.Graph(id="threeD")]),
-            ]),
-            dcc.Tab(label='2-Dimensions', children=[
-                html.Div([dcc.Graph(id="twoD")])
-            ]),
-            dcc.Tab(label='Table', children=[
-                dt.DataTable(
-                    id='table',
-                    page_current=0,
-                    page_size=75,
-                    style_cell={'whiteSpace': 'normal','height': 'auto','maxWidth':'0', 'textAlign': 'left'},
-                    style_data={'whiteSpace': 'normal','height': 'auto'},
-                    style_data_conditional=[
-                    {
-                        'if': {'row_index': 'odd'},
-                            'backgroundColor': 'rgb(248, 248, 248)'
-                    }],
-                    style_header={
-                        'backgroundColor': 'rgb(230, 230, 230)',
-                        'fontWeight': 'bold'
-                    },
-                    fixed_rows={'headers': True, 'data': 0 },
-                    style_table={'whiteSpace': 'normal',
-                        'height': 835,'min-height': 835},
+                html.Div(dcc.Dropdown(id="select-xaxis", placeholder = "Select x-axis", value = "Temperature (C)",
+                    options=[{'label': i.title(), 'value': i}  for i in dv.columns[7:]], clearable=False),
                 ),
-            ])
-        ]),style = {'position':"absolute",'width':"85%",'height':'100%', "display":"inline-block",'backgroundColor': 'white'}),
-                html.Details([
-                    html.Summary('Comparable Graphs',style={"cursor":"pointer"}),
+                html.Div(dcc.Dropdown(id="select-yaxis", placeholder = "Select y-axis", value = "Pressure (Psi)",
+                    options=[{'label': i.title(), 'value': i} for i in dv.columns[7:]], clearable=False)
+                ),
+                html.Div(dcc.Dropdown(id="select-zaxis", placeholder = "Select z-axis", value = "Halflife (Min)",
+                    options=[{'label': i.title(), 'value': i} for i in dv.columns[7:]], clearable=False)
+                )
+            ],style={'text-align':"center","margin-left": "auto", "margin-right": "auto", "width": "80%"}),
 
-                        html.Div([
-                            html.Div([html.P("Graph 1")],style={'text-align':"center", 'position':"absolute", 'top':0, 'left':0, 'right':0,
-                            'bottom':0, "padding-top": 55, 'color':"white", "font-size":40}),
+            html.Div([
+                html.Div([
+                    dcc.RadioItems(
+                        id='toggle',
+                        options=[{'label': i, 'value': i} for i in ['Show Less','Show More']],
+                        value='Show Less'
+                    ),
+                ],style={"height":25,'text-align':"center","margin-left": "auto", "margin-right": "auto"}),
 
-                         html.Div(dcc.Dropdown(id="select-xaxis2", placeholder = "Select x-axis", value = "Temperature (C)",
-                            options=[{'label': i.title(), 'value': i}  for i in dv.columns[7:]], clearable=False),
-                                  style={"padding-top":170,"display": "block", "margin-left": "auto", "margin-right": "auto", "width": "80%"}),
+                html.Div(id='controls-container', children=[
+                    
+                    html.Hr(),
+                    
+                    html.Details([
+                        html.Summary("Gasses"),
+                        dcc.Checklist(
+                            id = 'gasses',
+                            options= [{'label': gas, 'value': gas} for gas in list(dict.fromkeys(dv['Gas']))],
+                            value = list(dict.fromkeys(dv['Gas'])),
+                            labelStyle={'display': 'block'}
+                        ),
+                    ]),
 
-                         html.Div(dcc.Dropdown(id="select-yaxis2", placeholder = "Select y-axis", value = "Pressure (Psi)",
-                            options=[{'label': i.title(), 'value': i} for i in dv.columns[7:]], clearable=False),
-                                  style={"display": "block", "margin-left": "auto", "margin-right": "auto", "width": "80%"}),
+                    html.Hr(),
 
-                         html.Div(dcc.Dropdown(id="select-zaxis2", placeholder = "Select z-axis", value = "Halflife (Min)",
-                            options=[{'label': i.title(), 'value': i} for i in dv.columns[7:]], clearable=False),
-                                  style={"display": "block", "margin-left": "auto", "margin-right": "auto", "width": "80%", "padding-bottom":10}),
+                    html.Details([
+                        html.Summary("Surfactants"),
+                        dcc.Checklist(
+                            id = 'surfactants',
+                            options= [{'label': surfactant, 'value': surfactant} for surfactant in list(dict.fromkeys(dv['Surfactant']))],
+                            value = list(dict.fromkeys(dv['Surfactant'])),
+                            labelStyle={'display': 'block'}
+                        ),
+                    ]),
 
-                         html.Div([html.P("Graph 2")],style={'text-align':"center", 'position':"absolute", 'left':0, 'right':0,
-                            'bottom':0, "padding-bottom": 310, 'color':"white", "font-size":40}),
+                    html.Hr(),
 
-                         html.Div(dcc.Dropdown(id="select-xaxis3", placeholder = "Select x-axis", value = "Temperature (C)",
-                            options=[{'label': i.title(), 'value': i}  for i in dv.columns[7:]], clearable=False),
-                                  style={"padding-top":230,"display": "block", "margin-left": "auto", "margin-right": "auto", "width": "80%"}),
+                    html.Details([
+                        html.Summary("Surfactant Concentrations"),
+                        dcc.Checklist(
+                            id = 'sconc',
+                            options= [{'label': sc, 'value': sc} for sc in list(dict.fromkeys(dv['Surfactant Concentration']))],
+                            value = list(dict.fromkeys(dv['Surfactant Concentration'])),
+                            labelStyle={'display': 'block'}
+                        ),
+                    ]),
 
-                         html.Div(dcc.Dropdown(id="select-yaxis3", placeholder = "Select y-axis", value = "Pressure (Psi)",
-                            options=[{'label': i.title(), 'value': i} for i in dv.columns[7:]], clearable=False),
-                                  style={"display": "block", "margin-left": "auto", "margin-right": "auto", "width": "80%"}),
+                    html.Hr(),
 
-                         html.Div(dcc.Dropdown(id="select-zaxis3", placeholder = "Select z-axis", value = "Halflife (Min)",
-                            options=[{'label': i.title(), 'value': i} for i in dv.columns[7:]], clearable=False),
-                                  style={"display": "block", "margin-left": "auto", "margin-right": "auto", "width": "80%", "padding-bottom":10}),
+                    html.Details([
+                        html.Summary("Additives"),
+                        dcc.Checklist(
+                            id = 'additives',
+                            options= [{'label': ad, 'value': ad} for ad in list(dict.fromkeys(dv['Additive']))],
+                            value = list(dict.fromkeys(dv['Additive'])),
+                            labelStyle={'display': 'block'}
+                        ),
+                    ]),
 
-                        ],style={"text-align":"left","font-size":16,'position':"absolute", 'top':21, 'left':0,'backgroundColor': '#0066CC', 'width':'15%', 'height':832}),
+                    html.Hr(),
 
-                        html.Div([
-                            html.Div([
-                                html.Div([dcc.Graph(id="comp1")]),
-                            ],style = {'width':"50%","display":"inline-block",'backgroundColor': 'white'}),
-                            html.Div([
-                                html.Div([dcc.Graph(id="comp2")]),
-                            ],style = {'width':"50%", "display":"inline-block",'backgroundColor': 'white'}),
+                    html.Details([
+                        html.Summary("Additive Concentrations"),
+                        dcc.Checklist(
+                            id = 'aconc',
+                            options= [{'label': adc, 'value': adc} for adc in list(dict.fromkeys(dv['Additive Concentration']))],
+                            value = list(dict.fromkeys(dv['Additive Concentration'])),
+                            labelStyle={'display': 'block'}
+                        ),
+                    ]),
 
-                            html.Div([
-                                dt.DataTable(
-                                    id='comp1table',
-                                    page_current=0,
-                                    page_size=75,
-                                    export_format='xlsx',
-                                    style_cell={'whiteSpace': 'normal','height': 'auto','font-size':12, "text-align":"left"},
-                                    style_data={'whiteSpace': 'normal','height': 'auto'},
-                                    style_data_conditional=[
+                    html.Hr(),
+
+                    html.Details([
+                        html.Summary("Liquid Phase"),
+                        dcc.Checklist(
+                            id = 'lp',
+                            options= [{'label': li, 'value': li} for li in list(dict.fromkeys(dv['LiquidPhase']))],
+                            value = list(dict.fromkeys(dv['LiquidPhase'])),
+                            labelStyle={'display': 'block'}
+                        ),
+                    ]),
+                    
+                    html.Hr(),
+
+                ],style={"display":"none"}),
+            ],style={"text-align":"center", "margin-left": "auto", "margin-right": "auto", "width": "80%", "backgroundColor": 'white', "border-radius":3}),
+
+            dcc.Link('About', href='/about',style={'position':'absolute','top':0, 'left':0,"padding":5,"color":"white"}),
+        
+        ],style={'backgroundColor': '#0066CC'},width=2),
+
+        dbc.Col([
+            html.Div(
+                dcc.Tabs(id="tabs", children=[
+                    dcc.Tab(label='3-Dimensions', children=[
+                        html.Div([dcc.Graph(id="threeD")]),
+                    ]),
+                    dcc.Tab(label='2-Dimensions', children=[
+                        html.Div([dcc.Graph(id="twoD")])
+                    ]),
+                    dcc.Tab(label='Table', children=[
+                        dt.DataTable(
+                            id='table',
+                            page_current=0,
+                            page_size=75,
+                            style_data_conditional=[
+                            {
+                                'if': {'row_index': 'odd'},
+                                    'backgroundColor': 'rgb(248, 248, 248)'
+                            }],
+                            style_header={'backgroundColor': 'rgb(230, 230, 230)','fontWeight': 'bold'},
+                            style_table={'height': 835,'min-height': 835},
+                            fixed_rows={'headers': True}
+                        )
+                    ])
+                ]),style={'width':"100%",'height':'100%', 'backgroundColor': 'white'}
+            )
+        ])
+    ],no_gutters=True),
+        
+    html.Details([
+            html.Summary('Comparable Graphs',style={"cursor":"pointer"}),
+            dbc.Row([
+                dbc.Col([        
+                    html.Br(),
+                    html.Br(),
+                    html.Br(),
+                    html.Div([html.H1("Graph 1")],style={'text-align':"center", "margin-left":"auto","margin-right":"auto", 'color':"white"}),
+
+                    html.Div(dcc.Dropdown(id="select-xaxis2", placeholder = "Select x-axis", value = "Temperature (C)",
+                        options=[{'label': i.title(), 'value': i}  for i in dv.columns[7:]], clearable=False),
+                        style={"margin-left": "auto", "margin-right": "auto", "width": "80%"}),
+
+                    html.Div(dcc.Dropdown(id="select-yaxis2", placeholder = "Select y-axis", value = "Pressure (Psi)",
+                        options=[{'label': i.title(), 'value': i} for i in dv.columns[7:]], clearable=False),
+                        style={"margin-left": "auto", "margin-right": "auto", "width": "80%"}),
+
+                    html.Div(dcc.Dropdown(id="select-zaxis2", placeholder = "Select z-axis", value = "Halflife (Min)",
+                        options=[{'label': i.title(), 'value': i} for i in dv.columns[7:]], clearable=False),
+                        style={"margin-left": "auto", "margin-right": "auto", "width": "80%", "padding-bottom":10}),
+
+
+                    html.Br(),
+                    html.Br(),
+                    html.Br(),
+                    html.Br(),
+                    html.Br(),
+                    html.Br(),
+                    html.Br(),
+                    html.Br(),
+                    html.Br(),
+                    html.Br(),
+                    html.Br(),
+                    html.Br(),
+                    html.Div([html.H1("Graph 2")],style={'text-align':"center", "margin-left":"auto","margin-right":"auto", 'color':"white"}),
+
+                    html.Div(dcc.Dropdown(id="select-xaxis3", placeholder = "Select x-axis", value = "Temperature (C)",
+                        options=[{'label': i.title(), 'value': i}  for i in dv.columns[7:]], clearable=False),
+                        style={"margin-left": "auto", "margin-right": "auto", "width": "80%"}),
+
+                    html.Div(dcc.Dropdown(id="select-yaxis3", placeholder = "Select y-axis", value = "Pressure (Psi)",
+                        options=[{'label': i.title(), 'value': i} for i in dv.columns[7:]], clearable=False),
+                        style={"margin-left": "auto", "margin-right": "auto", "width": "80%"}),
+
+                    html.Div(dcc.Dropdown(id="select-zaxis3", placeholder = "Select z-axis", value = "Halflife (Min)",
+                        options=[{'label': i.title(), 'value': i} for i in dv.columns[7:]], clearable=False),
+                        style={"margin-left": "auto", "margin-right": "auto", "width": "80%", "padding-bottom":10}),
+                ],style={'backgroundColor': '#0066CC'},width=2),
+              
+                dbc.Col([
+                    dbc.Row([
+                        dbc.Col(
+                            html.Div([dcc.Graph(id="comp1")])
+                        ),
+
+                        dbc.Col(
+                            html.Div([dcc.Graph(id="comp2")])
+                        )
+                    ],no_gutters=True),
+
+                    dbc.Row([
+                        dbc.Col(
+                            dt.DataTable(
+                                id='comp1table',
+                                page_current=0,
+                                page_size=75,
+                                export_format='xlsx',
+                                style_data_conditional=[
                                     {
                                         'if': {'row_index': 'odd'},
-                                            'backgroundColor': 'rgb(248, 248, 248)'
-                                    }],
-                                    style_header={'backgroundColor': 'rgb(230, 230, 230)','fontWeight': 'bold'},
-                                    fixed_rows={'headers': True, 'data': 0 },
-                                    style_table={'whiteSpace': 'normal','height': 175},
-                                ),
-                            ],style = {'position':'absolute','top':'90%','left':"5%",'width':"40%",'backgroundColor': 'white','text-align':'right'}),
-                            html.Div([
-                                dt.DataTable(
-                                    id='comp2table',
-                                    page_current=0,
-                                    page_size=75,
-                                    columns=[{'id': c, 'name': c} for c in dv.columns[7:]],
-                                    export_format='xlsx',
-                                    style_cell={'whiteSpace': 'normal','height': 'auto','font-size':12, "text-align":"left"},
-                                    style_data={'whiteSpace': 'normal','height': 'auto',},
-                                    style_data_conditional=[
+                                        'backgroundColor': 'rgb(248, 248, 248)'
+                                    }
+                                ],
+                                style_header={'backgroundColor': 'rgb(230, 230, 230)','fontWeight': 'bold'},
+                                style_table={'height': 300,'min-height': 300},
+                                fixed_rows={'headers': True},
+                            ),style={"padding-left":20,"padding-right":20}
+                        ),
+
+                        dbc.Col(
+                            dt.DataTable(
+                                id='comp2table',
+                                page_current=0,
+                                page_size=75,
+                                columns=[{'id': c, 'name': c} for c in dv.columns[7:]],
+                                export_format='xlsx',
+                                style_data_conditional=[
                                     {
                                         'if': {'row_index': 'odd'},
-                                            'backgroundColor': 'rgb(248, 248, 248)'
-                                    }],
-                                    style_header={'backgroundColor': 'rgb(230, 230, 230)','fontWeight': 'bold'},
-                                    fixed_rows={'headers': True, 'data': 0 },
-                                    style_table={'whiteSpace': 'normal','height': 175},
-                                ),
-                            ],style = {'position':'absolute','top':'90%','right':"5%",'width':"40%",'backgroundColor': 'white','text-align':'right'}),
-                        ],style={'position':'absolute','right':0,'width':"85%"})
-
-                ],style={'position':"absolute", 'top':'100%',"text-align":"center","font-size":18,'width':"100%"})
-
-],style={'position':"absolute", 'top':0, 'left':0,'backgroundColor': '#0066CC', 'width':"100%", 'height':"100%"})
+                                        'backgroundColor': 'rgb(248, 248, 248)'
+                                    }
+                                ],
+                                style_header={'backgroundColor': 'rgb(230, 230, 230)','fontWeight': 'bold'},
+                                style_table={'height': 300,'min-height': 300},
+                                fixed_rows={'headers': True},
+                            ),style={"padding-left":20,"padding-right":20}
+                        )
+                    ],no_gutters=True)  
+                ])
+            ],no_gutters=True),
+    ],style={'top':'100%',"text-align":"center"})
+])
 
 about = html.Div([
-    html.Div(
-        dcc.Tabs(id="tabs", children=[
-            dcc.Tab(label='About Us', children=[
-                html.Br(),
-                html.H1("Team"),
-                html.Div([
-                    dbc.Row([
-                        dbc.Col(dbc.Card([
-                            dbc.CardImg(src="/assets/Ren.png", top=True,style={"height":"25vh","width":"100%"}),
-                            dbc.CardBody(
-                                [
-                                    html.H5("Dr.Fei Ren", className="card-title"),
-                                    html.A("renfei@temple.edu", href="mailto: renfei@temple.edu"),
-                                ])
-                        ])),
+    dbc.Row([
+        dbc.Col(
+            dcc.Link('Home', href='/',style={'position':'absolute','top':0, 'left':0,"padding":5,"color":"white"}),
+            width=3
+        ),
+        dbc.Col([
+            dcc.Tabs(id="tabs", children=[
+                dcc.Tab(label='About Us', children=[
+                    html.Br(),
+                    html.H1("Team",style={"text-align":"center"}),
+                    html.Br(),
+                    html.Div([
+                        dbc.Row([
+                            dbc.Col(dbc.Card([
+                                dbc.CardImg(src="/assets/Ren.PNG", top=True,style={"height":"25vh","width":"100%"}),
+                                dbc.CardBody(
+                                    [
+                                        html.H5("Dr.Fei Ren", className="card-title"),
+                                        html.A("renfei@temple.edu", href="mailto: renfei@temple.edu"),
+                                    ])
+                            ])),
 
-                        dbc.Col(dbc.Card([
-                            dbc.CardImg(src="/assets/Thakore.png", top=True,style={"height":"25vh","width":"100%"}),
-                            dbc.CardBody(
-                                [
-                                    html.H5("Virensinh Thakore", className="card-title"),
-                                    html.A("thakorev@temple.edu", href="mailto: thakorev@temple.edu"),
-                                ])
-                        ]))
-                    ],style={"margin-left":"auto","margin-right":"auto","width":"60%"}),
+                            dbc.Col(dbc.Card([
+                                dbc.CardImg(src="/assets/Thakore.PNG", top=True,style={"height":"25vh","width":"100%"}),
+                                dbc.CardBody(
+                                    [
+                                        html.H5("Virensinh Thakore", className="card-title"),
+                                        html.A("thakorev@temple.edu", href="mailto: thakorev@temple.edu"),
+                                    ])
+                            ]))
+                        ],style={"margin-left":"auto","margin-right":"auto","width":"60%"},no_gutters=True),
 
-                    dbc.Row([
-                        dbc.Col(dbc.Card([
-                            dbc.CardImg(src="/assets/Voytek.jpg", top=True,style={"height":"25vh","width":"100%"}),
-                            dbc.CardBody(
-                                [
-                                    html.H5("Josh Voytek", className="card-title"),
-                                    html.A("josh.voytek@temple.edu", href="mailto: josh.voytek@temple.edu"),
-                                ])
-                        ])),
-                    ],style={"margin-left":"auto","margin-right":"auto","width":"30%"})],
-                style={"width":"100%"})
-
-                
+                        dbc.Row([
+                            dbc.Col(dbc.Card([
+                                dbc.CardImg(src="/assets/Voytek.jpg", top=True,style={"height":"25vh","width":"100%"}),
+                                dbc.CardBody(
+                                    [
+                                        html.H5("Josh Voytek", className="card-title"),
+                                        html.A("josh.voytek@temple.edu", href="mailto: josh.voytek@temple.edu"),
+                                    ])
+                            ])),
+                            dbc.Col([
+                                dbc.Row([
+                                    html.A(html.Img(src="/assets/Oak_Ridge.PNG"),href="https://www.ornl.gov/",
+                                    style={"margin-top":"auto","margin-bottom":"auto","margin-left":"auto","margin-right":"auto"})
+                                ],style={"height":"50%"}),
+                                dbc.Row([
+                                    html.A(html.Img(src="/assets/DOE.PNG"),href="https://www.energy.gov/eere/geothermal/geothermal-energy-us-department-energy",
+                                    style={"margin-bottom":"auto","margin-left":"auto","margin-right":"auto"})
+                                ],style={"height":"50%"})
+                            ])
+                        ],style={"margin-left":"auto","margin-right":"auto","width":"60%"},no_gutters=True)],
+                    style={"width":"100%"})                    
+                ]),
+                dcc.Tab(label='About The Project', children=[
+                    html.Br(),
+                    html.H1("Project",style={"text-align":"center"}),
+                    html.Br(),
+                    html.Div(html.P("Last Updated: " + today),style={"text-align":"center"}),
+                ]),
             ]),
-            dcc.Tab(label='About The Project', children=[
-                html.Br(),
-                html.H1("Project"),
-            ]),
-        ]),
-    style={"height": "100%","width":"50%","margin-left":"auto","margin-right":"auto",'backgroundColor': 'white','text-align':'center'}),
-    
-    dcc.Link('Home', href='/',style={'position':'absolute','top':5, 'left':5,"color":"white"}),
-
-],style={"position":"absolute","left":0,"top":0,'backgroundColor': '#0066CC', 'width':"100%", 'height':"100%"})
+        ],style={"backgroundColor":"white"}),
+        dbc.Col(width=3)
+    ],style={'backgroundColor': '#0066CC',"height":"100vh"},no_gutters=True)
+])
 
 @app.callback(dash.dependencies.Output('page-content', 'children'),
               [dash.dependencies.Input('url', 'pathname')])
@@ -574,7 +630,6 @@ def update_comp1(selected_x, selected_y, selected_z, ga, sur, surc, add, addc, l
     return {"data": data,
             "layout": go.Layout(
                 height=700,
-                title="Graph 1",
                 scene={"aspectmode": "cube",
                         "camera":{"center":dict(x=0.05,y=0,z=-0.25)},
                         "xaxis": {"title": f"{selected_x.title()}"},
@@ -670,7 +725,6 @@ def update_comp2(selected_x, selected_y, selected_z, ga, sur, surc, add, addc, l
     return {"data": data,
             "layout": go.Layout(
                 height=700,
-                title="Graph 2",
                 scene={"aspectmode": "cube",
                         "camera":{"center":dict(x=0.05,y=0,z=-0.25)},
                         "xaxis": {"title": f"{selected_x.title()}"},
