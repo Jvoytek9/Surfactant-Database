@@ -55,7 +55,7 @@ dv.dropna(
 
 dv.fillna("None", inplace=True)
 app.layout = html.Div([
-    dcc.Location(id='url', refresh=False),
+    dcc.Location(id='url', refresh=True),
     html.Div(id='page-content'),
 ])
 
@@ -190,14 +190,14 @@ home = html.Div([
                                     'backgroundColor': 'rgb(248, 248, 248)'
                             }],
                             style_header={'backgroundColor': 'rgb(230, 230, 230)','fontWeight': 'bold'},
-                            style_table={'height': 835,'min-height': 835},
+                            style_table={'height': 820,'min-height': 820},
                             fixed_rows={'headers': True}
                         )
                     ])
                 ]),style={'width':"100%",'height':'100%', 'backgroundColor': 'white'}
             )
         ])
-    ],no_gutters=True),
+    ],style={"height":"100vh"},no_gutters=True),
         
     html.Details([
             html.Summary('Comparable Graphs',style={"cursor":"pointer"}),
@@ -350,7 +350,7 @@ about = html.Div([
                                     style={"margin-top":"auto","margin-bottom":"auto","margin-left":"auto","margin-right":"auto"})
                                 ],style={"height":"50%"}),
                                 dbc.Row([
-                                    html.A(html.Img(src="/assets/DOE.PNG"),href="https://www.energy.gov/eere/geothermal/geothermal-energy-us-department-energy",
+                                    html.A(html.Img(src="/assets/DOE.png"),href="https://www.energy.gov/eere/geothermal/geothermal-energy-us-department-energy",
                                     style={"margin-bottom":"auto","margin-left":"auto","margin-right":"auto"})
                                 ],style={"height":"50%"})
                             ])
@@ -480,6 +480,7 @@ def update_twoD(selected_x, selected_y, ga, sur, surc, add, addc, lp):
         + name_array.Gas + "<br />Surfactant: " + name_array.Surfactant + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"] + "<br />Additive: "
         + name_array.Additive + "<br />Concentration Additive: " + name_array['Additive Concentration'] + "<br />Liquid Phase: " + name_array.LiquidPhase,
         hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8},name=i)
+        name_array.sort_values(by=[selected_x], inplace=True)
         data.append(trace)
 
     return {
@@ -502,7 +503,7 @@ def update_twoD(selected_x, selected_y, ga, sur, surc, add, addc, lp):
                 family="Times New Roman",
             ),
             hovermode="closest",
-            height=790,
+            height=750,
         )
     }
 
@@ -555,7 +556,6 @@ def update_threeD(selected_x, selected_y, selected_z, ga, sur, surc, add, addc, 
         + name_array.Gas + "<br />Surfactant: " + name_array.Surfactant + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"] + "<br />Additive: "
         + name_array.Additive + "<br />Concentration Additive: " + name_array['Additive Concentration'] + "<br />Liquid Phase: " + name_array.LiquidPhase,
         hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8},name=i)
-        name_array.sort_values(by=[selected_x], inplace=True)
         data.append(trace)
 
     return {"data": data,
@@ -624,7 +624,6 @@ def update_comp1(selected_x, selected_y, selected_z, ga, sur, surc, add, addc, l
         + name_array.Gas + "<br />Surfactant: " + name_array.Surfactant + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"] + "<br />Additive: "
         + name_array.Additive + "<br />Concentration Additive: " + name_array['Additive Concentration'] + "<br />Liquid Phase: " + name_array.LiquidPhase,
         hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8},name=i)
-        name_array.sort_values(by=[selected_x], inplace=True)
         data.append(trace)
 
     return {"data": data,
@@ -719,7 +718,6 @@ def update_comp2(selected_x, selected_y, selected_z, ga, sur, surc, add, addc, l
         + name_array.Gas + "<br />Surfactant: " + name_array.Surfactant + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"] + "<br />Additive: "
         + name_array.Additive + "<br />Concentration Additive: " + name_array['Additive Concentration'] + "<br />Liquid Phase: " + name_array.LiquidPhase,
         hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8},name=i)
-        name_array.sort_values(by=[selected_x], inplace=True)
         data.append(trace)
 
     return {"data": data,
