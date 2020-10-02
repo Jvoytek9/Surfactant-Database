@@ -62,9 +62,8 @@ app.layout = html.Div([
 home = html.Div([
     dbc.Row([
         dbc.Col([
-            html.Br(),
             html.Div([html.H1("Foam Database")],
-                style={'text-align':"center", "margin-right":"auto","margin-left":"auto", 'color':"white","width": "80%"}),
+                style={'text-align':"center", "margin-right":"auto","margin-left":"auto", 'color':"white","width": "80%","padding-top":"10%"}),
 
             html.Div([
                 html.Div(dcc.Dropdown(id="select-xaxis", placeholder = "Select x-axis", value = "Temperature (C)",
@@ -79,13 +78,15 @@ home = html.Div([
             ],style={'text-align':"center","margin-left": "auto", "margin-right": "auto", "width": "80%"}),
 
             html.Div([
-                html.Div([
+                dbc.Row([
                     dcc.RadioItems(
                         id='toggle',
                         options=[{'label': i, 'value': i} for i in ['Show Less','Show More']],
-                        value='Show Less'
+                        value='Show Less',
+                        labelStyle={"padding-right":"10px","margin":"auto"},
+                        style={"text-align":"center","margin":"auto"}
                     ),
-                ],style={"height":25,'text-align':"center","margin-left": "auto", "margin-right": "auto"}),
+                ],style={'text-align':"center","margin-left": "auto", "margin-right": "auto"}),
 
                 html.Div(id='controls-container', children=[
                     
@@ -166,7 +167,7 @@ home = html.Div([
                 ],style={"display":"none"}),
             ],style={"text-align":"center", "margin-left": "auto", "margin-right": "auto", "width": "80%", "backgroundColor": 'white', "border-radius":3}),
 
-            dcc.Link('About', href='/about',style={'position':'absolute','top':0, 'left':0,"padding":5,"color":"white"}),
+            dcc.Link('About', href='/about',style={'position':'absolute','top':0, 'left':0,"padding":5,"color":"white","font-size":18}),
         
         ],style={'backgroundColor': '#0066CC'},width=2),
 
@@ -174,10 +175,27 @@ home = html.Div([
             html.Div(
                 dcc.Tabs(id="tabs", children=[
                     dcc.Tab(label='3-Dimensions', children=[
-                        html.Div([dcc.Graph(id="threeD")]),
+                        html.Div([
+                            dcc.Graph(id="threeD",
+                            config = {'toImageButtonOptions':
+                                    {'width': None,
+                                    'height': None,
+                                    'format': 'png',
+                                    'filename': '3D_Plot'}
+                                }
+                            )
+                        ]),
                     ]),
                     dcc.Tab(label='2-Dimensions', children=[
-                        html.Div([dcc.Graph(id="twoD")])
+                        html.Div([
+                            dcc.Graph(id="twoD",
+                            config = {'toImageButtonOptions':
+                                {'width': None,
+                                'height': None,
+                                'format': 'png',
+                                'filename': '2D_Plot'}
+                            })
+                        ])
                     ]),
                     dcc.Tab(label='Table', children=[
                         dt.DataTable(
@@ -190,7 +208,7 @@ home = html.Div([
                                     'backgroundColor': 'rgb(248, 248, 248)'
                             }],
                             style_header={'backgroundColor': 'rgb(230, 230, 230)','fontWeight': 'bold'},
-                            style_table={'height': 820,'min-height': 820},
+                            style_table={'height': "87vh",'min-height': "87vh"},
                             fixed_rows={'headers': True}
                         )
                     ])
@@ -202,11 +220,8 @@ home = html.Div([
     html.Details([
             html.Summary('Comparable Graphs',style={"cursor":"pointer"}),
             dbc.Row([
-                dbc.Col([        
-                    html.Br(),
-                    html.Br(),
-                    html.Br(),
-                    html.Div([html.H1("Graph 1")],style={'text-align':"center", "margin-left":"auto","margin-right":"auto", 'color':"white"}),
+                dbc.Col([
+                    html.Div([html.H1("Graph 1")],style={'text-align':"center", "margin-left":"auto","margin-right":"auto", 'color':"white","padding-top":"30%"}),
 
                     html.Div(dcc.Dropdown(id="select-xaxis2", placeholder = "Select x-axis", value = "Temperature (C)",
                         options=[{'label': i.title(), 'value': i}  for i in dv.columns[7:]], clearable=False),
@@ -218,22 +233,9 @@ home = html.Div([
 
                     html.Div(dcc.Dropdown(id="select-zaxis2", placeholder = "Select z-axis", value = "Halflife (Min)",
                         options=[{'label': i.title(), 'value': i} for i in dv.columns[7:]], clearable=False),
-                        style={"margin-left": "auto", "margin-right": "auto", "width": "80%", "padding-bottom":10}),
+                        style={"margin-left": "auto", "margin-right": "auto", "width": "80%"}),
 
-
-                    html.Br(),
-                    html.Br(),
-                    html.Br(),
-                    html.Br(),
-                    html.Br(),
-                    html.Br(),
-                    html.Br(),
-                    html.Br(),
-                    html.Br(),
-                    html.Br(),
-                    html.Br(),
-                    html.Br(),
-                    html.Div([html.H1("Graph 2")],style={'text-align':"center", "margin-left":"auto","margin-right":"auto", 'color':"white"}),
+                    html.Div([html.H1("Graph 2")],style={'text-align':"center", "margin-left":"auto","margin-right":"auto", "padding-top":"70%", 'color':"white"}),
 
                     html.Div(dcc.Dropdown(id="select-xaxis3", placeholder = "Select x-axis", value = "Temperature (C)",
                         options=[{'label': i.title(), 'value': i}  for i in dv.columns[7:]], clearable=False),
@@ -245,17 +247,33 @@ home = html.Div([
 
                     html.Div(dcc.Dropdown(id="select-zaxis3", placeholder = "Select z-axis", value = "Halflife (Min)",
                         options=[{'label': i.title(), 'value': i} for i in dv.columns[7:]], clearable=False),
-                        style={"margin-left": "auto", "margin-right": "auto", "width": "80%", "padding-bottom":10}),
+                        style={"margin-left": "auto", "margin-right": "auto", "width": "80%"}),
                 ],style={'backgroundColor': '#0066CC'},width=2),
               
                 dbc.Col([
                     dbc.Row([
                         dbc.Col(
-                            html.Div([dcc.Graph(id="comp1")])
+                            html.Div([
+                                dcc.Graph(id="comp1",
+                                config = {'toImageButtonOptions':
+                                    {'width': None,
+                                    'height': None,
+                                    'format': 'png',
+                                    'filename': '3D_Plot_Comp1'}
+                                })
+                            ])
                         ),
 
                         dbc.Col(
-                            html.Div([dcc.Graph(id="comp2")])
+                            html.Div([
+                                dcc.Graph(id="comp2",
+                                config = {'toImageButtonOptions':
+                                    {'width': None,
+                                    'height': None,
+                                    'format': 'png',
+                                    'filename': '3D_Plot_Comp2'}
+                                })
+                            ])
                         )
                     ],no_gutters=True),
 
@@ -273,7 +291,7 @@ home = html.Div([
                                     }
                                 ],
                                 style_header={'backgroundColor': 'rgb(230, 230, 230)','fontWeight': 'bold'},
-                                style_table={'height': 300,'min-height': 300},
+                                style_table={"height":"20vh","min-height":"20vh"},
                                 fixed_rows={'headers': True},
                             ),style={"padding-left":20,"padding-right":20}
                         ),
@@ -292,20 +310,20 @@ home = html.Div([
                                     }
                                 ],
                                 style_header={'backgroundColor': 'rgb(230, 230, 230)','fontWeight': 'bold'},
-                                style_table={'height': 300,'min-height': 300},
+                                style_table={"height":"20vh","min-height":"20vh"},
                                 fixed_rows={'headers': True},
                             ),style={"padding-left":20,"padding-right":20}
                         )
                     ],no_gutters=True)  
                 ])
-            ],no_gutters=True),
-    ],style={'top':'100%',"text-align":"center"})
+            ],style={"height":"100vh"},no_gutters=True),
+    ],style={"text-align":"center"})
 ])
 
 about = html.Div([
     dbc.Row([
         dbc.Col(
-            dcc.Link('Home', href='/',style={'position':'absolute','top':0, 'left':0,"padding":5,"color":"white"}),
+            dcc.Link('Home', href='/',style={'position':'absolute','top':0, 'left':0,"padding":5,"color":"white","font-size":18}),
             width=3
         ),
         dbc.Col([
@@ -314,59 +332,79 @@ about = html.Div([
                     html.Br(),
                     html.H1("Team",style={"text-align":"center"}),
                     html.Br(),
-                    html.Div([
-                        dbc.Row([
-                            dbc.Col(dbc.Card([
+                    dbc.Row([
+                        dbc.Col(
+                            dbc.Card([
                                 dbc.CardImg(src="/assets/Ren.PNG", top=True,style={"height":"25vh","width":"100%"}),
                                 dbc.CardBody(
                                     [
-                                        html.H5("Dr.Fei Ren", className="card-title"),
+                                        html.H5("Fei Ren", className="card-title"),
+                                        html.Hr(),
+                                        html.H6("Associate Professor"),
                                         html.A("renfei@temple.edu", href="mailto: renfei@temple.edu"),
-                                    ])
-                            ])),
-
-                            dbc.Col(dbc.Card([
+                                    ]
+                                ,style={"text-align":"center"})
+                            ])
+                        ),
+                            
+                        dbc.Col(
+                            dbc.Card([
                                 dbc.CardImg(src="/assets/Thakore.PNG", top=True,style={"height":"25vh","width":"100%"}),
                                 dbc.CardBody(
                                     [
                                         html.H5("Virensinh Thakore", className="card-title"),
+                                        html.Hr(),
+                                        html.H6("Ph.D Candidate"),
                                         html.A("thakorev@temple.edu", href="mailto: thakorev@temple.edu"),
-                                    ])
-                            ]))
-                        ],style={"margin-left":"auto","margin-right":"auto","width":"60%"},no_gutters=True),
-
-                        dbc.Row([
-                            dbc.Col(dbc.Card([
+                                    ]
+                                ,style={"text-align":"center"})
+                            ])
+                        ),
+                        dbc.Col(
+                            dbc.Card([
                                 dbc.CardImg(src="/assets/Voytek.jpg", top=True,style={"height":"25vh","width":"100%"}),
                                 dbc.CardBody(
                                     [
                                         html.H5("Josh Voytek", className="card-title"),
+                                        html.Hr(),
+                                        html.H6("Web Developer"),
                                         html.A("josh.voytek@temple.edu", href="mailto: josh.voytek@temple.edu"),
-                                    ])
-                            ])),
-                            dbc.Col([
-                                dbc.Row([
-                                    html.A(html.Img(src="/assets/Oak_Ridge.PNG"),href="https://www.ornl.gov/",
-                                    style={"margin-top":"auto","margin-bottom":"auto","margin-left":"auto","margin-right":"auto"})
-                                ],style={"height":"50%"}),
-                                dbc.Row([
-                                    html.A(html.Img(src="/assets/DOE.png"),href="https://www.energy.gov/eere/geothermal/geothermal-energy-us-department-energy",
-                                    style={"margin-bottom":"auto","margin-left":"auto","margin-right":"auto"})
-                                ],style={"height":"50%"})
+                                    ]
+                                ,style={"text-align":"center"})
                             ])
-                        ],style={"margin-left":"auto","margin-right":"auto","width":"60%"},no_gutters=True)],
-                    style={"width":"100%"})                    
+                        ),
+                    ],style={"margin-left":"auto","margin-right":"auto","width":"80%"},no_gutters=True),
+                    html.Br(),
+                    html.P("Email Virensinh or Josh from above with related research data not currently being displayed."
+                    ,style={"font-size":23,"padding-left":30,"padding-right":30,"text-align":"center"})         
                 ]),
                 dcc.Tab(label='About The Project', children=[
                     html.Br(),
                     html.H1("Project",style={"text-align":"center"}),
                     html.Br(),
-                    html.Div(html.P("Last Updated: " + today),style={"text-align":"center"}),
+                    html.Div([
+
+                        html.P("This project is supported by the Geothermal Technology Office of the Department of Energy and the Oak Ridge National Laboratory.",
+                        style={"font-size":23,"padding-left":30,"padding-right":30}),
+
+                        html.P("Hydraulic fracturing is the process of fracturing rock formations with high-pressure water-based fluids. In Enhanced Geothermal " +
+                           "Systems (EGS) hydraulic fracturing is carried out by injecting high-pressure fluids into the Hot Dry Rocks (HDR) under carefully " +
+                           "controlled conditions. The fluid used for fracturing is an important component for EGS, not only concerning the technical approch but " +
+                           "also environmental impact. Recent research has been carried out to develop waterless fracturing technologies for EGS, including foambased hydrofracking, " +
+                           "where foams are mixtures of gas and liquid fluids. Foam fracturing fluids have potential benefits over water-based " +
+                           "fluids because of less water consumption, less damage in water sensitive formations, and less liquid to recover and handle after " +
+                           "fracturing process. One challenge for implementing foam fracturing in EGS is to achieve stable foams at high temperatures, as the foam " +
+                           "stability tends to decay with increase in temperature. The intent of this project is to compile and neatly display modern literature data on foambased hydrofracking for EGS.",
+                            style={"font-size":23,"padding-left":50,"padding-right":50}
+                        )
+                        
+                    ],style={"text-align":"center"}),
+                    html.P("Last Updated: " + today,style={"text-align":"center"})
                 ]),
             ]),
         ],style={"backgroundColor":"white"}),
-        dbc.Col(width=3)
-    ],style={'backgroundColor': '#0066CC',"height":"100vh"},no_gutters=True)
+        dbc.Col(style={'backgroundColor': '#0066CC',"height":"100vh"},width=3)
+    ],style={'backgroundColor': '#0066CC',"height":"100%"},no_gutters=True)
 ])
 
 @app.callback(dash.dependencies.Output('page-content', 'children'),
@@ -383,7 +421,7 @@ def display_page(pathname):
 
 def toggle_container(toggle_value):
     if toggle_value == 'Show More':
-        return {'display': 'block','max-height':500,'overflow-y':'auto',"border-top":"1px black solid"}
+        return {'display': 'block','max-height':600,'overflow-y':'auto',"border-top":"1px black solid"}
     else:
         return {'display': 'none'}
 
@@ -476,32 +514,33 @@ def update_twoD(selected_x, selected_y, ga, sur, surc, add, addc, lp):
         if check == 1:
             continue
         name_array.sort_values(by=[selected_x], inplace=True)
+        
         trace = go.Scatter(y=name_array[selected_y], x=name_array[selected_x], hovertext= "Study: " + name_array.Study + "<br />Gas: "
         + name_array.Gas + "<br />Surfactant: " + name_array.Surfactant + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"] + "<br />Additive: "
         + name_array.Additive + "<br />Concentration Additive: " + name_array['Additive Concentration'] + "<br />Liquid Phase: " + name_array.LiquidPhase,
         hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8},name=i)
-        name_array.sort_values(by=[selected_x], inplace=True)
+
         data.append(trace)
 
     return {
         'data': data,
         'layout': go.Layout(
-            yaxis=dict(
-                title=selected_y,
-                titlefont_size=20,
-                tickfont_size=18,
-            ),
-            xaxis=dict(
-                title=selected_x,
-                titlefont_size=20,
-                tickfont_size=18
-            ),
-            legend=dict(
-                font_size = 20,
-            ),
-            font=dict(
-                family="Times New Roman",
-            ),
+            yaxis={
+                "title":selected_y,
+                "titlefont_size":20,
+                "tickfont_size":18
+            },
+            xaxis={
+                "title":selected_x,
+                "titlefont_size":20,
+                "tickfont_size":18
+            },
+            legend={
+                    "font_size": 24,
+            },
+            font={
+                "family":"Times New Roman",
+            },
             hovermode="closest",
             height=750,
         )
@@ -560,20 +599,21 @@ def update_threeD(selected_x, selected_y, selected_z, ga, sur, surc, add, addc, 
 
     return {"data": data,
             "layout": go.Layout(
-                height=800,
-                legend=dict(
-                    font_size = 24,
-                ),
-                font=dict(
-                    size = 16,
-                    family="Times New Roman",
-                ),
-                scene={"aspectmode": "cube",
-                        "camera":{"center":dict(x=0.05,y=0,z=-0.15)},
-                        "xaxis": {"title": f"{selected_x.title()}"},
-                        "yaxis": {"title": f"{selected_y.title()}"},
-                        "zaxis": {"title": f"{selected_z.title()}"}})
-            }
+                height=850,
+                legend={
+                    "font_size": 24,
+                },
+                font={
+                    "size": 16,
+                    "family": "Times New Roman",
+                },
+                scene={
+                    "camera":{"center":dict(x=0.05,y=0,z=-0.25)},
+                    "xaxis": {"title": f"{selected_x.title()}"},
+                    "yaxis": {"title": f"{selected_y.title()}"},
+                    "zaxis": {"title": f"{selected_z.title()}"}
+                }
+            )}
 
 @app.callback( #updates the 3d graph
     Output("comp1", "figure"),
@@ -628,13 +668,30 @@ def update_comp1(selected_x, selected_y, selected_z, ga, sur, surc, add, addc, l
 
     return {"data": data,
             "layout": go.Layout(
-                height=700,
-                scene={"aspectmode": "cube",
-                        "camera":{"center":dict(x=0.05,y=0,z=-0.25)},
-                        "xaxis": {"title": f"{selected_x.title()}"},
-                        "yaxis": {"title": f"{selected_y.title()}"},
-                        "zaxis": {"title": f"{selected_z.title()}"}})
-            }
+                height=680,
+                legend={
+                    "orientation":"h",
+                    "xanchor":"center",
+                    "x":0.5,
+                    "yanchor":"bottom",
+                    "y":1,
+                    "valign":"middle",
+                    "font_size": 24,
+                },
+                font={
+                    "size": 16,
+                    "family": "Times New Roman",
+                },
+                scene={
+                    "camera":{"center":dict(x=0.05,y=0,z=-0.25)},
+                    "xaxis": {"title": f"{selected_x.title()}"},
+                    "yaxis": {"title": f"{selected_y.title()}"},
+                    "zaxis": {"title": f"{selected_z.title()}"}
+                },
+                margin={
+                    "b":0
+                }
+            )}
 
 @app.callback(
     [Output("comp1table", "data"),
@@ -722,13 +779,30 @@ def update_comp2(selected_x, selected_y, selected_z, ga, sur, surc, add, addc, l
 
     return {"data": data,
             "layout": go.Layout(
-                height=700,
-                scene={"aspectmode": "cube",
-                        "camera":{"center":dict(x=0.05,y=0,z=-0.25)},
-                        "xaxis": {"title": f"{selected_x.title()}"},
-                        "yaxis": {"title": f"{selected_y.title()}"},
-                        "zaxis": {"title": f"{selected_z.title()}"}})
-            }
+                height=680,
+                legend={
+                    "orientation":"h",
+                    "xanchor":"center",
+                    "x":0.5,
+                    "yanchor":"bottom",
+                    "y":1,
+                    "valign":"middle",
+                    "font_size": 24,
+                },
+                font={
+                    "size": 16,
+                    "family": "Times New Roman",
+                },
+                scene={
+                    "camera":{"center":dict(x=0.05,y=0,z=-0.25)},
+                    "xaxis": {"title": f"{selected_x.title()}"},
+                    "yaxis": {"title": f"{selected_y.title()}"},
+                    "zaxis": {"title": f"{selected_z.title()}"}
+                },
+                margin={
+                    "b":0
+                }
+            )}
 
 @app.callback( #updates 2d graph relative to selected axes and checklist data
     [Output("comp2table", "data"),
