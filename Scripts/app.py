@@ -740,7 +740,7 @@ def update_threeD(selected_x, selected_y, selected_z, fit, ga, sur, surc, add, a
                 trace = go.Scatter3d(x = X, y = Y, z = Z, 
                 hovertext= "Study: " + name_array.Study 
                 + "<br />d = " + str(round(sx,2)) + "x  + " + str(round(sy,2)) + "y + " + str(round(sz,2)) + "z", 
-                hoverinfo='text',mode='lines+markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},line={'color' : name_array.Color},name=i)
+                hoverinfo='text',mode='lines+markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color}, line={'color' : name_array.Color.values[0]},name=i)
             
             else:
                 continue
@@ -870,7 +870,7 @@ def update_comp1(selected_x, selected_y, selected_z, fit, ga, sur, surc, add, ad
                 trace = go.Scatter3d(x = X, y = Y, z = Z, 
                 hovertext= "Study: " + name_array.Study 
                 + "<br />d = " + str(round(sx,2)) + "x  + " + str(round(sy,2)) + "y + " + str(round(sz,2)) + "z", 
-                hoverinfo='text',mode='lines+markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},line={'color' : name_array.Color},name=i)
+                hoverinfo='text',mode='lines+markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color}, line={'color' : name_array.Color.values[0]},name=i)
 
             else:
                 continue
@@ -1042,7 +1042,7 @@ def update_comp2(selected_x, selected_y, selected_z, fit, ga, sur, surc, add, ad
                 trace = go.Scatter3d(x = X, y = Y, z = Z, 
                 hovertext= "Study: " + name_array.Study 
                 + "<br />d = " + str(round(sx,2)) + "x  + " + str(round(sy,2)) + "y + " + str(round(sz,2)) + "z", 
-                hoverinfo='text',mode='lines+markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},line={'color' : name_array.Color},name=i)
+                hoverinfo='text',mode='lines+markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color}, line={'color' : name_array.Color.values[0]},name=i)
             
             else:
                 continue
