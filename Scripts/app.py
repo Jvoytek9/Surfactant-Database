@@ -53,8 +53,59 @@ dv.dropna(
     subset=None,
     inplace=True
 )
-
 dv.fillna("None", inplace=True)
+
+dv['Color'] = "any" 
+names = list(dict.fromkeys(dv['Study']))
+color = [
+    '#1f77b4',  # muted blue
+    '#ff7f0e',  # safety orange
+    '#2ca02c',  # cooked asparagus green
+    '#d62728',  # brick red
+    '#9467bd',  # muted purple
+    '#8c564b',  # chestnut brown
+    '#e377c2',  # raspberry yogurt pink
+    '#bcbd22',  # curry yellow-green
+    '#17becf',  # blue-teal
+    'black', 'blue', 'blueviolet', 'cadetblue',
+    'chartreuse', 'chocolate', 'coral', 'cornflowerblue',
+    'cornsilk', 'crimson', 'cyan', 'darkblue', 'darkcyan',
+    'darkgoldenrod', 'darkgray', 'darkgrey', 'darkgreen',
+    'darkkhaki', 'darkmagenta', 'darkolivegreen', 'darkorange',
+    'darkorchid', 'darkred', 'darksalmon', 'darkseagreen',
+    'darkslateblue', 'darkslategray', 'darkslategrey',
+    'darkturquoise', 'darkviolet', 'deeppink', 'deepskyblue',
+    'dimgray', 'dimgrey', 'dodgerblue', 'firebrick',
+    'floralwhite', 'forestgreen', 'fuchsia', 'gainsboro',
+    'ghostwhite', 'gold', 'goldenrod', 'gray', 'grey', 'green',
+    'greenyellow', 'honeydew', 'hotpink', 'indianred', 'indigo',
+    'ivory', 'khaki', 'lavender', 'lavenderblush', 'lawngreen',
+    'lemonchiffon', 'lightblue', 'lightcoral', 'lightcyan',
+    'lightgoldenrodyellow', 'lightgray', 'lightgrey',
+    'lightgreen', 'lightpink', 'lightsalmon', 'lightseagreen',
+    'lightskyblue', 'lightslategray', 'lightslategrey',
+    'lightsteelblue', 'lightyellow', 'lime', 'limegreen',
+    'linen', 'magenta', 'maroon', 'mediumaquamarine',
+    'mediumblue', 'mediumorchid', 'mediumpurple',
+    'mediumseagreen', 'mediumslateblue', 'mediumspringgreen',
+    'mediumturquoise', 'mediumvioletred', 'midnightblue',
+    'mintcream', 'mistyrose', 'moccasin', 'navajowhite', 'navy',
+    'oldlace', 'olive', 'olivedrab', 'orange', 'orangered',
+    'orchid', 'palegoldenrod', 'palegreen', 'paleturquoise',
+    'palevioletred', 'papayawhip', 'peachpuff', 'peru', 'pink',
+    'plum', 'powderblue', 'purple', 'red', 'rosybrown',
+    'royalblue', 'saddlebrown', 'salmon', 'sandybrown',
+    'seagreen', 'seashell', 'sienna', 'silver', 'skyblue',
+    'slateblue', 'slategray', 'slategrey', 'springgreen',
+    'steelblue', 'tan', 'teal', 'thistle', 'tomato', 'turquoise',
+    'violet', 'wheat', 'whitesmoke', 'yellow',
+    'yellowgreen'
+]
+color_index = 0
+for i in names:
+    dv.loc[dv.Study == i, 'Color'] = color[color_index]
+    color_index += 1
+#print(dv[dv.Study == "Kruss 2019"]) #check for colors you do not like
 
 app.layout = html.Div([
     dcc.Location(id='url', refresh=True),
@@ -511,7 +562,6 @@ def update_twoD(selected_x, selected_y, fit, ga, sur, surc, add, addc, lp):
     cleaned = d[d['LiquidPhase'].isin(lp)]
 
     data = []
-    names = list(dict.fromkeys(dv['Study']))
 
     for i in names:
         check = 0
@@ -538,7 +588,7 @@ def update_twoD(selected_x, selected_y, fit, ga, sur, surc, add, addc, lp):
             + "<br />Additive: " + name_array.Additive 
             + "<br />Concentration Additive: " + name_array['Additive Concentration'] 
             + "<br />Liquid Phase: " + name_array.LiquidPhase,
-            hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8},name=i)
+            hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},name=i)
 
         if(fit == 'Best-Fit'):
             if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0: 
@@ -555,7 +605,7 @@ def update_twoD(selected_x, selected_y, fit, ga, sur, surc, add, addc, lp):
                 + "<br />Slope: " + str(round(m,2)) 
                 + "<br />Intercept: " + str(round(b,2)) 
                 + "<br />R Squared: " + str(round(r_squared,2)),
-                hoverinfo='text',mode='lines+markers',name=i)
+                hoverinfo='text',mode='lines+markers',marker={'color' : name_array.Color}, line={'color' : name_array.Color.values[0]}, name=i)
                 
             else:
                 continue
@@ -609,7 +659,6 @@ def update_threeD(selected_x, selected_y, selected_z, fit, ga, sur, surc, add, a
     cleaned = d[d['LiquidPhase'].isin(lp)]
 
     data = []
-    names = list(dict.fromkeys(dv['Study']))
 
     for i in names:
         check = 0
@@ -642,7 +691,7 @@ def update_threeD(selected_x, selected_y, selected_z, fit, ga, sur, surc, add, a
             + "<br />Additive: " + name_array.Additive 
             + "<br />Concentration Additive: " + name_array['Additive Concentration'] 
             + "<br />Liquid Phase: " + name_array.LiquidPhase,
-            hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8},name=i)
+            hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},name=i)
 
         if(fit == 'Best-Fit'):
             if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0 and len(name_array[selected_z].values) != 0: 
@@ -691,7 +740,7 @@ def update_threeD(selected_x, selected_y, selected_z, fit, ga, sur, surc, add, a
                 trace = go.Scatter3d(x = X, y = Y, z = Z, 
                 hovertext= "Study: " + name_array.Study 
                 + "<br />d = " + str(round(sx,2)) + "x  + " + str(round(sy,2)) + "y + " + str(round(sz,2)) + "z", 
-                hoverinfo='text',mode='lines+markers', marker={'size': 10, 'opacity': 0.8},name=i)
+                hoverinfo='text',mode='lines+markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},line={'color' : name_array.Color},name=i)
             
             else:
                 continue
@@ -740,7 +789,6 @@ def update_comp1(selected_x, selected_y, selected_z, fit, ga, sur, surc, add, ad
     cleaned = d[d['LiquidPhase'].isin(lp)]
 
     data = []
-    names = list(dict.fromkeys(dv['Study']))
 
     for i in names:
         check = 0
@@ -773,7 +821,7 @@ def update_comp1(selected_x, selected_y, selected_z, fit, ga, sur, surc, add, ad
             + "<br />Additive: " + name_array.Additive 
             + "<br />Concentration Additive: " + name_array['Additive Concentration'] 
             + "<br />Liquid Phase: " + name_array.LiquidPhase,
-            hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8},name=i)
+            hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},name=i)
 
         if(fit == 'Best-Fit'):
             if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0 and len(name_array[selected_z].values) != 0: 
@@ -822,7 +870,7 @@ def update_comp1(selected_x, selected_y, selected_z, fit, ga, sur, surc, add, ad
                 trace = go.Scatter3d(x = X, y = Y, z = Z, 
                 hovertext= "Study: " + name_array.Study 
                 + "<br />d = " + str(round(sx,2)) + "x  + " + str(round(sy,2)) + "y + " + str(round(sz,2)) + "z", 
-                hoverinfo='text',mode='lines+markers', marker={'size': 10, 'opacity': 0.8},name=i)
+                hoverinfo='text',mode='lines+markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},line={'color' : name_array.Color},name=i)
 
             else:
                 continue
@@ -913,7 +961,6 @@ def update_comp2(selected_x, selected_y, selected_z, fit, ga, sur, surc, add, ad
     cleaned = d[d['LiquidPhase'].isin(lp)]
 
     data = []
-    names = list(dict.fromkeys(dv['Study']))
 
     for i in names:
         check = 0
@@ -946,7 +993,7 @@ def update_comp2(selected_x, selected_y, selected_z, fit, ga, sur, surc, add, ad
             + "<br />Additive: " + name_array.Additive 
             + "<br />Concentration Additive: " + name_array['Additive Concentration'] 
             + "<br />Liquid Phase: " + name_array.LiquidPhase,
-            hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8},name=i)
+            hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},name=i)
 
         if(fit == 'Best-Fit'):
             if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0 and len(name_array[selected_z].values) != 0: 
@@ -995,7 +1042,7 @@ def update_comp2(selected_x, selected_y, selected_z, fit, ga, sur, surc, add, ad
                 trace = go.Scatter3d(x = X, y = Y, z = Z, 
                 hovertext= "Study: " + name_array.Study 
                 + "<br />d = " + str(round(sx,2)) + "x  + " + str(round(sy,2)) + "y + " + str(round(sz,2)) + "z", 
-                hoverinfo='text',mode='lines+markers', marker={'size': 10, 'opacity': 0.8},name=i)
+                hoverinfo='text',mode='lines+markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},line={'color' : name_array.Color},name=i)
             
             else:
                 continue
