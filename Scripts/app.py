@@ -529,23 +529,36 @@ def update_twoD(selected_x, selected_y, fit, ga, sur, surc, add, addc, lp):
         if check == 1:
             continue
 
-        name_array.sort_values(by=[selected_x], inplace=True)
-
         if(fit == 'Scatter'):
-            trace = go.Scatter(y=name_array[selected_y], x=name_array[selected_x], hovertext= "Study: " + name_array.Study + "<br />Gas: "
-            + name_array.Gas + "<br />Surfactant: " + name_array.Surfactant + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"] + "<br />Additive: "
-            + name_array.Additive + "<br />Concentration Additive: " + name_array['Additive Concentration'] + "<br />Liquid Phase: " + name_array.LiquidPhase,
+            trace = go.Scatter(x=name_array[selected_x],y=name_array[selected_y], 
+            hovertext= "Study: " + name_array.Study 
+            + "<br />Gas: " + name_array.Gas 
+            + "<br />Surfactant: " + name_array.Surfactant 
+            + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"] 
+            + "<br />Additive: " + name_array.Additive 
+            + "<br />Concentration Additive: " + name_array['Additive Concentration'] 
+            + "<br />Liquid Phase: " + name_array.LiquidPhase,
             hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8},name=i)
 
         if(fit == 'Best-Fit'):
-            m, b = np.polyfit(name_array[selected_x].values.astype(float),name_array[selected_y].values.astype(float), 1)
-            correlation_matrix = np.corrcoef(name_array[selected_x].values.astype(float), name_array[selected_y].values.astype(float))
-            correlation_xy = correlation_matrix[0,1]
-            r_squared = correlation_xy**2
+            if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0: 
+                
+                name_array.sort_values(by=[selected_x], inplace=True)
 
-            trace = go.Scatter(y=m*name_array[selected_x].values+b, x=name_array[selected_x],mode='lines+markers',name=i
-            ,hovertext= "Study: " + name_array.Study + "<br />Slope: " + str(round(m,2)) + "<br />Intercept: " + str(round(b,2)) + "<br />R Squared: " + str(round(r_squared,2)),
-            hoverinfo='text')
+                m, b = np.polyfit(name_array[selected_x].values.astype(float),name_array[selected_y].values.astype(float), 1)
+                correlation_matrix = np.corrcoef(name_array[selected_x].values.astype(float), name_array[selected_y].values.astype(float))
+                correlation_xy = correlation_matrix[0,1]
+                r_squared = correlation_xy**2
+
+                trace = go.Scatter(x = name_array[selected_x], y = m*name_array[selected_x].values+b,
+                hovertext= "Study: " + name_array.Study 
+                + "<br />Slope: " + str(round(m,2)) 
+                + "<br />Intercept: " + str(round(b,2)) 
+                + "<br />R Squared: " + str(round(r_squared,2)),
+                hoverinfo='text',mode='lines+markers',name=i)
+                
+            else:
+                continue
             
         data.append(trace)
 
@@ -621,57 +634,67 @@ def update_threeD(selected_x, selected_y, selected_z, fit, ga, sur, surc, add, a
             continue
 
         if(fit == 'Scatter'):
-            trace = go.Scatter3d(x=name_array[selected_x],y=name_array[selected_y], z=name_array[selected_z], hovertext= "Study: " + name_array.Study + "<br />Gas: "
-            + name_array.Gas + "<br />Surfactant: " + name_array.Surfactant + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"] + "<br />Additive: "
-            + name_array.Additive + "<br />Concentration Additive: " + name_array['Additive Concentration'] + "<br />Liquid Phase: " + name_array.LiquidPhase,
+            trace = go.Scatter3d(x = name_array[selected_x], y = name_array[selected_y], z = name_array[selected_z], 
+            hovertext= "Study: " + name_array.Study 
+            + "<br />Gas: " + name_array.Gas 
+            + "<br />Surfactant: " + name_array.Surfactant 
+            + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"] 
+            + "<br />Additive: " + name_array.Additive 
+            + "<br />Concentration Additive: " + name_array['Additive Concentration'] 
+            + "<br />Liquid Phase: " + name_array.LiquidPhase,
             hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8},name=i)
 
         if(fit == 'Best-Fit'):
-            name_array.sort_values(by=[selected_x], inplace=True)
+            if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0 and len(name_array[selected_z].values) != 0: 
+                name_array.sort_values(by=[selected_x], inplace=True)
 
-            x = np.mgrid[min(name_array[selected_x].values.astype(float)):max(name_array[selected_x].values.astype(float)):3j]
-            y = np.mgrid[min(name_array[selected_y].values.astype(float)):max(name_array[selected_y].values.astype(float)):3j]
-            z = np.mgrid[min(name_array[selected_z].values.astype(float)):max(name_array[selected_z].values.astype(float)):3j]
+                x = np.mgrid[min(name_array[selected_x].values.astype(float)):max(name_array[selected_x].values.astype(float)):3j]
+                y = np.mgrid[min(name_array[selected_y].values.astype(float)):max(name_array[selected_y].values.astype(float)):3j]
+                z = np.mgrid[min(name_array[selected_z].values.astype(float)):max(name_array[selected_z].values.astype(float)):3j]
 
-            # this will find the slope and x-intercept of a plane
-            # parallel to the y-axis that best fits the data
-            A_xz = np.vstack((x, np.ones(len(x)))).T
-            m_xz, c_xz = np.linalg.lstsq(A_xz, z)[0]
+                # this will find the slope and x-intercept of a plane
+                # parallel to the y-axis that best fits the data
+                A_xz = np.vstack((x, np.ones(len(x)))).T
+                m_xz, c_xz = np.linalg.lstsq(A_xz, z)[0]
 
-            # again for a plane parallel to the x-axis
-            A_yz = np.vstack((y, np.ones(len(y)))).T
-            m_yz, c_yz = np.linalg.lstsq(A_yz, z)[0]
+                # again for a plane parallel to the x-axis
+                A_yz = np.vstack((y, np.ones(len(y)))).T
+                m_yz, c_yz = np.linalg.lstsq(A_yz, z)[0]
 
-            # the intersection of those two planes and
-            # the function for the line would be:
-            # z = m_xz * X + c_xz
-            # z = m_yz * Y + c_yz
-            # or:
-            def lin(z):
-                x = (z - c_xz)/m_xz
-                y = (z - c_yz)/m_yz
-                return x,y
+                # the intersection of those two planes and
+                # the function for the line would be:
+                # z = m_xz * X + c_xz
+                # z = m_yz * Y + c_yz
+                # or:
+                def lin(z):
+                    x = (z - c_xz)/m_xz
+                    y = (z - c_yz)/m_yz
+                    return x,y
 
-            X,Y = lin(z)
-            Z = z
+                X,Y = lin(z)
+                Z = z
 
-            # get 2 points on the intersection line 
-            za = z[0]
-            zb = z[len(z) - 1]
-            xa, ya = lin(za)
-            xb, yb = lin(zb)
+                # get 2 points on the intersection line 
+                za = z[0]
+                zb = z[len(z) - 1]
+                xa, ya = lin(za)
+                xb, yb = lin(zb)
 
-            # get distance between points
-            length = np.sqrt(pow(xb - xa, 2) + pow(yb - ya, 2) + pow(zb - za, 2))
+                # get distance between points
+                length = np.sqrt(pow(xb - xa, 2) + pow(yb - ya, 2) + pow(zb - za, 2))
 
-            # get slopes (projections onto x, y and z planes)
-            sx = (xb - xa) / length  # x slope
-            sy = (yb - ya) / length  # y slope
-            sz = (zb - za) / length  # z slope
+                # get slopes (projections onto x, y and z planes)
+                sx = (xb - xa) / length  # x slope
+                sy = (yb - ya) / length  # y slope
+                sz = (zb - za) / length  # z slope
 
-            trace = go.Scatter3d(x=X,y=Y, z=Z, hovertext= "Study: " + name_array.Study +
-            "<br />Scalar Equation of Plane: " + str(round(sx,2)) + "x  + " + str(round(sy,2)) + "y + " + str(round(sz,2)) + "z", 
-            hoverinfo='text',mode='lines+markers', marker={'size': 10, 'opacity': 0.8},name=i)
+                trace = go.Scatter3d(x = X, y = Y, z = Z, 
+                hovertext= "Study: " + name_array.Study 
+                + "<br />d = " + str(round(sx,2)) + "x  + " + str(round(sy,2)) + "y + " + str(round(sz,2)) + "z", 
+                hoverinfo='text',mode='lines+markers', marker={'size': 10, 'opacity': 0.8},name=i)
+            
+            else:
+                continue
             
         data.append(trace)
 
@@ -742,57 +765,67 @@ def update_comp1(selected_x, selected_y, selected_z, fit, ga, sur, surc, add, ad
             continue
         
         if(fit == 'Scatter'):
-            trace = go.Scatter3d(x=name_array[selected_x],y=name_array[selected_y], z=name_array[selected_z], hovertext= "Study: " + name_array.Study + "<br />Gas: "
-            + name_array.Gas + "<br />Surfactant: " + name_array.Surfactant + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"] + "<br />Additive: "
-            + name_array.Additive + "<br />Concentration Additive: " + name_array['Additive Concentration'] + "<br />Liquid Phase: " + name_array.LiquidPhase,
+            trace = go.Scatter3d(x = name_array[selected_x], y = name_array[selected_y], z = name_array[selected_z], 
+            hovertext= "Study: " + name_array.Study 
+            + "<br />Gas: " + name_array.Gas 
+            + "<br />Surfactant: " + name_array.Surfactant 
+            + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"] 
+            + "<br />Additive: " + name_array.Additive 
+            + "<br />Concentration Additive: " + name_array['Additive Concentration'] 
+            + "<br />Liquid Phase: " + name_array.LiquidPhase,
             hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8},name=i)
 
         if(fit == 'Best-Fit'):
-            name_array.sort_values(by=[selected_x], inplace=True)
+            if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0 and len(name_array[selected_z].values) != 0: 
+                name_array.sort_values(by=[selected_x], inplace=True)
 
-            x = np.mgrid[min(name_array[selected_x].values.astype(float)):max(name_array[selected_x].values.astype(float)):3j]
-            y = np.mgrid[min(name_array[selected_y].values.astype(float)):max(name_array[selected_y].values.astype(float)):3j]
-            z = np.mgrid[min(name_array[selected_z].values.astype(float)):max(name_array[selected_z].values.astype(float)):3j]
+                x = np.mgrid[min(name_array[selected_x].values.astype(float)):max(name_array[selected_x].values.astype(float)):3j]
+                y = np.mgrid[min(name_array[selected_y].values.astype(float)):max(name_array[selected_y].values.astype(float)):3j]
+                z = np.mgrid[min(name_array[selected_z].values.astype(float)):max(name_array[selected_z].values.astype(float)):3j]
 
-            # this will find the slope and x-intercept of a plane
-            # parallel to the y-axis that best fits the data
-            A_xz = np.vstack((x, np.ones(len(x)))).T
-            m_xz, c_xz = np.linalg.lstsq(A_xz, z)[0]
+                # this will find the slope and x-intercept of a plane
+                # parallel to the y-axis that best fits the data
+                A_xz = np.vstack((x, np.ones(len(x)))).T
+                m_xz, c_xz = np.linalg.lstsq(A_xz, z)[0]
 
-            # again for a plane parallel to the x-axis
-            A_yz = np.vstack((y, np.ones(len(y)))).T
-            m_yz, c_yz = np.linalg.lstsq(A_yz, z)[0]
+                # again for a plane parallel to the x-axis
+                A_yz = np.vstack((y, np.ones(len(y)))).T
+                m_yz, c_yz = np.linalg.lstsq(A_yz, z)[0]
 
-            # the intersection of those two planes and
-            # the function for the line would be:
-            # z = m_xz * X + c_xz
-            # z = m_yz * Y + c_yz
-            # or:
-            def lin(z):
-                x = (z - c_xz)/m_xz
-                y = (z - c_yz)/m_yz
-                return x,y
+                # the intersection of those two planes and
+                # the function for the line would be:
+                # z = m_xz * X + c_xz
+                # z = m_yz * Y + c_yz
+                # or:
+                def lin(z):
+                    x = (z - c_xz)/m_xz
+                    y = (z - c_yz)/m_yz
+                    return x,y
 
-            X,Y = lin(z)
-            Z = z
+                X,Y = lin(z)
+                Z = z
 
-            # get 2 points on the intersection line 
-            za = z[0]
-            zb = z[len(z) - 1]
-            xa, ya = lin(za)
-            xb, yb = lin(zb)
+                # get 2 points on the intersection line 
+                za = z[0]
+                zb = z[len(z) - 1]
+                xa, ya = lin(za)
+                xb, yb = lin(zb)
 
-            # get distance between points
-            length = np.sqrt(pow(xb - xa, 2) + pow(yb - ya, 2) + pow(zb - za, 2))
+                # get distance between points
+                length = np.sqrt(pow(xb - xa, 2) + pow(yb - ya, 2) + pow(zb - za, 2))
 
-            # get slopes (projections onto x, y and z planes)
-            sx = (xb - xa) / length  # x slope
-            sy = (yb - ya) / length  # y slope
-            sz = (zb - za) / length  # z slope
+                # get slopes (projections onto x, y and z planes)
+                sx = (xb - xa) / length  # x slope
+                sy = (yb - ya) / length  # y slope
+                sz = (zb - za) / length  # z slope
 
-            trace = go.Scatter3d(x=X,y=Y, z=Z, hovertext= "Study: " + name_array.Study +
-            "<br />Scalar Equation of Plane: " + str(round(sx,2)) + "x  + " + str(round(sy,2)) + "y + " + str(round(sz,2)) + "z", 
-            hoverinfo='text',mode='lines+markers', marker={'size': 10, 'opacity': 0.8},name=i)
+                trace = go.Scatter3d(x = X, y = Y, z = Z, 
+                hovertext= "Study: " + name_array.Study 
+                + "<br />d = " + str(round(sx,2)) + "x  + " + str(round(sy,2)) + "y + " + str(round(sz,2)) + "z", 
+                hoverinfo='text',mode='lines+markers', marker={'size': 10, 'opacity': 0.8},name=i)
+
+            else:
+                continue
             
         data.append(trace)
 
@@ -905,57 +938,67 @@ def update_comp2(selected_x, selected_y, selected_z, fit, ga, sur, surc, add, ad
             continue
 
         if(fit == 'Scatter'):
-            trace = go.Scatter3d(x=name_array[selected_x],y=name_array[selected_y], z=name_array[selected_z], hovertext= "Study: " + name_array.Study + "<br />Gas: "
-            + name_array.Gas + "<br />Surfactant: " + name_array.Surfactant + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"] + "<br />Additive: "
-            + name_array.Additive + "<br />Concentration Additive: " + name_array['Additive Concentration'] + "<br />Liquid Phase: " + name_array.LiquidPhase,
+            trace = go.Scatter3d(x = name_array[selected_x], y = name_array[selected_y], z = name_array[selected_z], 
+            hovertext= "Study: " + name_array.Study 
+            + "<br />Gas: " + name_array.Gas 
+            + "<br />Surfactant: " + name_array.Surfactant 
+            + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"] 
+            + "<br />Additive: " + name_array.Additive 
+            + "<br />Concentration Additive: " + name_array['Additive Concentration'] 
+            + "<br />Liquid Phase: " + name_array.LiquidPhase,
             hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8},name=i)
 
         if(fit == 'Best-Fit'):
-            name_array.sort_values(by=[selected_x], inplace=True)
+            if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0 and len(name_array[selected_z].values) != 0: 
+                name_array.sort_values(by=[selected_x], inplace=True)
 
-            x = np.mgrid[min(name_array[selected_x].values.astype(float)):max(name_array[selected_x].values.astype(float)):3j]
-            y = np.mgrid[min(name_array[selected_y].values.astype(float)):max(name_array[selected_y].values.astype(float)):3j]
-            z = np.mgrid[min(name_array[selected_z].values.astype(float)):max(name_array[selected_z].values.astype(float)):3j]
+                x = np.mgrid[min(name_array[selected_x].values.astype(float)):max(name_array[selected_x].values.astype(float)):3j]
+                y = np.mgrid[min(name_array[selected_y].values.astype(float)):max(name_array[selected_y].values.astype(float)):3j]
+                z = np.mgrid[min(name_array[selected_z].values.astype(float)):max(name_array[selected_z].values.astype(float)):3j]
 
-            # this will find the slope and x-intercept of a plane
-            # parallel to the y-axis that best fits the data
-            A_xz = np.vstack((x, np.ones(len(x)))).T
-            m_xz, c_xz = np.linalg.lstsq(A_xz, z)[0]
+                # this will find the slope and x-intercept of a plane
+                # parallel to the y-axis that best fits the data
+                A_xz = np.vstack((x, np.ones(len(x)))).T
+                m_xz, c_xz = np.linalg.lstsq(A_xz, z)[0]
 
-            # again for a plane parallel to the x-axis
-            A_yz = np.vstack((y, np.ones(len(y)))).T
-            m_yz, c_yz = np.linalg.lstsq(A_yz, z)[0]
+                # again for a plane parallel to the x-axis
+                A_yz = np.vstack((y, np.ones(len(y)))).T
+                m_yz, c_yz = np.linalg.lstsq(A_yz, z)[0]
 
-            # the intersection of those two planes and
-            # the function for the line would be:
-            # z = m_xz * X + c_xz
-            # z = m_yz * Y + c_yz
-            # or:
-            def lin(z):
-                x = (z - c_xz)/m_xz
-                y = (z - c_yz)/m_yz
-                return x,y
+                # the intersection of those two planes and
+                # the function for the line would be:
+                # z = m_xz * X + c_xz
+                # z = m_yz * Y + c_yz
+                # or:
+                def lin(z):
+                    x = (z - c_xz)/m_xz
+                    y = (z - c_yz)/m_yz
+                    return x,y
 
-            X,Y = lin(z)
-            Z = z
+                X,Y = lin(z)
+                Z = z
 
-            # get 2 points on the intersection line 
-            za = z[0]
-            zb = z[len(z) - 1]
-            xa, ya = lin(za)
-            xb, yb = lin(zb)
+                # get 2 points on the intersection line 
+                za = z[0]
+                zb = z[len(z) - 1]
+                xa, ya = lin(za)
+                xb, yb = lin(zb)
 
-            # get distance between points
-            length = np.sqrt(pow(xb - xa, 2) + pow(yb - ya, 2) + pow(zb - za, 2))
+                # get distance between points
+                length = np.sqrt(pow(xb - xa, 2) + pow(yb - ya, 2) + pow(zb - za, 2))
 
-            # get slopes (projections onto x, y and z planes)
-            sx = (xb - xa) / length  # x slope
-            sy = (yb - ya) / length  # y slope
-            sz = (zb - za) / length  # z slope
+                # get slopes (projections onto x, y and z planes)
+                sx = (xb - xa) / length  # x slope
+                sy = (yb - ya) / length  # y slope
+                sz = (zb - za) / length  # z slope
 
-            trace = go.Scatter3d(x=X,y=Y, z=Z, hovertext= "Study: " + name_array.Study +
-            "<br />Scalar Equation of Plane: " + str(round(sx,2)) + "x  + " + str(round(sy,2)) + "y + " + str(round(sz,2)) + "z", 
-            hoverinfo='text',mode='lines+markers', marker={'size': 10, 'opacity': 0.8},name=i)
+                trace = go.Scatter3d(x = X, y = Y, z = Z, 
+                hovertext= "Study: " + name_array.Study 
+                + "<br />d = " + str(round(sx,2)) + "x  + " + str(round(sy,2)) + "y + " + str(round(sz,2)) + "z", 
+                hoverinfo='text',mode='lines+markers', marker={'size': 10, 'opacity': 0.8},name=i)
+            
+            else:
+                continue
             
         data.append(trace)
 
