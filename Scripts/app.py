@@ -535,7 +535,13 @@ def update_twoD(selected_x, selected_y, fit, ga, sur, surc, add, addc, lp):
 
         if(fit == 'Best-Fit'):
             m, b = np.polyfit(name_array[selected_x].values.astype(float),name_array[selected_y].values.astype(float), 1)
-            trace = go.Scatter(y=m*name_array[selected_x].values+b, x=name_array[selected_x],hovertext= "Study: " + name_array.Study, hoverinfo='text',mode='lines+markers',name=i)
+            correlation_matrix = np.corrcoef(name_array[selected_x].values.astype(float), name_array[selected_y].values.astype(float))
+            correlation_xy = correlation_matrix[0,1]
+            r_squared = correlation_xy**2
+
+            trace = go.Scatter(y=m*name_array[selected_x].values+b, x=name_array[selected_x],mode='lines+markers',name=i
+            ,hovertext= "Study: " + name_array.Study + "<br />Slope: " + str(round(m,2)) + "<br />Intercept " + str(round(b,2)) + "<br />R Squared " + str(round(r_squared,2)),
+            hoverinfo='text')
             
         data.append(trace)
 
