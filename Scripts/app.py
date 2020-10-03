@@ -3,6 +3,7 @@ from datetime import date
 import gspread
 from gspread_dataframe import get_as_dataframe
 from oauth2client.service_account import ServiceAccountCredentials
+import numpy as np
 import dash
 from dash.dependencies import Input, Output
 import dash_core_components as dcc
@@ -187,6 +188,15 @@ home = html.Div([
                         ]),
                     ]),
                     dcc.Tab(label='2-Dimensions', children=[
+                        html.Div(
+                            dcc.RadioItems(
+                                id='bestfit',
+                                options=[{'label': i, 'value': i} for i in ['Best-Fit','Scatter']],
+                                value='Best-Fit',
+                                labelStyle={"padding-right":"10px","margin":"auto"},
+                                style={"text-align":"center"}
+                            )
+                        ),
                         html.Div([
                             dcc.Graph(id="twoD",
                             config = {'toImageButtonOptions':
@@ -479,6 +489,7 @@ def update_styles(x,y,z):
     Output("twoD", "figure"),
     [Input("select-xaxis", "value"),
      Input("select-yaxis", "value"),
+     Input("bestfit", "value"),
      Input('gasses', 'value'),
      Input('surfactants', 'value'),
      Input('sconc', 'value'),
@@ -486,7 +497,7 @@ def update_styles(x,y,z):
      Input('aconc', 'value'),
      Input('lp', 'value')],
 )
-def update_twoD(selected_x, selected_y, ga, sur, surc, add, addc, lp):
+def update_twoD(selected_x, selected_y, fit, ga, sur, surc, add, addc, lp):
     check = 0
     cl = dv[dv['Gas'].isin(ga)]
     ea = cl[cl['Surfactant'].isin(sur)]
@@ -513,13 +524,19 @@ def update_twoD(selected_x, selected_y, ga, sur, surc, add, addc, lp):
                 break
         if check == 1:
             continue
-        name_array.sort_values(by=[selected_x], inplace=True)
-        
-        trace = go.Scatter(y=name_array[selected_y], x=name_array[selected_x], hovertext= "Study: " + name_array.Study + "<br />Gas: "
-        + name_array.Gas + "<br />Surfactant: " + name_array.Surfactant + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"] + "<br />Additive: "
-        + name_array.Additive + "<br />Concentration Additive: " + name_array['Additive Concentration'] + "<br />Liquid Phase: " + name_array.LiquidPhase,
-        hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8},name=i)
 
+        name_array.sort_values(by=[selected_x], inplace=True)
+
+        if(fit == 'Scatter'):
+            trace = go.Scatter(y=name_array[selected_y], x=name_array[selected_x], hovertext= "Study: " + name_array.Study + "<br />Gas: "
+            + name_array.Gas + "<br />Surfactant: " + name_array.Surfactant + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"] + "<br />Additive: "
+            + name_array.Additive + "<br />Concentration Additive: " + name_array['Additive Concentration'] + "<br />Liquid Phase: " + name_array.LiquidPhase,
+            hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8},name=i)
+
+        if(fit == 'Best-Fit'):
+            m, b = np.polyfit(name_array[selected_x].values.astype(float),name_array[selected_y].values.astype(float), 1)
+            trace = go.Scatter(y=m*name_array[selected_x].values+b, x=name_array[selected_x],hovertext= "Study: " + name_array.Study, hoverinfo='text',mode='lines+markers',name=i)
+            
         data.append(trace)
 
     return {
@@ -528,7 +545,7 @@ def update_twoD(selected_x, selected_y, ga, sur, surc, add, addc, lp):
             yaxis={
                 "title":selected_y,
                 "titlefont_size":20,
-                "tickfont_size":18
+                "tickfont_size":18,
             },
             xaxis={
                 "title":selected_x,
