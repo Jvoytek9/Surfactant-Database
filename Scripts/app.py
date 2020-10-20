@@ -4,8 +4,9 @@ import gspread
 from gspread_dataframe import get_as_dataframe
 from oauth2client.service_account import ServiceAccountCredentials
 import numpy as np
+np.warnings.filterwarnings('ignore')
 import dash
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
@@ -112,68 +113,114 @@ app.layout = html.Div([
     html.Div(id='page-content'),
 ])
 
-home = html.Div([
-    dbc.Row([
+Graph_Height = 610
+
+home = dbc.Row([
         dbc.Col([
+            html.Div([
+                html.Div([html.H1("Graph 2")],style={'text-align':"center", "margin-left":"auto","margin-right":"auto", 'color':"white"}),
+
+                html.Div(dcc.Dropdown(id="select-xaxis2", placeholder = "Select x-axis", value = "Temperature (C)",
+                options=[{'label': i.title(), 'value': i}  for i in dv.columns[7:]], clearable=False),
+                style={"margin-left": "auto", "margin-right": "auto", "width": "80%"}),
+
+                html.Div(dcc.Dropdown(id="select-yaxis2", placeholder = "Select y-axis", value = "Pressure (Psi)",
+                options=[{'label': i.title(), 'value': i} for i in dv.columns[7:]], clearable=False),
+                style={"margin-left": "auto", "margin-right": "auto", "width": "80%"}),
+
+                html.Div(dcc.Dropdown(id="select-zaxis2", placeholder = "Select z-axis", value = "Halflife (Min)",
+                options=[{'label': i.title(), 'value': i} for i in dv.columns[7:]], clearable=False),
+                style={"margin-left": "auto", "margin-right": "auto", "width": "80%"})
+            ],id="compare_dropdown"),
+
             html.Div([html.H1("Foam Database")],
                 style={'text-align':"center", "margin-right":"auto","margin-left":"auto", 'color':"white","width": "80%","padding-top":"10%"}),
 
             html.Div([
                 html.Div(dcc.Dropdown(id="select-xaxis", placeholder = "Select x-axis", value = "Temperature (C)",
-                    options=[{'label': i.title(), 'value': i}  for i in dv.columns[7:]], clearable=False),
-                ),
+                options=[{'label': i.title(), 'value': i}  for i in dv.columns[7:]], clearable=False),
+                style={"margin-left": "auto", "margin-right": "auto", "width": "80%"}),
+
                 html.Div(dcc.Dropdown(id="select-yaxis", placeholder = "Select y-axis", value = "Pressure (Psi)",
-                    options=[{'label': i.title(), 'value': i} for i in dv.columns[7:]], clearable=False)
-                ),
+                options=[{'label': i.title(), 'value': i} for i in dv.columns[7:]], clearable=False),
+                style={"margin-left": "auto", "margin-right": "auto", "width": "80%"}),
+
                 html.Div(dcc.Dropdown(id="select-zaxis", placeholder = "Select z-axis", value = "Halflife (Min)",
-                    options=[{'label': i.title(), 'value': i} for i in dv.columns[7:]], clearable=False)
-                )
-            ],style={'text-align':"center","margin-left": "auto", "margin-right": "auto", "width": "80%"}),
+                options=[{'label': i.title(), 'value': i} for i in dv.columns[7:]], clearable=False),
+                style={"margin-left": "auto", "margin-right": "auto", "width": "80%"}),
 
-            html.Div([
-                dbc.Row([
-                    dcc.RadioItems(
-                        id='toggle',
-                        options=[{'label': i, 'value': i} for i in ['Show Less','Show More']],
-                        value='Show Less',
-                        labelStyle={"padding-right":"10px","margin":"auto"},
-                        style={"text-align":"center","margin":"auto"}
-                    ),
-                ],style={'text-align':"center","margin-left": "auto", "margin-right": "auto"}),
-
-                html.Div(id='controls-container', children=[
-                    
-                    html.Hr(),
-                    
-                    html.Div(
+                html.Div([
+                    dbc.Row([
                         dcc.RadioItems(
-                            id='bestfit',
-                            options=[{'label': i, 'value': i} for i in ['Scatter','Best-Fit']],
-                            value='Scatter',
+                            id='toggle',
+                            options=[{'label': i, 'value': i} for i in ['Show Less','Show More']],
+                            value='Show Less',
                             labelStyle={"padding-right":"10px","margin":"auto"},
-                            style={"text-align":"center"}
-                        )
-                    ,style={"margin":"auto"}),
+                            style={"text-align":"center","margin":"auto"}
+                        ),
+                    ],style={'text-align':"center","margin-left": "auto", "margin-right": "auto"}),
+                    
+                    html.Div(id='controls-container', children=[
+                                            
+                        html.Hr(),
+                        
+                        html.Div(
+                            dcc.Checklist(
+                                id = 'bestfit',
+                                options= [{'label': i, 'value': i} for i in ['Scatter','Best-Fit']],
+                                value = ['Scatter','Best-Fit'],
+                                labelStyle={"padding-right":"10px","margin":"auto"}
+                            )
+                        ,style={"margin":"auto"}),
+                                                    
+                        html.Div(
+                            dcc.RadioItems(
+                                id='addComp',
+                                options=[{'label': i, 'value': i} for i in ['No Compare','Compare']],
+                                value='No Compare',
+                                labelStyle={"padding-right":"10px","margin":"auto","padding-top":"10px"}
+                            )
+                        ,style={"margin":"auto"}),
 
                     html.Hr(),
-                    
+                                            
                     html.Details([
                         html.Summary("Gasses"),
+
+                        dbc.Row([
+                            dbc.Col(
+                                dbc.Button('Select All', id='allgas', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                            ,style={"padding-right":"5px"}),
+                            dbc.Col(
+                                dbc.Button('Deselect All', id='dallgas', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                            ,style={"padding-left":"5px"}),
+                        ],style={"margin":"auto","padding-top":"10px","padding-left":"10px","padding-right":"10px"},no_gutters=True),
+
                         dcc.Checklist(
                             id = 'gasses',
-                            options= [{'label': gas, 'value': gas} for gas in list(dict.fromkeys(dv['Gas']))],
+                            options= [{'label': gas, 'value': gas} for gas in sorted(list(dict.fromkeys(dv['Gas'])))],
                             value = list(dict.fromkeys(dv['Gas'])),
                             labelStyle={'display': 'block'}
-                        ),
-                    ]),
+                        )
+                   ]),
 
                     html.Hr(),
 
                     html.Details([
                         html.Summary("Surfactants"),
+
+                        dbc.Row([
+                            dbc.Col(
+                                dbc.Button('Select All', id='allsurf', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                            ,style={"padding-right":"5px"}),
+                            dbc.Col(
+                                dbc.Button('Deselect All', id='dallsurf', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                            ,style={"padding-left":"5px"}),
+                        ],style={"margin":"auto","padding-top":"10px","padding-left":"10px","padding-right":"10px"},no_gutters=True),
+
                         dcc.Checklist(
                             id = 'surfactants',
-                            options= [{'label': surfactant, 'value': surfactant} for surfactant in list(dict.fromkeys(dv['Surfactant']))],
+                            options= [{'label': surfactant, 'value': surfactant} for surfactant in sorted(list(dict.fromkeys(dv['Surfactant'])))],
                             value = list(dict.fromkeys(dv['Surfactant'])),
                             labelStyle={'display': 'block'}
                         ),
@@ -183,9 +230,19 @@ home = html.Div([
 
                     html.Details([
                         html.Summary("Surfactant Concentrations"),
+
+                        dbc.Row([
+                            dbc.Col(
+                                dbc.Button('Select All', id='allsconc', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                            ,style={"padding-right":"5px"}),
+                            dbc.Col(
+                                dbc.Button('Deselect All', id='dallsconc', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                            ,style={"padding-left":"5px"}),
+                        ],style={"margin":"auto","padding-top":"10px","padding-left":"10px","padding-right":"10px"},no_gutters=True),
+
                         dcc.Checklist(
                             id = 'sconc',
-                            options= [{'label': sc, 'value': sc} for sc in list(dict.fromkeys(dv['Surfactant Concentration']))],
+                            options= [{'label': sc, 'value': sc} for sc in sorted(list(dict.fromkeys(dv['Surfactant Concentration'])))],
                             value = list(dict.fromkeys(dv['Surfactant Concentration'])),
                             labelStyle={'display': 'block'}
                         ),
@@ -195,9 +252,19 @@ home = html.Div([
 
                     html.Details([
                         html.Summary("Additives"),
+                        
+                        dbc.Row([
+                            dbc.Col(
+                                dbc.Button('Select All', id='alladd', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                            ,style={"padding-right":"5px"}),
+                            dbc.Col(
+                                dbc.Button('Deselect All', id='dalladd', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                            ,style={"padding-left":"5px"}),
+                        ],style={"margin":"auto","padding-top":"10px","padding-left":"10px","padding-right":"10px"},no_gutters=True),
+
                         dcc.Checklist(
                             id = 'additives',
-                            options= [{'label': ad, 'value': ad} for ad in list(dict.fromkeys(dv['Additive']))],
+                            options= [{'label': ad, 'value': ad} for ad in sorted(list(dict.fromkeys(dv['Additive'])))],
                             value = list(dict.fromkeys(dv['Additive'])),
                             labelStyle={'display': 'block'}
                         ),
@@ -207,9 +274,19 @@ home = html.Div([
 
                     html.Details([
                         html.Summary("Additive Concentrations"),
+
+                        dbc.Row([
+                            dbc.Col(
+                                dbc.Button('Select All', id='allaconc', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                            ,style={"padding-right":"5px"}),
+                            dbc.Col(
+                                dbc.Button('Deselect All', id='dallaconc', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                            ,style={"padding-left":"5px"}),
+                        ],style={"margin":"auto","padding-top":"10px","padding-left":"10px","padding-right":"10px"},no_gutters=True),
+
                         dcc.Checklist(
                             id = 'aconc',
-                            options= [{'label': adc, 'value': adc} for adc in list(dict.fromkeys(dv['Additive Concentration']))],
+                            options= [{'label': adc, 'value': adc} for adc in sorted(list(dict.fromkeys(dv['Additive Concentration'])))],
                             value = list(dict.fromkeys(dv['Additive Concentration'])),
                             labelStyle={'display': 'block'}
                         ),
@@ -219,49 +296,200 @@ home = html.Div([
 
                     html.Details([
                         html.Summary("Liquid Phase"),
+                        
+                        dbc.Row([
+                            dbc.Col(
+                                dbc.Button('Select All', id='alllp', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                            ,style={"padding-right":"5px"}),
+                            dbc.Col(
+                                dbc.Button('Deselect All', id='dalllp', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                            ,style={"padding-left":"5px"}),
+                        ],style={"margin":"auto","padding-top":"10px","padding-left":"10px","padding-right":"10px"},no_gutters=True),
+
                         dcc.Checklist(
                             id = 'lp',
-                            options= [{'label': li, 'value': li} for li in list(dict.fromkeys(dv['LiquidPhase']))],
+                            options= [{'label': li, 'value': li} for li in sorted(list(dict.fromkeys(dv['LiquidPhase'])))],
                             value = list(dict.fromkeys(dv['LiquidPhase'])),
                             labelStyle={'display': 'block'}
                         ),
                     ]),
-                    
+
                     html.Hr(),
 
-                ],style={"display":"none"}),
-            ],style={"text-align":"center", "margin-left": "auto", "margin-right": "auto", "width": "80%", "backgroundColor": 'white', "border-radius":3}),
+                    ],style={"display":"none"}),
+                ],style={"text-align":"center", "margin-left": "auto", "margin-right": "auto", "width": "80%", "backgroundColor": 'white', "border-radius":3,"position":"relative"}),
+
+            ],style={'text-align':"center","margin-left": "auto", "margin-right": "auto", "width": "100%"}),
 
             dcc.Link('About', href='/about',style={'position':'absolute','top':0, 'left':0,"padding":5,"color":"white","font-size":18}),
-        
-        ],style={'backgroundColor': '#0066CC'},width=2),
+        ],style={'backgroundColor': '#9E1B34'},width=2),
 
         dbc.Col([
-            html.Div(
                 dcc.Tabs(id="tabs", children=[
                     dcc.Tab(label='3-Dimensions', children=[
-                        html.Div([
-                            dcc.Graph(id="threeD",
-                            config = {'toImageButtonOptions':
+                        dbc.Row([                            
+                            dbc.Col([
+                                    dcc.Graph(id="comp1_3D_graph",
+                                    config = {'toImageButtonOptions':
                                     {'width': None,
                                     'height': None,
                                     'format': 'png',
-                                    'filename': '3D_Plot'}
-                                }
-                            )
-                        ]),
+                                    'filename': '3D_Plot_Comp1'}
+                                    })
+                            ]),
+
+                            dbc.Col([
+                                    dcc.Graph(id="comp2_3D_graph",
+                                    config = {'toImageButtonOptions':
+                                    {'width': None,
+                                    'height': None,
+                                    'format': 'png',
+                                    'filename': '3D_Plot_Comp2'}
+                                    })
+                            ],id="compare_graph")
+                        ],no_gutters=True),
+
+                        dbc.Row([
+                            dbc.Col(
+                                dt.DataTable(
+                                    id='comp1_3D_table',
+                                    page_current=0,
+                                    page_size=75,
+                                    export_format='xlsx',
+                                    style_data_conditional=[
+                                    {
+                                    'if': {'row_index': 'odd'},
+                                    'backgroundColor': 'rgb(248, 248, 248)'
+                                    }],
+                                    style_header={'backgroundColor': 'rgb(230, 230, 230)','fontWeight': 'bold'},
+                                    style_table={'max-height': "20vh", "height": "20vh"},
+                                    fixed_rows={'headers': True},
+                                    style_cell={
+                                        'height': 'auto',
+                                        'minWidth': 'auto', 'width': 'auto', 'maxWidth': 'auto',
+                                        'whiteSpace': 'normal'
+                                    },
+                                    css=[{
+                                        'selector': '.dash-spreadsheet-container .dash-spreadsheet-inner *, .dash-spreadsheet-container .dash-spreadsheet-inner *:after, .dash-spreadsheet-container .dash-spreadsheet-inner *:before',
+                                        'rule': 'box-sizing: inherit; width: 100%;'
+                                    }],
+                                ),
+                            style={"padding-left":20,"padding-right":20}),
+
+                            dbc.Col(
+                                dt.DataTable(
+                                    id='comp2_3D_table',
+                                    page_current=0,
+                                    page_size=75,
+                                    columns=[{'id': c, 'name': c} for c in dv.columns[7:]],
+                                    export_format='xlsx',
+                                    style_data_conditional=[
+                                    {
+                                    'if': {'row_index': 'odd'},
+                                    'backgroundColor': 'rgb(248, 248, 248)'
+                                    }],
+                                    style_header={'backgroundColor': 'rgb(230, 230, 230)','fontWeight': 'bold'},
+                                    style_table={'max-height': "20vh", "height": "20vh"},
+                                    fixed_rows={'headers': True},
+                                    style_cell={
+                                        'height': 'auto',
+                                        'minWidth': 'auto', 'width': 'auto', 'maxWidth': 'auto',
+                                        'whiteSpace': 'normal'
+                                    },
+                                    css=[{
+                                        'selector': '.dash-spreadsheet-container .dash-spreadsheet-inner *, .dash-spreadsheet-container .dash-spreadsheet-inner *:after, .dash-spreadsheet-container .dash-spreadsheet-inner *:before',
+                                        'rule': 'box-sizing: inherit; width: 100%;'
+                                    }],
+                                )
+                            ,style={"padding-left":20,"padding-right":20},id="compare_table")
+                        ],no_gutters=True)
                     ]),
+
                     dcc.Tab(label='2-Dimensions', children=[
-                        html.Div([
-                            dcc.Graph(id="twoD",
-                            config = {'toImageButtonOptions':
-                                {'width': None,
-                                'height': None,
-                                'format': 'png',
-                                'filename': '2D_Plot'}
-                            })
-                        ])
+                        dbc.Row([
+                            dbc.Col(
+                                html.Div([
+                                    dcc.Graph(id="comp1_2D_graph",
+                                    config = {'toImageButtonOptions':
+                                    {'width': None,
+                                    'height': None,
+                                    'format': 'png',
+                                    'filename': '2D_Plot_Comp1'}
+                                    })
+                                ])
+                            ),
+
+                            dbc.Col(
+                                html.Div([
+                                    dcc.Graph(id="comp2_2D_graph",
+                                        config = {'toImageButtonOptions':
+                                        {'width': None,
+                                        'height': None,
+                                        'format': 'png',
+                                        'filename': '2D_Plot_Comp2'}
+                                        })
+                                    ])
+                            ,id="compare_graph_2D")
+                        ],no_gutters=True),
+
+                        dbc.Row([
+                            dbc.Col(
+                                dt.DataTable(
+                                    id='comp1_2D_table',
+                                    page_current=0,
+                                    page_size=75,
+                                    export_format='xlsx',
+                                    style_data_conditional=[
+                                    {
+                                    'if': {'row_index': 'odd'},
+                                    'backgroundColor': 'rgb(248, 248, 248)'
+                                    }
+                                    ],
+                                    style_header={'backgroundColor': 'rgb(230, 230, 230)','fontWeight': 'bold'},
+                                    style_table={"height":"20vh","min-height":"20vh"},
+                                    fixed_rows={'headers': True},
+                                    style_cell={
+                                        'height': 'auto',
+                                        'minWidth': 'auto', 'width': 'auto', 'maxWidth': 'auto',
+                                        'whiteSpace': 'normal'
+                                    },
+                                    css=[{
+                                        'selector': '.dash-spreadsheet-container .dash-spreadsheet-inner *, .dash-spreadsheet-container .dash-spreadsheet-inner *:after, .dash-spreadsheet-container .dash-spreadsheet-inner *:before',
+                                        'rule': 'box-sizing: inherit; width: 100%;'
+                                    }],
+                                ),style={"padding-left":20,"padding-right":20}
+                            ),
+
+                            dbc.Col(
+                                dt.DataTable(
+                                    id='comp2_2D_table',
+                                    page_current=0,
+                                    page_size=75,
+                                    columns=[{'id': c, 'name': c} for c in dv.columns[7:]],
+                                    export_format='xlsx',
+                                    style_data_conditional=[
+                                    {
+                                        'if': {'row_index': 'odd'},
+                                        'backgroundColor': 'rgb(248, 248, 248)'
+                                        }
+                                    ],
+                                    style_header={'backgroundColor': 'rgb(230, 230, 230)','fontWeight': 'bold'},
+                                    style_table={"height":"20vh","min-height":"20vh"},
+                                    fixed_rows={'headers': True},
+                                    style_cell={
+                                        'height': 'auto',
+                                        'minWidth': 'auto', 'width': 'auto', 'maxWidth': 'auto',
+                                        'whiteSpace': 'normal'
+                                    },
+                                    css=[{
+                                        'selector': '.dash-spreadsheet-container .dash-spreadsheet-inner *, .dash-spreadsheet-container .dash-spreadsheet-inner *:after, .dash-spreadsheet-container .dash-spreadsheet-inner *:before',
+                                        'rule': 'box-sizing: inherit; width: 100%;'
+                                    }],
+                                )
+                            ,style={"padding-left":20,"padding-right":20},id="compare_table_2D")
+                        ],no_gutters=True)  
                     ]),
+
                     dcc.Tab(label='Table', children=[
                         dt.DataTable(
                             id='table',
@@ -272,118 +500,23 @@ home = html.Div([
                                 'if': {'row_index': 'odd'},
                                     'backgroundColor': 'rgb(248, 248, 248)'
                             }],
+                            fixed_rows={'headers': True},
                             style_header={'backgroundColor': 'rgb(230, 230, 230)','fontWeight': 'bold'},
-                            style_table={'height': "87vh",'min-height': "87vh"},
-                            fixed_rows={'headers': True}
+                            style_cell={
+                                'height': 'auto',
+                                'minWidth': 'auto', 'width': 'auto', 'maxWidth': 'auto',
+                                'whiteSpace': 'normal'
+                            },
+                            css=[{
+                                'selector': '.dash-spreadsheet-container .dash-spreadsheet-inner *, .dash-spreadsheet-container .dash-spreadsheet-inner *:after, .dash-spreadsheet-container .dash-spreadsheet-inner *:before',
+                                'rule': 'box-sizing: inherit; width: 100%;'
+                            }],
+                            style_table={'height': "87vh",'min-height': "87vh"}
                         )
                     ])
-                ]),style={'width':"100%",'height':'100%', 'backgroundColor': 'white'}
-            )
-        ])
-    ],style={"height":"100vh"},no_gutters=True),
-        
-    html.Details([
-            html.Summary('Comparable Graphs',style={"cursor":"pointer"}),
-            dbc.Row([
-                dbc.Col([
-                    html.Div([html.H1("Graph 1")],style={'text-align':"center", "margin-left":"auto","margin-right":"auto", 'color':"white","padding-top":"30%"}),
-
-                    html.Div(dcc.Dropdown(id="select-xaxis2", placeholder = "Select x-axis", value = "Temperature (C)",
-                        options=[{'label': i.title(), 'value': i}  for i in dv.columns[7:]], clearable=False),
-                        style={"margin-left": "auto", "margin-right": "auto", "width": "80%"}),
-
-                    html.Div(dcc.Dropdown(id="select-yaxis2", placeholder = "Select y-axis", value = "Pressure (Psi)",
-                        options=[{'label': i.title(), 'value': i} for i in dv.columns[7:]], clearable=False),
-                        style={"margin-left": "auto", "margin-right": "auto", "width": "80%"}),
-
-                    html.Div(dcc.Dropdown(id="select-zaxis2", placeholder = "Select z-axis", value = "Halflife (Min)",
-                        options=[{'label': i.title(), 'value': i} for i in dv.columns[7:]], clearable=False),
-                        style={"margin-left": "auto", "margin-right": "auto", "width": "80%"}),
-
-                    html.Div([html.H1("Graph 2")],style={'text-align':"center", "margin-left":"auto","margin-right":"auto", "padding-top":"70%", 'color':"white"}),
-
-                    html.Div(dcc.Dropdown(id="select-xaxis3", placeholder = "Select x-axis", value = "Temperature (C)",
-                        options=[{'label': i.title(), 'value': i}  for i in dv.columns[7:]], clearable=False),
-                        style={"margin-left": "auto", "margin-right": "auto", "width": "80%"}),
-
-                    html.Div(dcc.Dropdown(id="select-yaxis3", placeholder = "Select y-axis", value = "Pressure (Psi)",
-                        options=[{'label': i.title(), 'value': i} for i in dv.columns[7:]], clearable=False),
-                        style={"margin-left": "auto", "margin-right": "auto", "width": "80%"}),
-
-                    html.Div(dcc.Dropdown(id="select-zaxis3", placeholder = "Select z-axis", value = "Halflife (Min)",
-                        options=[{'label': i.title(), 'value': i} for i in dv.columns[7:]], clearable=False),
-                        style={"margin-left": "auto", "margin-right": "auto", "width": "80%"}),
-                ],style={'backgroundColor': '#0066CC'},width=2),
-              
-                dbc.Col([
-                    dbc.Row([
-                        dbc.Col(
-                            html.Div([
-                                dcc.Graph(id="comp1",
-                                config = {'toImageButtonOptions':
-                                    {'width': None,
-                                    'height': None,
-                                    'format': 'png',
-                                    'filename': '3D_Plot_Comp1'}
-                                })
-                            ])
-                        ),
-
-                        dbc.Col(
-                            html.Div([
-                                dcc.Graph(id="comp2",
-                                config = {'toImageButtonOptions':
-                                    {'width': None,
-                                    'height': None,
-                                    'format': 'png',
-                                    'filename': '3D_Plot_Comp2'}
-                                })
-                            ])
-                        )
-                    ],no_gutters=True),
-
-                    dbc.Row([
-                        dbc.Col(
-                            dt.DataTable(
-                                id='comp1table',
-                                page_current=0,
-                                page_size=75,
-                                export_format='xlsx',
-                                style_data_conditional=[
-                                    {
-                                        'if': {'row_index': 'odd'},
-                                        'backgroundColor': 'rgb(248, 248, 248)'
-                                    }
-                                ],
-                                style_header={'backgroundColor': 'rgb(230, 230, 230)','fontWeight': 'bold'},
-                                style_table={"height":"20vh","min-height":"20vh"},
-                                fixed_rows={'headers': True},
-                            ),style={"padding-left":20,"padding-right":20}
-                        ),
-
-                        dbc.Col(
-                            dt.DataTable(
-                                id='comp2table',
-                                page_current=0,
-                                page_size=75,
-                                columns=[{'id': c, 'name': c} for c in dv.columns[7:]],
-                                export_format='xlsx',
-                                style_data_conditional=[
-                                    {
-                                        'if': {'row_index': 'odd'},
-                                        'backgroundColor': 'rgb(248, 248, 248)'
-                                    }
-                                ],
-                                style_header={'backgroundColor': 'rgb(230, 230, 230)','fontWeight': 'bold'},
-                                style_table={"height":"20vh","min-height":"20vh"},
-                                fixed_rows={'headers': True},
-                            ),style={"padding-left":20,"padding-right":20}
-                        )
-                    ],no_gutters=True)  
                 ])
-            ],style={"height":"100vh"},no_gutters=True),
-    ],style={"text-align":"center"})
-])
+        ])
+    ],no_gutters=True,style={"height":"100vh"})
 
 about = html.Div([
     dbc.Row([
@@ -468,8 +601,8 @@ about = html.Div([
                 ]),
             ]),
         ],style={"backgroundColor":"white"}),
-        dbc.Col(style={'backgroundColor': '#0066CC',"height":"100vh"},width=3)
-    ],style={'backgroundColor': '#0066CC',"height":"100%"},no_gutters=True)
+        dbc.Col(style={'backgroundColor': '#9E1B34',"height":"100vh"},width=3)
+    ],style={'backgroundColor': '#9E1B34',"height":"100%"},no_gutters=True)
 ])
 
 @app.callback(dash.dependencies.Output('page-content', 'children'),
@@ -491,6 +624,108 @@ def toggle_container(toggle_value):
         return {'display': 'none'}
 
 @app.callback(
+    [Output('gasses', 'value'),
+     Output('surfactants', 'value'),
+     Output('sconc', 'value'),
+     Output('additives', 'value'),
+     Output('aconc', 'value'),
+     Output('lp', 'value')],
+    [Input('allgas', 'n_clicks'),
+     Input('dallgas', 'n_clicks'),
+     Input('allsurf', 'n_clicks'),
+     Input('dallsurf', 'n_clicks'),
+     Input('allsconc', 'n_clicks'),
+     Input('dallsconc', 'n_clicks'),
+     Input('alladd', 'n_clicks'),
+     Input('dalladd', 'n_clicks'),
+     Input('allaconc', 'n_clicks'),
+     Input('dallaconc', 'n_clicks'),
+     Input('alllp', 'n_clicks'),
+     Input('dalllp', 'n_clicks')],
+    [State('gasses', 'value'),
+     State('gasses', 'options'),
+     State('surfactants', 'value'),
+     State('surfactants', 'options'),
+     State('sconc', 'value'),
+     State('sconc', 'options'),
+     State('additives', 'value'),
+     State('additives', 'options'),
+     State('aconc', 'value'),
+     State('aconc', 'options'),
+     State('lp', 'value'),
+     State('lp', 'options')]
+)
+def select_deselect_all(gasall,dgasall,surfall,dsurfall,sconcall,dsconcall,addall,daddall,aconcall,daconcall,lpall,dlpall,gas,gaso,surf,surfo,sconc,sconco,add,addo,aconc,aconco,lp,lpo):
+    value_array = []
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+
+    if changed_id == 'allgas.n_clicks':
+        value_array.append([value['value'] for value in gaso])        
+    elif changed_id == 'dallgas.n_clicks':
+        value_array.append([])
+    else:
+        value_array.append(gas)
+
+    if changed_id == 'allsurf.n_clicks':
+        value_array.append([value['value'] for value in surfo])        
+    elif changed_id == 'dallsurf.n_clicks':
+        value_array.append([])
+    else:
+        value_array.append(surf)
+
+    if changed_id == 'allsconc.n_clicks':
+        value_array.append([value['value'] for value in sconco])        
+    elif changed_id == 'dallsconc.n_clicks':
+        value_array.append([])
+    else:
+        value_array.append(sconc)
+
+    if changed_id == 'alladd.n_clicks':
+        value_array.append([value['value'] for value in addo])        
+    elif changed_id == 'dalladd.n_clicks':
+        value_array.append([])
+    else:
+        value_array.append(add)
+
+    if changed_id == 'allaconc.n_clicks':
+        value_array.append([value['value'] for value in aconco])        
+    elif changed_id == 'dallaconc.n_clicks':
+        value_array.append([])
+    else:
+        value_array.append(aconc)
+
+    if changed_id == 'alllp.n_clicks':
+        value_array.append([value['value'] for value in lpo])        
+    elif changed_id == 'dalllp.n_clicks':
+        value_array.append([])
+    else:
+        value_array.append(lp)
+
+    return(value_array)
+
+@app.callback(
+    [Output('compare_dropdown', 'style'),
+     Output('compare_graph', 'style'),
+     Output('compare_table', 'style'),
+     Output('compare_graph_2D', 'style'),
+     Output('compare_table_2D', 'style')],
+    [Input('addComp', 'value')])
+
+def toggle_compare_container(compare_value):
+    if compare_value == 'Compare':
+        return [{'display': 'block',"position":"absolute","top":"50%","margin-right":"auto","margin-left":"auto","width":"100%","text-align":"center"},
+                {'display': 'block'},
+                {'display': 'block'},
+                {'display': 'block'},
+                {'display': 'block'}]
+    else:
+        return [{'display': 'none'},
+                {'display': 'none'},
+                {'display': 'none'},
+                {'display': 'none'},
+                {'display': 'none'}]
+
+@app.callback(
     [Output("table", "data"),
      Output("table", "columns")],
     [Input('gasses', 'value'),
@@ -509,7 +744,7 @@ def update_table(ga, sur, surc, add, addc, lp):
     cleaned = d[d['LiquidPhase'].isin(lp)]
 
     return (
-        cleaned.to_dict('records'), [{'id': c, 'name': c} for c in cleaned.columns[:]],
+        cleaned.to_dict('records'), [{'id': c, 'name': c} for c in cleaned.columns[:-1]],
     )
 
 @app.callback(
@@ -541,9 +776,10 @@ def update_styles(x,y,z):
     }]
 
 @app.callback(
-    Output("twoD", "figure"),
+    Output("comp1_2D_graph", "figure"),
     [Input("select-xaxis", "value"),
      Input("select-yaxis", "value"),
+     Input('addComp', 'value'),
      Input("bestfit", "value"),
      Input('gasses', 'value'),
      Input('surfactants', 'value'),
@@ -552,7 +788,162 @@ def update_styles(x,y,z):
      Input('aconc', 'value'),
      Input('lp', 'value')],
 )
-def update_twoD(selected_x, selected_y, fit, ga, sur, surc, add, addc, lp):
+def update_comp1_2D_graph(selected_x, selected_y, comp, fit, ga, sur, surc, add, addc, lp):
+    check = 0
+    cl = dv[dv['Gas'].isin(ga)]
+    ea = cl[cl['Surfactant'].isin(sur)]
+    n = ea[ea["Surfactant Concentration"].isin(surc)]
+    e = n[n['Additive'].isin(add)]
+    d = e[e['Additive Concentration'].isin(addc)]
+    cleaned = d[d['LiquidPhase'].isin(lp)]
+
+    data = []
+    legend_orientation = {}
+
+    for i in names:
+        check = 0
+        name_array = cleaned[cleaned.Study == i]
+        for x in name_array[selected_x]:
+            if x == "None":
+                check = 1 
+                break
+        if check == 1:
+            continue
+        for x in name_array[selected_y]:
+            if x == "None":
+                check = 1 
+                break
+        if check == 1:
+            continue
+
+        if len(name_array.Color.values) == 0:
+            group_value = "none"
+        else:
+            group_value = str(name_array.Study.values[0])
+
+        if('Scatter' in fit):
+            trace = go.Scattergl(x=name_array[selected_x],y=name_array[selected_y], 
+            hovertext= "Study: " + name_array.Study 
+            + "<br />Gas: " + name_array.Gas 
+            + "<br />Surfactant: " + name_array.Surfactant 
+            + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"] 
+            + "<br />Additive: " + name_array.Additive 
+            + "<br />Concentration Additive: " + name_array['Additive Concentration'] 
+            + "<br />Liquid Phase: " + name_array.LiquidPhase,
+            hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
+            name=i,legendgroup=group_value)
+
+            data.append(trace)
+            
+        if('Best-Fit' in fit):
+            if('Scatter' in fit):
+                showLegend = False
+            else:
+                showLegend = True
+
+            if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0: 
+                m, b = np.polyfit(name_array[selected_x].values.astype(float),name_array[selected_y].values.astype(float), 1)
+                correlation_matrix = np.corrcoef(name_array[selected_x].values.astype(float), name_array[selected_y].values.astype(float))
+                correlation_xy = correlation_matrix[0,1]
+                r_squared = correlation_xy**2
+
+                trace = go.Scattergl(x = name_array[selected_x], y = m*name_array[selected_x].values+b,
+                hovertext= "Study: " + name_array.Study 
+                + "<br />Slope: " + str(round(m,2)) 
+                + "<br />Intercept: " + str(round(b,2)) 
+                + "<br />R Squared: " + str(round(r_squared,2)),
+                hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]}, 
+                name=i,showlegend=showLegend,legendgroup=group_value)
+                
+                data.append(trace)
+            else:
+                continue
+
+    if(comp == "No Compare"):
+        legend_orientation={
+                "font_size": 24,
+        }
+
+    if(comp == "Compare"):
+        legend_orientation={
+                "orientation":"h",
+                "xanchor":"center",
+                "x":0.5,
+                "yanchor":"bottom",
+                "y":1,
+                "font_size": 20,
+        }
+
+    return {
+        'data': data,
+        'layout': go.Layout(
+            yaxis={
+                "title":selected_y,
+                "titlefont_size":20,
+                "tickfont_size":18,
+            },
+            xaxis={
+                "title":selected_x,
+                "titlefont_size":20,
+                "tickfont_size":18
+            },
+            legend=legend_orientation,
+            font={
+                "family":"Times New Roman",
+            },
+            hovermode="closest",
+            height=Graph_Height
+        )
+    }
+
+@app.callback(
+    [Output("comp1_2D_table", "data"),
+     Output("comp1_2D_table", "columns")],
+    [Input("select-xaxis", "value"),
+     Input("select-yaxis", "value"),
+     Input('gasses', 'value'),
+     Input('surfactants', 'value'),
+     Input('sconc', 'value'),
+     Input('additives', 'value'),
+     Input('aconc', 'value'),
+     Input('lp', 'value')],
+)
+def update_comp1_2D_table(selected_x, selected_y, ga, sur, surc, add, addc, lp):
+    cl = dv[dv['Gas'].isin(ga)]
+    ea = cl[cl['Surfactant'].isin(sur)]
+    n = ea[ea["Surfactant Concentration"].isin(surc)]
+    e = n[n['Additive'].isin(add)]
+    d = e[e['Additive Concentration'].isin(addc)]
+    cleaned = d[d['LiquidPhase'].isin(lp)]
+
+    cleaned = cleaned[cleaned[selected_x] != "None"]
+    cleaned = cleaned[cleaned[selected_y] != "None"]
+
+    final = cleaned.columns
+    final = final.drop([selected_x,selected_y])
+    cleaned = cleaned.drop(final, axis=1)
+
+    return (
+        cleaned.to_dict('records'), [{'id': c, 'name': c} for c in cleaned.columns]
+    )
+
+@app.callback(
+    Output("comp2_2D_graph", "figure"),
+    [Input("select-xaxis2", "value"),
+     Input("select-yaxis2", "value"),
+     Input('addComp', 'value'),
+     Input("bestfit", "value"),
+     Input('gasses', 'value'),
+     Input('surfactants', 'value'),
+     Input('sconc', 'value'),
+     Input('additives', 'value'),
+     Input('aconc', 'value'),
+     Input('lp', 'value')],
+)
+def update_comp2_2D_graph(selected_x, selected_y, comp, fit, ga, sur, surc, add, addc, lp):
+    if comp == "No Compare":
+        return {}
+
     check = 0
     cl = dv[dv['Gas'].isin(ga)]
     ea = cl[cl['Surfactant'].isin(sur)]
@@ -579,8 +970,13 @@ def update_twoD(selected_x, selected_y, fit, ga, sur, surc, add, addc, lp):
         if check == 1:
             continue
 
-        if(fit == 'Scatter'):
-            trace = go.Scatter(x=name_array[selected_x],y=name_array[selected_y], 
+        if len(name_array.Color.values) == 0:
+            group_value = "none"
+        else:
+            group_value = str(name_array.Study.values[0])
+
+        if('Scatter' in fit):
+            trace = go.Scattergl(x=name_array[selected_x],y=name_array[selected_y], 
             hovertext= "Study: " + name_array.Study 
             + "<br />Gas: " + name_array.Gas 
             + "<br />Surfactant: " + name_array.Surfactant 
@@ -588,29 +984,34 @@ def update_twoD(selected_x, selected_y, fit, ga, sur, surc, add, addc, lp):
             + "<br />Additive: " + name_array.Additive 
             + "<br />Concentration Additive: " + name_array['Additive Concentration'] 
             + "<br />Liquid Phase: " + name_array.LiquidPhase,
-            hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},name=i)
+            hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
+            name=i,legendgroup=group_value)
 
-        if(fit == 'Best-Fit'):
+            data.append(trace)
+
+        if('Best-Fit' in fit):
+            if('Scatter' in fit):
+                showLegend = False
+            else:
+                showLegend = True
+
             if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0: 
-                
-                name_array.sort_values(by=[selected_x], inplace=True)
-
                 m, b = np.polyfit(name_array[selected_x].values.astype(float),name_array[selected_y].values.astype(float), 1)
                 correlation_matrix = np.corrcoef(name_array[selected_x].values.astype(float), name_array[selected_y].values.astype(float))
                 correlation_xy = correlation_matrix[0,1]
                 r_squared = correlation_xy**2
 
-                trace = go.Scatter(x = name_array[selected_x], y = m*name_array[selected_x].values+b,
+                trace = go.Scattergl(x = name_array[selected_x], y = m*name_array[selected_x].values+b,
                 hovertext= "Study: " + name_array.Study 
                 + "<br />Slope: " + str(round(m,2)) 
                 + "<br />Intercept: " + str(round(b,2)) 
                 + "<br />R Squared: " + str(round(r_squared,2)),
-                hoverinfo='text',mode='lines+markers',marker={'color' : name_array.Color}, line={'color' : name_array.Color.values[0]}, name=i)
+                hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]}, 
+                name=i,showlegend=showLegend,legendgroup=group_value)
                 
+                data.append(trace)
             else:
                 continue
-            
-        data.append(trace)
 
     return {
         'data': data,
@@ -626,21 +1027,63 @@ def update_twoD(selected_x, selected_y, fit, ga, sur, surc, add, addc, lp):
                 "tickfont_size":18
             },
             legend={
-                    "font_size": 24,
+                "orientation":"h",
+                "xanchor":"center",
+                "x":0.5,
+                "yanchor":"bottom",
+                "y":1,
+                "valign":"middle",
+                "font_size": 20,
             },
             font={
                 "family":"Times New Roman",
             },
             hovermode="closest",
-            height=750,
+            height=Graph_Height
         )
     }
 
-@app.callback( #updates the 3d graph
-    Output("threeD", "figure"),
+@app.callback(
+    [Output("comp2_2D_table", "data"),
+     Output("comp2_2D_table", "columns")],
+    [Input("select-xaxis", "value"),
+     Input("select-yaxis", "value"),
+     Input("addComp","value"),
+     Input('gasses', 'value'),
+     Input('surfactants', 'value'),
+     Input('sconc', 'value'),
+     Input('additives', 'value'),
+     Input('aconc', 'value'),
+     Input('lp', 'value')],
+)
+def update_comp2_2D_table(selected_x, selected_y, comp, ga, sur, surc, add, addc, lp):
+    if comp == "No Compare":
+        return [[],[]]
+
+    cl = dv[dv['Gas'].isin(ga)]
+    ea = cl[cl['Surfactant'].isin(sur)]
+    n = ea[ea["Surfactant Concentration"].isin(surc)]
+    e = n[n['Additive'].isin(add)]
+    d = e[e['Additive Concentration'].isin(addc)]
+    cleaned = d[d['LiquidPhase'].isin(lp)]
+
+    cleaned = cleaned[cleaned[selected_x] != "None"]
+    cleaned = cleaned[cleaned[selected_y] != "None"]
+
+    final = cleaned.columns
+    final = final.drop([selected_x,selected_y])
+    cleaned = cleaned.drop(final, axis=1)
+
+    return (
+        cleaned.to_dict('records'), [{'id': c, 'name': c} for c in cleaned.columns]
+    )
+
+@app.callback(
+    Output("comp1_3D_graph", "figure"),
     [Input("select-xaxis", "value"),
      Input("select-yaxis", "value"),
      Input("select-zaxis", "value"),
+     Input('addComp', 'value'),
      Input("bestfit", "value"),
      Input('gasses', 'value'),
      Input('surfactants', 'value'),
@@ -649,7 +1092,7 @@ def update_twoD(selected_x, selected_y, fit, ga, sur, surc, add, addc, lp):
      Input('aconc', 'value'),
      Input('lp', 'value')],
 )
-def update_threeD(selected_x, selected_y, selected_z, fit, ga, sur, surc, add, addc, lp):
+def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, fit, ga, sur, surc, add, addc, lp):
     check = 0
     cl = dv[dv['Gas'].isin(ga)]
     ea = cl[cl['Surfactant'].isin(sur)]
@@ -659,6 +1102,7 @@ def update_threeD(selected_x, selected_y, selected_z, fit, ga, sur, surc, add, a
     cleaned = d[d['LiquidPhase'].isin(lp)]
 
     data = []
+    legend_orientation = {}
 
     for i in names:
         check = 0
@@ -682,137 +1126,12 @@ def update_threeD(selected_x, selected_y, selected_z, fit, ga, sur, surc, add, a
         if check == 1:
             continue
 
-        if(fit == 'Scatter'):
-            trace = go.Scatter3d(x = name_array[selected_x], y = name_array[selected_y], z = name_array[selected_z], 
-            hovertext= "Study: " + name_array.Study 
-            + "<br />Gas: " + name_array.Gas 
-            + "<br />Surfactant: " + name_array.Surfactant 
-            + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"] 
-            + "<br />Additive: " + name_array.Additive 
-            + "<br />Concentration Additive: " + name_array['Additive Concentration'] 
-            + "<br />Liquid Phase: " + name_array.LiquidPhase,
-            hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},name=i)
-
-        if(fit == 'Best-Fit'):
-            if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0 and len(name_array[selected_z].values) != 0: 
-                name_array.sort_values(by=[selected_x], inplace=True)
-
-                x = np.mgrid[min(name_array[selected_x].values.astype(float)):max(name_array[selected_x].values.astype(float)):3j]
-                y = np.mgrid[min(name_array[selected_y].values.astype(float)):max(name_array[selected_y].values.astype(float)):3j]
-                z = np.mgrid[min(name_array[selected_z].values.astype(float)):max(name_array[selected_z].values.astype(float)):3j]
-
-                # this will find the slope and x-intercept of a plane
-                # parallel to the y-axis that best fits the data
-                A_xz = np.vstack((x, np.ones(len(x)))).T
-                m_xz, c_xz = np.linalg.lstsq(A_xz, z)[0]
-
-                # again for a plane parallel to the x-axis
-                A_yz = np.vstack((y, np.ones(len(y)))).T
-                m_yz, c_yz = np.linalg.lstsq(A_yz, z)[0]
-
-                # the intersection of those two planes and
-                # the function for the line would be:
-                # z = m_xz * X + c_xz
-                # z = m_yz * Y + c_yz
-                # or:
-                def lin(z):
-                    x = (z - c_xz)/m_xz
-                    y = (z - c_yz)/m_yz
-                    return x,y
-
-                X,Y = lin(z)
-                Z = z
-
-                # get 2 points on the intersection line 
-                za = z[0]
-                zb = z[len(z) - 1]
-                xa, ya = lin(za)
-                xb, yb = lin(zb)
-
-                # get distance between points
-                length = np.sqrt(pow(xb - xa, 2) + pow(yb - ya, 2) + pow(zb - za, 2))
-
-                # get slopes (projections onto x, y and z planes)
-                sx = (xb - xa) / length  # x slope
-                sy = (yb - ya) / length  # y slope
-                sz = (zb - za) / length  # z slope
-
-                trace = go.Scatter3d(x = X, y = Y, z = Z, 
-                hovertext= "Study: " + name_array.Study 
-                + "<br />d = " + str(round(sx,2)) + "x  + " + str(round(sy,2)) + "y + " + str(round(sz,2)) + "z", 
-                hoverinfo='text',mode='lines+markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color}, line={'color' : name_array.Color.values[0]},name=i)
-            
-            else:
-                continue
-            
-        data.append(trace)
-
-    return {"data": data,
-            "layout": go.Layout(
-                height=850,
-                hovermode="closest",
-                legend={
-                    "font_size": 24,
-                },
-                font={
-                    "size": 16,
-                    "family": "Times New Roman",
-                },
-                scene={
-                    "camera":{"center":dict(x=0.05,y=0,z=-0.25)},
-                    "xaxis": {"title": f"{selected_x.title()}"},
-                    "yaxis": {"title": f"{selected_y.title()}"},
-                    "zaxis": {"title": f"{selected_z.title()}"}
-                }
-            )}
-
-@app.callback( #updates the 3d graph
-    Output("comp1", "figure"),
-    [Input("select-xaxis2", "value"),
-     Input("select-yaxis2", "value"),
-     Input("select-zaxis2", "value"),
-     Input("bestfit", "value"),
-     Input('gasses', 'value'),
-     Input('surfactants', 'value'),
-     Input('sconc', 'value'),
-     Input('additives', 'value'),
-     Input('aconc', 'value'),
-     Input('lp', 'value')],
-)
-def update_comp1(selected_x, selected_y, selected_z, fit, ga, sur, surc, add, addc, lp):
-    check = 0
-    cl = dv[dv['Gas'].isin(ga)]
-    ea = cl[cl['Surfactant'].isin(sur)]
-    n = ea[ea["Surfactant Concentration"].isin(surc)]
-    e = n[n['Additive'].isin(add)]
-    d = e[e['Additive Concentration'].isin(addc)]
-    cleaned = d[d['LiquidPhase'].isin(lp)]
-
-    data = []
-
-    for i in names:
-        check = 0
-        name_array = cleaned[cleaned.Study == i]
-        for x in name_array[selected_x]:
-            if x == "None":
-                check = 1 
-                break
-        if check == 1:
-            continue
-        for x in name_array[selected_y]:
-            if x == "None":
-                check = 1 
-                break
-        if check == 1:
-            continue
-        for x in name_array[selected_z]:
-            if x == "None":
-                check = 1 
-                break
-        if check == 1:
-            continue
+        if len(name_array.Color.values) == 0:
+            group_value = "none"
+        else:
+            group_value = str(name_array.Study.values[0])
         
-        if(fit == 'Scatter'):
+        if('Scatter' in fit):
             trace = go.Scatter3d(x = name_array[selected_x], y = name_array[selected_y], z = name_array[selected_z], 
             hovertext= "Study: " + name_array.Study 
             + "<br />Gas: " + name_array.Gas 
@@ -821,9 +1140,17 @@ def update_comp1(selected_x, selected_y, selected_z, fit, ga, sur, surc, add, ad
             + "<br />Additive: " + name_array.Additive 
             + "<br />Concentration Additive: " + name_array['Additive Concentration'] 
             + "<br />Liquid Phase: " + name_array.LiquidPhase,
-            hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},name=i)
+            hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
+            name=i,legendgroup=group_value)
 
-        if(fit == 'Best-Fit'):
+            data.append(trace)
+
+        if('Best-Fit' in fit):
+            if('Scatter' in fit):
+                showLegend = False
+            else:
+                showLegend = True
+
             if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0 and len(name_array[selected_z].values) != 0: 
                 name_array.sort_values(by=[selected_x], inplace=True)
 
@@ -870,26 +1197,33 @@ def update_comp1(selected_x, selected_y, selected_z, fit, ga, sur, surc, add, ad
                 trace = go.Scatter3d(x = X, y = Y, z = Z, 
                 hovertext= "Study: " + name_array.Study 
                 + "<br />d = " + str(round(sx,2)) + "x  + " + str(round(sy,2)) + "y + " + str(round(sz,2)) + "z", 
-                hoverinfo='text',mode='lines+markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color}, line={'color' : name_array.Color.values[0]},name=i)
+                hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
+                name=i,showlegend=showLegend,legendgroup=group_value)
 
+                data.append(trace)
             else:
                 continue
-            
-        data.append(trace)
+
+    if(comp == "No Compare"):
+        legend_orientation={
+                "font_size": 24,
+        }
+
+    if(comp == "Compare"):
+        legend_orientation={
+                "orientation":"h",
+                "xanchor":"center",
+                "x":0.5,
+                "yanchor":"bottom",
+                "y":1,
+                "valign":"middle",
+                "font_size": 20,
+        }
 
     return {"data": data,
             "layout": go.Layout(
-                height=680,
                 hovermode="closest",
-                legend={
-                    "orientation":"h",
-                    "xanchor":"center",
-                    "x":0.5,
-                    "yanchor":"bottom",
-                    "y":1,
-                    "valign":"middle",
-                    "font_size": 24,
-                },
+                legend=legend_orientation,
                 font={
                     "size": 16,
                     "family": "Times New Roman",
@@ -901,16 +1235,19 @@ def update_comp1(selected_x, selected_y, selected_z, fit, ga, sur, surc, add, ad
                     "zaxis": {"title": f"{selected_z.title()}"}
                 },
                 margin={
-                    "b":0
-                }
+                    "b":0,
+                    "l":0,
+                    "r":0
+                },
+                height=Graph_Height
             )}
 
 @app.callback(
-    [Output("comp1table", "data"),
-     Output("comp1table", "columns")],
-    [Input("select-xaxis2", "value"),
-     Input("select-yaxis2", "value"),
-     Input("select-zaxis2", "value"),
+    [Output("comp1_3D_table", "data"),
+     Output("comp1_3D_table", "columns")],
+    [Input("select-xaxis", "value"),
+     Input("select-yaxis", "value"),
+     Input("select-zaxis", "value"),
      Input('gasses', 'value'),
      Input('surfactants', 'value'),
      Input('sconc', 'value'),
@@ -918,7 +1255,7 @@ def update_comp1(selected_x, selected_y, selected_z, fit, ga, sur, surc, add, ad
      Input('aconc', 'value'),
      Input('lp', 'value')],
 )
-def update_comp1table(selected_x, selected_y,selected_z, ga, sur, surc, add, addc, lp):
+def update_comp1_3D_table(selected_x, selected_y,selected_z, ga, sur, surc, add, addc, lp):
     cl = dv[dv['Gas'].isin(ga)]
     ea = cl[cl['Surfactant'].isin(sur)]
     n = ea[ea["Surfactant Concentration"].isin(surc)]
@@ -938,11 +1275,12 @@ def update_comp1table(selected_x, selected_y,selected_z, ga, sur, surc, add, add
         cleaned.to_dict('records'), [{'id': c, 'name': c} for c in cleaned.columns]
     )
 
-@app.callback( #updates the 3d graph
-    Output("comp2", "figure"),
-    [Input("select-xaxis3", "value"),
-     Input("select-yaxis3", "value"),
-     Input("select-zaxis3", "value"),
+@app.callback(
+    Output("comp2_3D_graph", "figure"),
+    [Input("select-xaxis2", "value"),
+     Input("select-yaxis2", "value"),
+     Input("select-zaxis2", "value"),
+     Input("addComp","value"),
      Input("bestfit", "value"),
      Input('gasses', 'value'),
      Input('surfactants', 'value'),
@@ -951,7 +1289,10 @@ def update_comp1table(selected_x, selected_y,selected_z, ga, sur, surc, add, add
      Input('aconc', 'value'),
      Input('lp', 'value')],
 )
-def update_comp2(selected_x, selected_y, selected_z, fit, ga, sur, surc, add, addc, lp):
+def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, fit, ga, sur, surc, add, addc, lp):
+    if comp == "No Compare":
+        return {}
+
     check = 0
     cl = dv[dv['Gas'].isin(ga)]
     ea = cl[cl['Surfactant'].isin(sur)]
@@ -984,7 +1325,12 @@ def update_comp2(selected_x, selected_y, selected_z, fit, ga, sur, surc, add, ad
         if check == 1:
             continue
 
-        if(fit == 'Scatter'):
+        if len(name_array.Color.values) == 0:
+            group_value = "none"
+        else:
+            group_value = str(name_array.Study.values[0])
+
+        if('Scatter' in fit):
             trace = go.Scatter3d(x = name_array[selected_x], y = name_array[selected_y], z = name_array[selected_z], 
             hovertext= "Study: " + name_array.Study 
             + "<br />Gas: " + name_array.Gas 
@@ -993,9 +1339,17 @@ def update_comp2(selected_x, selected_y, selected_z, fit, ga, sur, surc, add, ad
             + "<br />Additive: " + name_array.Additive 
             + "<br />Concentration Additive: " + name_array['Additive Concentration'] 
             + "<br />Liquid Phase: " + name_array.LiquidPhase,
-            hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},name=i)
+            hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
+            name=i,legendgroup=group_value)
 
-        if(fit == 'Best-Fit'):
+            data.append(trace)
+
+        if('Best-Fit' in fit):
+            if('Scatter' in fit):
+                showLegend = False
+            else:
+                showLegend = True
+
             if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0 and len(name_array[selected_z].values) != 0: 
                 name_array.sort_values(by=[selected_x], inplace=True)
 
@@ -1042,16 +1396,16 @@ def update_comp2(selected_x, selected_y, selected_z, fit, ga, sur, surc, add, ad
                 trace = go.Scatter3d(x = X, y = Y, z = Z, 
                 hovertext= "Study: " + name_array.Study 
                 + "<br />d = " + str(round(sx,2)) + "x  + " + str(round(sy,2)) + "y + " + str(round(sz,2)) + "z", 
-                hoverinfo='text',mode='lines+markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color}, line={'color' : name_array.Color.values[0]},name=i)
+                hoverinfo='text',mode='lines', line={ 'color' : name_array.Color.values[0]},
+                name=i,showlegend=showLegend,legendgroup=group_value)
             
+                data.append(trace)
+
             else:
                 continue
-            
-        data.append(trace)
 
     return {"data": data,
             "layout": go.Layout(
-                height=680,
                 hovermode="closest",
                 legend={
                     "orientation":"h",
@@ -1060,7 +1414,7 @@ def update_comp2(selected_x, selected_y, selected_z, fit, ga, sur, surc, add, ad
                     "yanchor":"bottom",
                     "y":1,
                     "valign":"middle",
-                    "font_size": 24,
+                    "font_size": 20,
                 },
                 font={
                     "size": 16,
@@ -1073,16 +1427,20 @@ def update_comp2(selected_x, selected_y, selected_z, fit, ga, sur, surc, add, ad
                     "zaxis": {"title": f"{selected_z.title()}"}
                 },
                 margin={
-                    "b":0
-                }
+                    "b":0,
+                    "l":0,
+                    "r":0
+                },
+                height=Graph_Height
             )}
 
 @app.callback( #updates 2d graph relative to selected axes and checklist data
-    [Output("comp2table", "data"),
-     Output("comp2table", "columns")],
-    [Input("select-xaxis3", "value"),
-     Input("select-yaxis3", "value"),
-     Input("select-zaxis3", "value"),
+    [Output("comp2_3D_table", "data"),
+     Output("comp2_3D_table", "columns")],
+    [Input("select-xaxis2", "value"),
+     Input("select-yaxis2", "value"),
+     Input("select-zaxis2", "value"),
+     Input("addComp","value"),
      Input('gasses', 'value'),
      Input('surfactants', 'value'),
      Input('sconc', 'value'),
@@ -1090,7 +1448,10 @@ def update_comp2(selected_x, selected_y, selected_z, fit, ga, sur, surc, add, ad
      Input('aconc', 'value'),
      Input('lp', 'value')],
 )
-def update_comp2table(selected_x, selected_y,selected_z, ga, sur, surc, add, addc, lp):
+def update_comp2_3D_table(selected_x, selected_y,selected_z, comp, ga, sur, surc, add, addc, lp):
+    if comp == "No Compare":
+        return [[],[]]
+
     cl = dv[dv['Gas'].isin(ga)]
     ea = cl[cl['Surfactant'].isin(sur)]
     n = ea[ea["Surfactant Concentration"].isin(surc)]
