@@ -3,6 +3,7 @@ from datetime import date
 import gspread
 from gspread_dataframe import get_as_dataframe
 from oauth2client.service_account import ServiceAccountCredentials
+import itertools
 import numpy as np
 np.warnings.filterwarnings('ignore')
 import dash
@@ -131,7 +132,7 @@ for i in names:
 #print(dv[dv.Study == "Kruss 2019"]) #check for colors you do not like
 
 app.layout = html.Div([
-    dcc.Location(id='url', refresh=True),
+    dcc.Location(id='url', refresh=False),
     html.Div(id='page-content'),
 ])
 
@@ -141,35 +142,241 @@ home = dbc.Row([
     dbc.Col([
         html.Div([
             html.Div([html.H1("Graph 2")],style={'text-align':"center", "margin-left":"auto","margin-right":"auto", 'color':"white"}),
+            dbc.Row([
+                dbc.Col(html.H6("X: "),style={"margin":"auto","width":"10%","height":"100%"}),
+                html.Div(dcc.Dropdown(id="select-xaxis2", placeholder = "Select x-axis", value = "Temperature (C)",
+                options=[{'label': i.title(), 'value': i} for i in dv.columns[7:-1]], clearable=False),
+                style={"width":"90%","border":"1px solid white"}),
+            ],style={"background-color":"white","border-radius":"3px","border":"1px solid #cccccc","margin-left": "auto", "margin-right": "auto", "width": "80%","height":"10%"},no_gutters=True),
 
-            html.Div(dcc.Dropdown(id="select-xaxis2", placeholder = "Select x-axis", value = "Temperature (C)",
-            options=[{'label': i.title(), 'value': i}  for i in dv.columns[7:-1]], clearable=False),
-            style={"margin-left": "auto", "margin-right": "auto", "width": "80%"}),
+            dbc.Row([
+                dbc.Col(html.H6("Y: "),style={"margin":"auto","width":"10%","height":"100%"}),
+                html.Div(dcc.Dropdown(id="select-yaxis2", placeholder = "Select y-axis", value = "Halflife (Min)",
+                options=[{'label': i.title(), 'value': i} for i in dv.columns[7:-1]], clearable=False),
+                style={"width":"90%","border":"1px solid white"}),
+            ],style={"background-color":"white","border-radius":"3px","border":"1px solid #cccccc","margin-left": "auto", "margin-right": "auto", "width": "80%","height":"10%"},no_gutters=True),
 
-            html.Div(dcc.Dropdown(id="select-yaxis2", placeholder = "Select y-axis", value = "Pressure (Psi)",
-            options=[{'label': i.title(), 'value': i} for i in dv.columns[7:-1]], clearable=False),
-            style={"margin-left": "auto", "margin-right": "auto", "width": "80%"}),
+            dbc.Row([
+                dbc.Col(html.H6("Z: "),style={"margin":"auto","width":"10%","height":"100%"}),
+                html.Div(dcc.Dropdown(id="select-zaxis2", placeholder = "Select z-axis", value = "Pressure (Psi)",
+                options=[{'label': i.title(), 'value': i} for i in dv.columns[7:-1]], clearable=False),
+                style={"width":"90%","border":"1px solid white"}),
+            ],style={"background-color":"white","border-radius":"3px","border":"1px solid #cccccc","margin-left": "auto", "margin-right": "auto", "width": "80%","height":"10%"},no_gutters=True),
 
-            html.Div(dcc.Dropdown(id="select-zaxis2", placeholder = "Select z-axis", value = "Halflife (Min)",
-            options=[{'label': i.title(), 'value': i} for i in dv.columns[7:-1]], clearable=False),
-            style={"margin-left": "auto", "margin-right": "auto", "width": "80%"})
-        ],id="compare_dropdown"),
+            dbc.Row([
+                dcc.RadioItems(
+                    id='toggle2',
+                    options=[{'label': i, 'value': i} for i in ['Show Less','Show More']],
+                    value='Show Less',
+                    labelStyle={"padding-right":"10px","margin":"auto"},
+                    style={"text-align":"center","margin":"auto"}
+                ),
+            ],style={'text-align':"center","margin-left": "auto", "margin-right": "auto"}),
+
+            html.Div([
+                html.Div(id='controls-container2', children=[
+
+                    html.Hr(),
+
+                    html.Div(
+                        dcc.Checklist(
+                            id = 'bestfit2',
+                            options= [{'label': i, 'value': i} for i in ['Scatter','Best-fit']],
+                            value = ['Scatter','Best-fit'],
+                            labelStyle={"padding-right":"10px","margin":"auto"}
+                        )
+                    ,style={"margin":"auto"}),
+
+                    html.Div([
+                        html.H6("Degree:",style={"padding-top":"10px"}),
+                        dcc.Slider(
+                            id="input_fit2",
+                            max=4,
+                            min=1,
+                            value=1,
+                            step=1,
+                            included=False,
+                            marks={
+                                1: {'label': '1'},
+                                2: {'label': '2'},
+                                3: {'label': '3'},
+                                4: {'label': '4'},
+                            }
+                        )
+                    ]),
+
+                html.Hr(),
+
+                html.Details([
+                    html.Summary("Gasses"),
+
+                    dbc.Row([
+                        dbc.Col(
+                            dbc.Button('Select All', id='allgas2', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                        ,style={"padding-right":"5px"}),
+
+                        dbc.Col(
+                            dbc.Button('Deselect All', id='dallgas2', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                        ,style={"padding-left":"5px"}),
+                    ],style={"margin":"auto","padding-top":"10px","padding-left":"10px","padding-right":"10px"},no_gutters=True),
+
+                    dcc.Checklist(
+                        id = 'gasses2',
+                        options= [{'label': gas, 'value': gas} for gas in sorted(list(dict.fromkeys(dv['Gas'])))],
+                        value = list(dict.fromkeys(dv['Gas'])),
+                        labelStyle={'display': 'block'}
+                    )
+                ]),
+
+                html.Hr(),
+
+                html.Details([
+                    html.Summary("Surfactants"),
+
+                    dbc.Row([
+                        dbc.Col(
+                            dbc.Button('Select All', id='allsurf2', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                        ,style={"padding-right":"5px"}),
+
+                        dbc.Col(
+                            dbc.Button('Deselect All', id='dallsurf2', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                        ,style={"padding-left":"5px"}),
+                    ],style={"margin":"auto","padding-top":"10px","padding-left":"10px","padding-right":"10px"},no_gutters=True),
+
+                    dcc.Checklist(
+                        id = 'surfactants2',
+                        options= [{'label': surfactant, 'value': surfactant} for surfactant in sorted(list(dict.fromkeys(dv['Surfactant'])))],
+                        value = list(dict.fromkeys(dv['Surfactant'])),
+                        labelStyle={'display': 'block'}
+                    ),
+                ]),
+
+                html.Hr(),
+
+                html.Details([
+                    html.Summary("Surfactant Concentrations"),
+
+                    dbc.Row([
+                        dbc.Col(
+                            dbc.Button('Select All', id='allsconc2', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                        ,style={"padding-right":"5px"}),
+
+                        dbc.Col(
+                            dbc.Button('Deselect All', id='dallsconc2', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                        ,style={"padding-left":"5px"}),
+                    ],style={"margin":"auto","padding-top":"10px","padding-left":"10px","padding-right":"10px"},no_gutters=True),
+
+                    dcc.Checklist(
+                        id = 'sconc2',
+                        options= [{'label': sc, 'value': sc} for sc in sorted(list(dict.fromkeys(dv['Surfactant Concentration'])))],
+                        value = list(dict.fromkeys(dv['Surfactant Concentration'])),
+                        labelStyle={'display': 'block'}
+                    ),
+                ]),
+
+                html.Hr(),
+
+                html.Details([
+                    html.Summary("Additives"),
+
+                    dbc.Row([
+                        dbc.Col(
+                            dbc.Button('Select All', id='alladd2', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                        ,style={"padding-right":"5px"}),
+
+                        dbc.Col(
+                            dbc.Button('Deselect All', id='dalladd2', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                        ,style={"padding-left":"5px"}),
+                    ],style={"margin":"auto","padding-top":"10px","padding-left":"10px","padding-right":"10px"},no_gutters=True),
+
+                    dcc.Checklist(
+                        id = 'additives2',
+                        options= [{'label': ad, 'value': ad} for ad in sorted(list(dict.fromkeys(dv['Additive'])))],
+                        value = list(dict.fromkeys(dv['Additive'])),
+                        labelStyle={'display': 'block'}
+                    ),
+                ]),
+
+                html.Hr(),
+
+                html.Details([
+                    html.Summary("Additive Concentrations"),
+
+                    dbc.Row([
+                        dbc.Col(
+                            dbc.Button('Select All', id='allaconc2', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                        ,style={"padding-right":"5px"}),
+
+                        dbc.Col(
+                            dbc.Button('Deselect All', id='dallaconc2', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                        ,style={"padding-left":"5px"}),
+                    ],style={"margin":"auto","padding-top":"10px","padding-left":"10px","padding-right":"10px"},no_gutters=True),
+
+                    dcc.Checklist(
+                        id = 'aconc2',
+                        options= [{'label': adc, 'value': adc} for adc in sorted(list(dict.fromkeys(dv['Additive Concentration'])))],
+                        value = list(dict.fromkeys(dv['Additive Concentration'])),
+                        labelStyle={'display': 'block'}
+                    ),
+                ]),
+
+                html.Hr(),
+
+                html.Details([
+                    html.Summary("Liquid Phase"),
+
+                    dbc.Row([
+                        dbc.Col(
+                            dbc.Button('Select All', id='alllp2', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                        ,style={"padding-right":"5px"}),
+
+                        dbc.Col(
+                            dbc.Button('Deselect All', id='dalllp2', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                        ,style={"padding-left":"5px"}),
+                    ],style={"margin":"auto","padding-top":"10px","padding-left":"10px","padding-right":"10px"},no_gutters=True),
+
+                    dcc.Checklist(
+                        id = 'lp2',
+                        options= [{'label': li, 'value': li} for li in sorted(list(dict.fromkeys(dv['LiquidPhase'])))],
+                        value = list(dict.fromkeys(dv['LiquidPhase'])),
+                        labelStyle={'display': 'block'}
+                    ),
+                ]),
+
+                html.Hr(),
+
+                ],style={"display":"none"}),
+            ],style={"text-align":"center", "margin-left": "auto", "margin-right": "auto", "width": "80%", "backgroundColor": 'white', "border-radius":3,"position":"relative"}),
+
+
+        ],id="compare_dropdown",style={"display":"None"}),
 
         html.Div([html.H1("Foam Database")],
-            style={'text-align':"center", "margin-right":"auto","margin-left":"auto", 'color':"white","width": "80%","padding-top":"10%"}),
+            style={'text-align':"center", "margin-right":"auto","margin-left":"auto", 'color':"white","width": "80%","padding-top":"20%"}),
 
         html.Div([
-            html.Div(dcc.Dropdown(id="select-xaxis", placeholder = "Select x-axis", value = "Temperature (C)",
-            options=[{'label': i.title(), 'value': i}  for i in dv.columns[7:-1]], clearable=False),
-            style={"margin-left": "auto", "margin-right": "auto", "width": "80%"}),
+            dbc.Row([
+                dbc.Col(html.H6("X: "),style={"margin":"auto","width":"10%","height":"100%"}),
+                html.Div(dcc.Dropdown(id="select-xaxis", placeholder = "Select x-axis", value = "Pressure (Psi)",
+                options=[{'label': i.title(), 'value': i} for i in dv.columns[7:-1]], clearable=False),
+                style={"width":"90%","border":"1px solid white"}),
+            ],style={"background-color":"white","border-radius":"3px","border":"1px solid #cccccc","margin-left": "auto", "margin-right": "auto", "width": "80%","height":"10%"},no_gutters=True),
 
-            html.Div(dcc.Dropdown(id="select-yaxis", placeholder = "Select y-axis", value = "Pressure (Psi)",
-            options=[{'label': i.title(), 'value': i} for i in dv.columns[7:-1]], clearable=False),
-            style={"margin-left": "auto", "margin-right": "auto", "width": "80%"}),
 
-            html.Div(dcc.Dropdown(id="select-zaxis", placeholder = "Select z-axis", value = "Halflife (Min)",
-            options=[{'label': i.title(), 'value': i} for i in dv.columns[7:-1]], clearable=False),
-            style={"margin-left": "auto", "margin-right": "auto", "width": "80%"}),
+            dbc.Row([
+                dbc.Col(html.H6("Y: "),style={"margin":"auto","width":"10%","height":"100%"}),
+                html.Div(dcc.Dropdown(id="select-yaxis", placeholder = "Select y-axis", value = "Halflife (Min)",
+                options=[{'label': i.title(), 'value': i} for i in dv.columns[7:-1]], clearable=False),
+                style={"width":"90%","border":"1px solid white"}),
+            ],style={"background-color":"white","border-radius":"3px","border":"1px solid #cccccc","margin-left": "auto", "margin-right": "auto", "width": "80%","height":"10%"},no_gutters=True),
+
+
+            dbc.Row([
+                dbc.Col(html.H6("Z: "),style={"margin":"auto","width":"10%","height":"100%"}),
+                html.Div(dcc.Dropdown(id="select-zaxis", placeholder = "Select z-axis", value = "Temperature (C)",
+                options=[{'label': i.title(), 'value': i} for i in dv.columns[7:-1]], clearable=False),
+                style={"width":"90%","border":"1px solid white"}),
+            ],style={"background-color":"white","border-radius":"3px","border":"1px solid #cccccc","margin-left": "auto", "margin-right": "auto", "width": "80%","height":"10%"},no_gutters=True),
 
             html.Div([
                 dbc.Row([
@@ -189,11 +396,29 @@ home = dbc.Row([
                     html.Div(
                         dcc.Checklist(
                             id = 'bestfit',
-                            options= [{'label': i, 'value': i} for i in ['Scatter','Best-Fit']],
-                            value = ['Scatter','Best-Fit'],
+                            options= [{'label': i, 'value': i} for i in ['Scatter','Best-fit']],
+                            value = ['Scatter','Best-fit'],
                             labelStyle={"padding-right":"10px","margin":"auto"}
                         )
                     ,style={"margin":"auto"}),
+
+                    html.Div([
+                        html.H6("Degree:",style={"padding-top":"10px"}),
+                        dcc.Slider(
+                            id="input_fit",
+                            max=4,
+                            min=1,
+                            value=1,
+                            step=1,
+                            included=False,
+                            marks={
+                                1: {'label': '1'},
+                                2: {'label': '2'},
+                                3: {'label': '3'},
+                                4: {'label': '4'},
+                            }
+                        )
+                    ]),
 
                     html.Div(
                         dcc.RadioItems(
@@ -344,12 +569,13 @@ home = dbc.Row([
 
                 html.Hr(),
 
-            ],style={"display":"none"}),
-                ],style={"text-align":"center", "margin-left": "auto", "margin-right": "auto", "width": "80%", "backgroundColor": 'white', "border-radius":3,"position":"relative"}),
+                ],style={"display":"none"}),
+            ],style={"text-align":"center", "margin-left": "auto", "margin-right": "auto", "width": "80%", "backgroundColor": 'white', "border-radius":3,"position":"relative"}),
 
-            ],style={'text-align':"center","margin-left": "auto", "margin-right": "auto", "width": "100%"}),
+        ],style={'text-align':"center","margin-left": "auto", "margin-right": "auto", "width": "100%"}),
 
-            dcc.Link('About', href='/about',style={'position':'absolute','top':0, 'left':0,"padding":5,"color":"white","font-size":18}),
+        dcc.Link('About', href='/about',style={'position':'absolute','top':0, 'left':0,"padding":5,"color":"white","font-size":18})
+
     ],style={'backgroundColor': '#9E1B34'},width=2),
 
     dbc.Col([
@@ -374,7 +600,7 @@ home = dbc.Row([
                             'format': 'png',
                             'filename': '3D_Plot_Comp2'}
                             })
-                    ],id="compare_graph")
+                    ],id="compare_graph",style={"display":"None"})
                 ],no_gutters=True),
 
                 dbc.Row([
@@ -429,7 +655,7 @@ home = dbc.Row([
                                 'rule': 'box-sizing: inherit; width: 100%;'
                             }],
                         )
-                    ,style={"padding-left":20,"padding-right":20},id="compare_table")
+                    ,style={"display":"None"},id="compare_table")
                 ],no_gutters=True)
             ]),
 
@@ -457,7 +683,7 @@ home = dbc.Row([
                                 'filename': '2D_Plot_Comp2'}
                                 })
                             ])
-                    ,id="compare_graph_2D")
+                    ,id="compare_graph_2D",style={"display":"None"})
                 ],no_gutters=True),
 
                 dbc.Row([
@@ -514,7 +740,7 @@ home = dbc.Row([
                                 'rule': 'box-sizing: inherit; width: 100%;'
                             }],
                         )
-                    ,style={"padding-left":20,"padding-right":20},id="compare_table_2D")
+                    ,style={"display":"None"},id="compare_table_2D")
                 ],no_gutters=True)
             ]),
 
@@ -647,109 +873,245 @@ def display_page(pathname):
     Output('controls-container', 'style'),
     [Input('toggle', 'value')])
 
-def toggle_container(toggle_value):
+def toggle_showmore_container(toggle_value):
     if toggle_value == 'Show More':
-        return {'display': 'block','max-height':600,'overflow-y':'auto',"border-top":"1px black solid"}
+        return {'display': 'block','max-height':250,'overflow-y':'auto',"border-top":"1px black solid"}
     else:
         return {'display': 'none'}
 
 @app.callback(
-    [Output('gasses', 'value'),
-     Output('surfactants', 'value'),
-     Output('sconc', 'value'),
-     Output('additives', 'value'),
-     Output('aconc', 'value'),
-     Output('lp', 'value')],
+    Output('controls-container2', 'style'),
+    [Input('toggle2', 'value')])
+
+def toggle_showmore_container2(toggle_value):
+    if toggle_value == 'Show More':
+        return {'display': 'block','max-height':250,'overflow-y':'auto',"border-top":"1px black solid"}
+    else:
+        return {'display': 'none'}
+
+@app.callback(
+    [Output('gasses', 'value')],
     [Input('allgas', 'n_clicks'),
-     Input('dallgas', 'n_clicks'),
-     Input('allsurf', 'n_clicks'),
-     Input('dallsurf', 'n_clicks'),
-     Input('allsconc', 'n_clicks'),
-     Input('dallsconc', 'n_clicks'),
-     Input('alladd', 'n_clicks'),
-     Input('dalladd', 'n_clicks'),
-     Input('allaconc', 'n_clicks'),
-     Input('dallaconc', 'n_clicks'),
-     Input('alllp', 'n_clicks'),
-     Input('dalllp', 'n_clicks')],
+     Input('dallgas', 'n_clicks')],
     [State('gasses', 'value'),
-     State('gasses', 'options'),
-     State('surfactants', 'value'),
-     State('surfactants', 'options'),
-     State('sconc', 'value'),
-     State('sconc', 'options'),
-     State('additives', 'value'),
-     State('additives', 'options'),
-     State('aconc', 'value'),
-     State('aconc', 'options'),
-     State('lp', 'value'),
-     State('lp', 'options')]
+     State('gasses', 'options')]
 )
-def select_deselect_all(gasall,dgasall,surfall,dsurfall,sconcall,dsconcall,addall,daddall,aconcall,daconcall,lpall,dlpall,gas,gaso,surf,surfo,sconc,sconco,add,addo,aconc,aconco,lp,lpo):
-    value_array = []
+def select_deselect_all_gasses(allgas,dallgas,gas_value,gas_options):
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+    
+    if changed_id == 'allgas.n_clicks':
+        return([[value['value'] for value in gas_options]])
+    elif changed_id == 'dallgas.n_clicks':
+        return([[]])
+    else:
+        return([gas_value])
+
+@app.callback(
+    [Output('gasses2', 'value')],
+    [Input('allgas2', 'n_clicks'),
+     Input('dallgas2', 'n_clicks')],
+    [State('gasses2', 'value'),
+     State('gasses2', 'options')]
+)
+def select_deselect_all_gasses2(allgas,dallgas,gas_value,gas_options):
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+    
+    if changed_id == 'allgas.n_clicks':
+        return([[value['value'] for value in gas_options]])
+    elif changed_id == 'dallgas.n_clicks':
+        return([[]])
+    else:
+        return([gas_value])
+
+@app.callback(
+    [Output('surfactants', 'value')],
+    [Input('allsurf', 'n_clicks'),
+     Input('dallsurf', 'n_clicks')],
+    [State('surfactants', 'value'),
+     State('surfactants', 'options')]
+)
+def select_deselect_all_surfactants(allsurf,dallsurf,surf_value,surf_options):          
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
 
-    if changed_id == 'allgas.n_clicks':
-        value_array.append([value['value'] for value in gaso])
-    elif changed_id == 'dallgas.n_clicks':
-        value_array.append([])
+    if changed_id == 'allsurf.n_clicks':
+        return([[value['value'] for value in surf_options]])
+    elif changed_id == 'dallsurf.n_clicks':
+        return([[]])
     else:
-        value_array.append(gas)
+        return([surf_value])
+
+@app.callback(
+    [Output('surfactants2', 'value')],
+    [Input('allsurf2', 'n_clicks'),
+     Input('dallsurf2', 'n_clicks')],
+    [State('surfactants2', 'value'),
+     State('surfactants2', 'options')]
+)
+def select_deselect_all_surfactants2(allsurf,dallsurf,surf_value,surf_options):          
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
 
     if changed_id == 'allsurf.n_clicks':
-        value_array.append([value['value'] for value in surfo])
+        return([[value['value'] for value in surf_options]])
     elif changed_id == 'dallsurf.n_clicks':
-        value_array.append([])
+        return([[]])
     else:
-        value_array.append(surf)
+        return([surf_value])
 
+@app.callback(
+    [Output('sconc', 'value')],
+    [Input('allsconc', 'n_clicks'),
+     Input('dallsconc', 'n_clicks')],
+    [State('sconc', 'value'),
+     State('sconc', 'options')]
+)
+def select_deselect_all_surfconc(allsconc,dallscon,sconc_value,sconc_options):
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+    
     if changed_id == 'allsconc.n_clicks':
-        value_array.append([value['value'] for value in sconco])
+        return([[value['value'] for value in sconc_options]])
     elif changed_id == 'dallsconc.n_clicks':
-        value_array.append([])
+        return([[]])
     else:
-        value_array.append(sconc)
+        return([sconc_value])
+
+@app.callback(
+    [Output('sconc2', 'value')],
+    [Input('allsconc2', 'n_clicks'),
+     Input('dallsconc2', 'n_clicks')],
+    [State('sconc2', 'value'),
+     State('sconc2', 'options')]
+)
+def select_deselect_all_surfconc2(allsconc,dallscon,sconc_value,sconc_options):
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+    
+    if changed_id == 'allsconc.n_clicks':
+        return([[value['value'] for value in sconc_options]])
+    elif changed_id == 'dallsconc.n_clicks':
+        return([[]])
+    else:
+        return([sconc_value])
+
+@app.callback(
+    [Output('additives', 'value')],
+    [Input('alladd', 'n_clicks'),
+     Input('dalladd', 'n_clicks')],
+    [State('additives', 'value'),
+     State('additives', 'options')]
+)
+def select_deselect_all_additives(alladd,dalladd,add_value,add_options):
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
 
     if changed_id == 'alladd.n_clicks':
-        value_array.append([value['value'] for value in addo])
+        return([[value['value'] for value in add_options]])
     elif changed_id == 'dalladd.n_clicks':
-        value_array.append([])
+        return([[]])
     else:
-        value_array.append(add)
+        return([add_value])
+
+@app.callback(
+    [Output('additives2', 'value')],
+    [Input('alladd2', 'n_clicks'),
+     Input('dalladd2', 'n_clicks')],
+    [State('additives2', 'value'),
+     State('additives2', 'options')]
+)
+def select_deselect_all_additives2(alladd,dalladd,add_value,add_options):
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+
+    if changed_id == 'alladd.n_clicks':
+        return([[value['value'] for value in add_options]])
+    elif changed_id == 'dalladd.n_clicks':
+        return([[]])
+    else:
+        return([add_value])
+
+@app.callback(
+    [Output('aconc', 'value')],
+    [Input('allaconc', 'n_clicks'),
+     Input('dallaconc', 'n_clicks')],
+    [State('aconc', 'value'),
+     State('aconc', 'options')]
+)
+def select_deselect_all_addconc(allaconc,dallaconc,aconc_value,aconc_options):
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
 
     if changed_id == 'allaconc.n_clicks':
-        value_array.append([value['value'] for value in aconco])
+        return([[value['value'] for value in aconc_options]])
     elif changed_id == 'dallaconc.n_clicks':
-        value_array.append([])
+        return([[]])
     else:
-        value_array.append(aconc)
+        return([aconc_value])
+
+@app.callback(
+    [Output('aconc2', 'value')],
+    [Input('allaconc2', 'n_clicks'),
+     Input('dallaconc2', 'n_clicks')],
+    [State('aconc2', 'value'),
+     State('aconc2', 'options')]
+)
+def select_deselect_all_addconc2(allaconc,dallaconc,aconc_value,aconc_options):
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+
+    if changed_id == 'allaconc.n_clicks':
+        return([[value['value'] for value in aconc_options]])
+    elif changed_id == 'dallaconc.n_clicks':
+        return([[]])
+    else:
+        return([aconc_value])
+
+@app.callback(
+    [Output('lp', 'value')],
+    [Input('alllp', 'n_clicks'),
+     Input('dalllp', 'n_clicks')],
+    [State('lp', 'value'),
+     State('lp', 'options')]
+)
+def select_deselect_all_liquidphases(alllp,dalllp,lp_value,lp_options):
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
 
     if changed_id == 'alllp.n_clicks':
-        value_array.append([value['value'] for value in lpo])
+        return([[value['value'] for value in lp_options]])
     elif changed_id == 'dalllp.n_clicks':
-        value_array.append([])
+        return([[]])
     else:
-        value_array.append(lp)
+        return([lp_value])
 
-    return(value_array)
+@app.callback(
+    [Output('lp2', 'value')],
+    [Input('alllp2', 'n_clicks'),
+     Input('dalllp2', 'n_clicks')],
+    [State('lp2', 'value'),
+     State('lp2', 'options')]
+)
+def select_deselect_all_liquidphases2(alllp,dalllp,lp_value,lp_options):
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+
+    if changed_id == 'alllp.n_clicks':
+        return([[value['value'] for value in lp_options]])
+    elif changed_id == 'dalllp.n_clicks':
+        return([[]])
+    else:
+        return([lp_value])
 
 @app.callback(
     [Output('compare_dropdown', 'style'),
      Output('compare_graph', 'style'),
      Output('compare_table', 'style'),
      Output('compare_graph_2D', 'style'),
-     Output('compare_table_2D', 'style')],
+     Output('compare_table_2D', 'style'),
+     Output('toggle2', 'style')],
     [Input('addComp', 'value')])
-
 def toggle_compare_container(compare_value):
     if compare_value == 'Compare':
-        return [{'display': 'block',"position":"absolute","top":"50%","margin-right":"auto","margin-left":"auto","width":"100%","text-align":"center"},
+        return [{'display': 'block',"position":"absolute","top":"45%","margin-right":"auto","margin-left":"auto","width":"100%","text-align":"center"},
                 {'display': 'block'},
                 {'display': 'block'},
                 {'display': 'block'},
-                {'display': 'block'}]
+                {'display': 'block'},
+                {"text-align":"center","margin":"auto","backgroundColor": 'white', "border-radius":3,"width":"80%"}]
     else:
         return [{'display': 'none'},
+                {'display': 'none'},
                 {'display': 'none'},
                 {'display': 'none'},
                 {'display': 'none'},
@@ -761,7 +1123,7 @@ def toggle_compare_container(compare_value):
      Input("select-yaxis", "value"),
      Input("select-zaxis", "value")]
 )
-def update_styles(x,y,z):
+def update_master_table_styles(x,y,z):
     return [
     {
         'if': {'row_index': 'odd'},
@@ -789,6 +1151,7 @@ def update_styles(x,y,z):
      Input("select-yaxis", "value"),
      Input('addComp', 'value'),
      Input("bestfit", "value"),
+     Input("input_fit", "value"),
      Input('gasses', 'value'),
      Input('surfactants', 'value'),
      Input('sconc', 'value'),
@@ -796,7 +1159,7 @@ def update_styles(x,y,z):
      Input('aconc', 'value'),
      Input('lp', 'value')],
 )
-def update_comp1_2D_graph(selected_x, selected_y, comp, fit, ga, sur, surc, add, addc, lp):
+def update_comp1_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, surc, add, addc, lp):
     check = 0
     cl = dv[dv['Gas'].isin(ga)]
     ea = cl[cl['Surfactant'].isin(sur)]
@@ -842,23 +1205,30 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, fit, ga, sur, surc, add,
             name=i,legendgroup=group_value)
 
             data.append(trace)
-
-        if('Best-Fit' in fit):
+        
+        if('Best-fit' in fit):
             if('Scatter' in fit):
                 showLegend = False
             else:
                 showLegend = True
 
             if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0:
-                m, b = np.polyfit(name_array[selected_x].values.astype(float),name_array[selected_y].values.astype(float), 1)
-                correlation_matrix = np.corrcoef(name_array[selected_x].values.astype(float), name_array[selected_y].values.astype(float))
+
+                x = sorted(name_array[selected_x].values.astype(float))
+                y = name_array[selected_y].values.astype(float)
+                
+                z = np.polyfit(x,y,order)
+                f = np.poly1d(z)
+
+                x_new = np.linspace(x[0], x[-1], 50)
+                y_new = f(x_new)
+
+                correlation_matrix = np.corrcoef(x,y)
                 correlation_xy = correlation_matrix[0,1]
                 r_squared = correlation_xy**2
 
-                trace = go.Scattergl(x = name_array[selected_x], y = m*name_array[selected_x].values+b,
+                trace = go.Scattergl(x = x_new, y = y_new,
                 hovertext= "Study: " + name_array.Study
-                + "<br />Slope: " + str(round(m,2))
-                + "<br />Intercept: " + str(round(b,2))
                 + "<br />R Squared: " + str(round(r_squared,2)),
                 hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
                 name=i,showlegend=showLegend,legendgroup=group_value)
@@ -940,15 +1310,16 @@ def update_comp1_2D_table(selected_x, selected_y, ga, sur, surc, add, addc, lp):
     [Input("select-xaxis2", "value"),
      Input("select-yaxis2", "value"),
      Input('addComp', 'value'),
-     Input("bestfit", "value"),
-     Input('gasses', 'value'),
-     Input('surfactants', 'value'),
-     Input('sconc', 'value'),
-     Input('additives', 'value'),
-     Input('aconc', 'value'),
-     Input('lp', 'value')],
+     Input("bestfit2", "value"),
+     Input("input_fit2", "value"),
+     Input('gasses2', 'value'),
+     Input('surfactants2', 'value'),
+     Input('sconc2', 'value'),
+     Input('additives2', 'value'),
+     Input('aconc2', 'value'),
+     Input('lp2', 'value')],
 )
-def update_comp2_2D_graph(selected_x, selected_y, comp, fit, ga, sur, surc, add, addc, lp):
+def update_comp2_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, surc, add, addc, lp):
     if comp == "No Compare":
         return {}
 
@@ -997,22 +1368,29 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, fit, ga, sur, surc, add,
 
             data.append(trace)
 
-        if('Best-Fit' in fit):
+        if('Best-fit' in fit):
             if('Scatter' in fit):
                 showLegend = False
             else:
                 showLegend = True
 
             if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0:
-                m, b = np.polyfit(name_array[selected_x].values.astype(float),name_array[selected_y].values.astype(float), 1)
-                correlation_matrix = np.corrcoef(name_array[selected_x].values.astype(float), name_array[selected_y].values.astype(float))
+
+                x = sorted(name_array[selected_x].values.astype(float))
+                y = name_array[selected_y].values.astype(float)
+                
+                z = np.polyfit(x,y,order)
+                f = np.poly1d(z)
+
+                x_new = np.linspace(x[0], x[-1], 50)
+                y_new = f(x_new)
+
+                correlation_matrix = np.corrcoef(x,y)
                 correlation_xy = correlation_matrix[0,1]
                 r_squared = correlation_xy**2
 
-                trace = go.Scattergl(x = name_array[selected_x], y = m*name_array[selected_x].values+b,
+                trace = go.Scattergl(x = x_new, y = y_new,
                 hovertext= "Study: " + name_array.Study
-                + "<br />Slope: " + str(round(m,2))
-                + "<br />Intercept: " + str(round(b,2))
                 + "<br />R Squared: " + str(round(r_squared,2)),
                 hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
                 name=i,showlegend=showLegend,legendgroup=group_value)
@@ -1054,15 +1432,15 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, fit, ga, sur, surc, add,
 @app.callback(
     [Output("comp2_2D_table", "data"),
      Output("comp2_2D_table", "columns")],
-    [Input("select-xaxis", "value"),
-     Input("select-yaxis", "value"),
+    [Input("select-xaxis2", "value"),
+     Input("select-yaxis2", "value"),
      Input("addComp","value"),
-     Input('gasses', 'value'),
-     Input('surfactants', 'value'),
-     Input('sconc', 'value'),
-     Input('additives', 'value'),
-     Input('aconc', 'value'),
-     Input('lp', 'value')],
+     Input('gasses2', 'value'),
+     Input('surfactants2', 'value'),
+     Input('sconc2', 'value'),
+     Input('additives2', 'value'),
+     Input('aconc2', 'value'),
+     Input('lp2', 'value')],
 )
 def update_comp2_2D_table(selected_x, selected_y, comp, ga, sur, surc, add, addc, lp):
     if comp == "No Compare":
@@ -1086,6 +1464,23 @@ def update_comp2_2D_table(selected_x, selected_y, comp, ga, sur, surc, add, addc
         cleaned.to_dict('records'), [{'id': c, 'name': c} for c in cleaned.columns]
     )
 
+def polyfit2d(x, y, z, order):
+    ncols = (order + 1)**2
+    G = np.zeros((x.size, ncols))
+    ij = itertools.product(range(order+1), range(order+1))
+    for k, (i,j) in enumerate(ij):
+        G[:,k] = x**i * y**j
+    m, _, _, _ = np.linalg.lstsq(G, z)
+    return m
+
+def polyval2d(x, y, m):
+    order = int(np.sqrt(len(m))) - 1
+    ij = itertools.product(range(order+1), range(order+1))
+    z = np.zeros_like(x)
+    for a, (i,j) in zip(m, ij):
+        z += a * x**i * y**j
+    return z
+
 @app.callback(
     Output("comp1_3D_graph", "figure"),
     [Input("select-xaxis", "value"),
@@ -1093,6 +1488,7 @@ def update_comp2_2D_table(selected_x, selected_y, comp, ga, sur, surc, add, addc
      Input("select-zaxis", "value"),
      Input('addComp', 'value'),
      Input("bestfit", "value"),
+     Input("input_fit", "value"),
      Input('gasses', 'value'),
      Input('surfactants', 'value'),
      Input('sconc', 'value'),
@@ -1100,7 +1496,7 @@ def update_comp2_2D_table(selected_x, selected_y, comp, ga, sur, surc, add, addc
      Input('aconc', 'value'),
      Input('lp', 'value')],
 )
-def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, fit, ga, sur, surc, add, addc, lp):
+def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, fit, order, ga, sur, surc, add, addc, lp):
     check = 0
     cl = dv[dv['Gas'].isin(ga)]
     ea = cl[cl['Surfactant'].isin(sur)]
@@ -1153,64 +1549,34 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, fit, ga, sur
 
             data.append(trace)
 
-        if('Best-Fit' in fit):
-            if('Scatter' in fit):
-                showLegend = False
-            else:
-                showLegend = True
-
+        if('Best-fit' in fit):
             if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0 and len(name_array[selected_z].values) != 0:
                 name_array.sort_values(by=[selected_x], inplace=True)
 
-                x = np.mgrid[min(name_array[selected_x].values.astype(float)):max(name_array[selected_x].values.astype(float)):3j]
-                y = np.mgrid[min(name_array[selected_y].values.astype(float)):max(name_array[selected_y].values.astype(float)):3j]
-                z = np.mgrid[min(name_array[selected_z].values.astype(float)):max(name_array[selected_z].values.astype(float)):3j]
+                x = np.array(name_array[selected_x].values.astype(float))
+                y = np.array(name_array[selected_y].values.astype(float))
+                z = np.array(name_array[selected_z].values.astype(float))
 
-                # this will find the slope and x-intercept of a plane
-                # parallel to the y-axis that best fits the data
-                A_xz = np.vstack((x, np.ones(len(x)))).T
-                m_xz, c_xz = np.linalg.lstsq(A_xz, z)[0]
+                # Fit a 3rd order, 2d polynomial
+                m = polyfit2d(x,y,z,order)
 
-                # again for a plane parallel to the x-axis
-                A_yz = np.vstack((y, np.ones(len(y)))).T
-                m_yz, c_yz = np.linalg.lstsq(A_yz, z)[0]
+                # Evaluate it on a grid...
+                nx, ny = 20, 20
+                xx, yy = np.meshgrid(np.linspace(x.min(), x.max(), nx), 
+                                    np.linspace(y.min(), y.max(), ny))
+                zz = polyval2d(xx, yy, m)
 
-                # the intersection of those two planes and
-                # the function for the line would be:
-                # z = m_xz * X + c_xz
-                # z = m_yz * Y + c_yz
-                # or:
-                def lin(z):
-                    x = (z - c_xz)/m_xz
-                    y = (z - c_yz)/m_yz
-                    return x,y
+                colorscale= [[0, name_array.Color.values[0]], [1, name_array.Color.values[0]]]
 
-                X,Y = lin(z)
-                Z = z
-
-                # get 2 points on the intersection line
-                za = z[0]
-                zb = z[len(z) - 1]
-                xa, ya = lin(za)
-                xb, yb = lin(zb)
-
-                # get distance between points
-                length = np.sqrt(pow(xb - xa, 2) + pow(yb - ya, 2) + pow(zb - za, 2))
-
-                # get slopes (projections onto x, y and z planes)
-                sx = (xb - xa) / length  # x slope
-                sy = (yb - ya) / length  # y slope
-                sz = (zb - za) / length  # z slope
-
-                trace = go.Scatter3d(x = X, y = Y, z = Z,
-                hovertext= "Study: " + name_array.Study
-                + "<br />d = " + str(round(sx,2)) + "x  + " + str(round(sy,2)) + "y + " + str(round(sz,2)) + "z",
-                hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
-                name=i,showlegend=showLegend,legendgroup=group_value)
+                trace = go.Surface(x = xx, y = yy, z = zz,
+                colorscale=colorscale,
+                hovertext= ["Study: " + name_array.Study],
+                hoverinfo='text',name=i,showscale=False, )
 
                 data.append(trace)
-            else:
-                continue
+        
+        else:
+            continue
 
     if(comp == "No Compare"):
         legend_orientation={
@@ -1289,15 +1655,16 @@ def update_comp1_3D_table(selected_x, selected_y,selected_z, ga, sur, surc, add,
      Input("select-yaxis2", "value"),
      Input("select-zaxis2", "value"),
      Input("addComp","value"),
-     Input("bestfit", "value"),
-     Input('gasses', 'value'),
-     Input('surfactants', 'value'),
-     Input('sconc', 'value'),
-     Input('additives', 'value'),
-     Input('aconc', 'value'),
-     Input('lp', 'value')],
+     Input("bestfit2", "value"),
+     Input("input_fit2", "value"),
+     Input('gasses2', 'value'),
+     Input('surfactants2', 'value'),
+     Input('sconc2', 'value'),
+     Input('additives2', 'value'),
+     Input('aconc2', 'value'),
+     Input('lp2', 'value')],
 )
-def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, fit, ga, sur, surc, add, addc, lp):
+def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, fit, order, ga, sur, surc, add, addc, lp):
     if comp == "No Compare":
         return {}
 
@@ -1352,60 +1719,29 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, fit, ga, sur
 
             data.append(trace)
 
-        if('Best-Fit' in fit):
-            if('Scatter' in fit):
-                showLegend = False
-            else:
-                showLegend = True
-
+        if('Best-fit' in fit):
             if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0 and len(name_array[selected_z].values) != 0:
                 name_array.sort_values(by=[selected_x], inplace=True)
 
-                x = np.mgrid[min(name_array[selected_x].values.astype(float)):max(name_array[selected_x].values.astype(float)):3j]
-                y = np.mgrid[min(name_array[selected_y].values.astype(float)):max(name_array[selected_y].values.astype(float)):3j]
-                z = np.mgrid[min(name_array[selected_z].values.astype(float)):max(name_array[selected_z].values.astype(float)):3j]
+                x = np.array(name_array[selected_x].values.astype(float))
+                y = np.array(name_array[selected_y].values.astype(float))
+                z = np.array(name_array[selected_z].values.astype(float))
 
-                # this will find the slope and x-intercept of a plane
-                # parallel to the y-axis that best fits the data
-                A_xz = np.vstack((x, np.ones(len(x)))).T
-                m_xz, c_xz = np.linalg.lstsq(A_xz, z)[0]
+                # Fit a 3rd order, 2d polynomial
+                m = polyfit2d(x,y,z,order)
 
-                # again for a plane parallel to the x-axis
-                A_yz = np.vstack((y, np.ones(len(y)))).T
-                m_yz, c_yz = np.linalg.lstsq(A_yz, z)[0]
+                # Evaluate it on a grid...
+                nx, ny = 20, 20
+                xx, yy = np.meshgrid(np.linspace(x.min(), x.max(), nx), 
+                                    np.linspace(y.min(), y.max(), ny))
+                zz = polyval2d(xx, yy, m)
 
-                # the intersection of those two planes and
-                # the function for the line would be:
-                # z = m_xz * X + c_xz
-                # z = m_yz * Y + c_yz
-                # or:
-                def lin(z):
-                    x = (z - c_xz)/m_xz
-                    y = (z - c_yz)/m_yz
-                    return x,y
+                colorscale= [[0, name_array.Color.values[0]], [1, name_array.Color.values[0]]]
 
-                X,Y = lin(z)
-                Z = z
-
-                # get 2 points on the intersection line
-                za = z[0]
-                zb = z[len(z) - 1]
-                xa, ya = lin(za)
-                xb, yb = lin(zb)
-
-                # get distance between points
-                length = np.sqrt(pow(xb - xa, 2) + pow(yb - ya, 2) + pow(zb - za, 2))
-
-                # get slopes (projections onto x, y and z planes)
-                sx = (xb - xa) / length  # x slope
-                sy = (yb - ya) / length  # y slope
-                sz = (zb - za) / length  # z slope
-
-                trace = go.Scatter3d(x = X, y = Y, z = Z,
-                hovertext= "Study: " + name_array.Study
-                + "<br />d = " + str(round(sx,2)) + "x  + " + str(round(sy,2)) + "y + " + str(round(sz,2)) + "z",
-                hoverinfo='text',mode='lines', line={ 'color' : name_array.Color.values[0]},
-                name=i,showlegend=showLegend,legendgroup=group_value)
+                trace = go.Surface(x = xx, y = yy, z = zz,
+                colorscale=colorscale,
+                hovertext= ["Study: " + name_array.Study],
+                hoverinfo='text',name=i,showscale=False, )
 
                 data.append(trace)
 
@@ -1442,19 +1778,19 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, fit, ga, sur
                 height=Graph_Height
             )}
 
-@app.callback( #updates 2d graph relative to selected axes and checklist data
+@app.callback(
     [Output("comp2_3D_table", "data"),
      Output("comp2_3D_table", "columns")],
     [Input("select-xaxis2", "value"),
      Input("select-yaxis2", "value"),
      Input("select-zaxis2", "value"),
      Input("addComp","value"),
-     Input('gasses', 'value'),
-     Input('surfactants', 'value'),
-     Input('sconc', 'value'),
-     Input('additives', 'value'),
-     Input('aconc', 'value'),
-     Input('lp', 'value')],
+     Input('gasses2', 'value'),
+     Input('surfactants2', 'value'),
+     Input('sconc2', 'value'),
+     Input('additives2', 'value'),
+     Input('aconc2', 'value'),
+     Input('lp2', 'value')],
 )
 def update_comp2_3D_table(selected_x, selected_y,selected_z, comp, ga, sur, surc, add, addc, lp):
     if comp == "No Compare":
