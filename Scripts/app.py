@@ -916,9 +916,9 @@ def select_deselect_all_gasses(allgas,dallgas,gas_value,gas_options):
 def select_deselect_all_gasses2(allgas,dallgas,gas_value,gas_options):
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
     
-    if changed_id == 'allgas.n_clicks':
+    if changed_id == 'allgas2.n_clicks':
         return([[value['value'] for value in gas_options]])
-    elif changed_id == 'dallgas.n_clicks':
+    elif changed_id == 'dallgas2.n_clicks':
         return([[]])
     else:
         return([gas_value])
@@ -950,9 +950,9 @@ def select_deselect_all_surfactants(allsurf,dallsurf,surf_value,surf_options):
 def select_deselect_all_surfactants2(allsurf,dallsurf,surf_value,surf_options):          
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
 
-    if changed_id == 'allsurf.n_clicks':
+    if changed_id == 'allsurf2.n_clicks':
         return([[value['value'] for value in surf_options]])
-    elif changed_id == 'dallsurf.n_clicks':
+    elif changed_id == 'dallsurf2.n_clicks':
         return([[]])
     else:
         return([surf_value])
@@ -984,9 +984,9 @@ def select_deselect_all_surfconc(allsconc,dallscon,sconc_value,sconc_options):
 def select_deselect_all_surfconc2(allsconc,dallscon,sconc_value,sconc_options):
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
     
-    if changed_id == 'allsconc.n_clicks':
+    if changed_id == 'allsconc2.n_clicks':
         return([[value['value'] for value in sconc_options]])
-    elif changed_id == 'dallsconc.n_clicks':
+    elif changed_id == 'dallsconc2.n_clicks':
         return([[]])
     else:
         return([sconc_value])
@@ -1018,9 +1018,9 @@ def select_deselect_all_additives(alladd,dalladd,add_value,add_options):
 def select_deselect_all_additives2(alladd,dalladd,add_value,add_options):
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
 
-    if changed_id == 'alladd.n_clicks':
+    if changed_id == 'alladd2.n_clicks':
         return([[value['value'] for value in add_options]])
-    elif changed_id == 'dalladd.n_clicks':
+    elif changed_id == 'dalladd2.n_clicks':
         return([[]])
     else:
         return([add_value])
@@ -1052,9 +1052,9 @@ def select_deselect_all_addconc(allaconc,dallaconc,aconc_value,aconc_options):
 def select_deselect_all_addconc2(allaconc,dallaconc,aconc_value,aconc_options):
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
 
-    if changed_id == 'allaconc.n_clicks':
+    if changed_id == 'allaconc2.n_clicks':
         return([[value['value'] for value in aconc_options]])
-    elif changed_id == 'dallaconc.n_clicks':
+    elif changed_id == 'dallaconc2.n_clicks':
         return([[]])
     else:
         return([aconc_value])
@@ -1086,9 +1086,9 @@ def select_deselect_all_liquidphases(alllp,dalllp,lp_value,lp_options):
 def select_deselect_all_liquidphases2(alllp,dalllp,lp_value,lp_options):
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
 
-    if changed_id == 'alllp.n_clicks':
+    if changed_id == 'alllp2.n_clicks':
         return([[value['value'] for value in lp_options]])
-    elif changed_id == 'dalllp.n_clicks':
+    elif changed_id == 'dalllp2.n_clicks':
         return([[]])
     else:
         return([lp_value])
