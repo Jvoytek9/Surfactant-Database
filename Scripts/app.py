@@ -1,4 +1,5 @@
-import os
+from os import environ
+import json
 from datetime import date
 import gspread
 from gspread_dataframe import get_as_dataframe
@@ -14,13 +15,13 @@ import dash_bootstrap_components as dbc
 import dash_table as dt
 import plotly.graph_objs as go
 
-scope = ['https://spreadsheets.google.com/feeds',
+scopes = ['https://spreadsheets.google.com/feeds',
 'https://www.googleapis.com/auth/drive']
+json_creds = environ.get('GOOGLE_SHEETS_CREDS_JSON')
 
-basedir = os.path.abspath(os.path.dirname(__file__))
-data_json = basedir+'/amazing-insight.json'
-
-creds = ServiceAccountCredentials.from_json_keyfile_name(data_json, scope)
+creds_dict = json.loads(json_creds)
+creds_dict["private_key"] = creds_dict["private_key"].replace("\\\\n", "\n")
+creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scopes)
 connection = gspread.authorize(creds)
 
 worksheet = connection.open("Surfactant_Database").sheet1
