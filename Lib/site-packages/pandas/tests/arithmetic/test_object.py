@@ -1,6 +1,7 @@
 # Arithmetic tests for DataFrame/Series/Index/Array classes that should
 # behave identically.
 # Specifically for object dtype
+import datetime
 from decimal import Decimal
 import operator
 
@@ -9,8 +10,8 @@ import pytest
 
 import pandas as pd
 from pandas import Series, Timestamp
+import pandas._testing as tm
 from pandas.core import ops
-import pandas.util.testing as tm
 
 # ------------------------------------------------------------------
 # Comparisons
@@ -89,7 +90,7 @@ class TestArithmetic:
 
     @pytest.mark.parametrize("op", [operator.add, ops.radd])
     @pytest.mark.parametrize("other", ["category", "Int64"])
-    def test_add_extension_scalar(self, other, box, op):
+    def test_add_extension_scalar(self, other, box_with_array, op):
         # GH#22378
         # Check that scalars satisfying is_extension_array_dtype(obj)
         # do not incorrectly try to dispatch to an ExtensionArray operation
@@ -97,8 +98,8 @@ class TestArithmetic:
         arr = pd.Series(["a", "b", "c"])
         expected = pd.Series([op(x, other) for x in arr])
 
-        arr = tm.box_expected(arr, box)
-        expected = tm.box_expected(expected, box)
+        arr = tm.box_expected(arr, box_with_array)
+        expected = tm.box_expected(expected, box_with_array)
 
         result = op(arr, other)
         tm.assert_equal(result, expected)
@@ -133,24 +134,32 @@ class TestArithmetic:
         ],
     )
     @pytest.mark.parametrize("dtype", [None, object])
-    def test_objarr_radd_str_invalid(self, dtype, data, box):
+    def test_objarr_radd_str_invalid(self, dtype, data, box_with_array):
         ser = Series(data, dtype=dtype)
 
-        ser = tm.box_expected(ser, box)
-        with pytest.raises(TypeError):
+        ser = tm.box_expected(ser, box_with_array)
+        msg = (
+            "can only concatenate str|"
+            "did not contain a loop with signature matching types|"
+            "unsupported operand type|"
+            "must be str"
+        )
+        with pytest.raises(TypeError, match=msg):
             "foo_" + ser
 
     @pytest.mark.parametrize("op", [operator.add, ops.radd, operator.sub, ops.rsub])
-    def test_objarr_add_invalid(self, op, box):
+    def test_objarr_add_invalid(self, op, box_with_array):
         # invalid ops
+        box = box_with_array
 
         obj_ser = tm.makeObjectSeries()
         obj_ser.name = "objects"
 
         obj_ser = tm.box_expected(obj_ser, box)
-        with pytest.raises(Exception):
+        msg = "can only concatenate str|unsupported operand type|must be str"
+        with pytest.raises(Exception, match=msg):
             op(obj_ser, 1)
-        with pytest.raises(Exception):
+        with pytest.raises(Exception, match=msg):
             op(obj_ser, np.array(1, dtype=np.int64))
 
     # TODO: Moved from tests.series.test_operators; needs cleanup
@@ -274,13 +283,15 @@ class TestArithmetic:
 
     def test_sub_fail(self):
         index = tm.makeStringIndex(100)
-        with pytest.raises(TypeError):
+
+        msg = "unsupported operand type|Cannot broadcast"
+        with pytest.raises(TypeError, match=msg):
             index - "a"
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeError, match=msg):
             index - index
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeError, match=msg):
             index - index.tolist()
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeError, match=msg):
             index.tolist() - index
 
     def test_sub_object(self):
@@ -294,10 +305,11 @@ class TestArithmetic:
         result = index - pd.Index([Decimal(1), Decimal(1)])
         tm.assert_index_equal(result, expected)
 
-        with pytest.raises(TypeError):
+        msg = "unsupported operand type"
+        with pytest.raises(TypeError, match=msg):
             index - "foo"
 
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeError, match=msg):
             index - np.array([2, "foo"])
 
     def test_rsub_object(self):
@@ -311,8 +323,54 @@ class TestArithmetic:
         result = np.array([Decimal(2), Decimal(2)]) - index
         tm.assert_index_equal(result, expected)
 
-        with pytest.raises(TypeError):
+        msg = "unsupported operand type"
+        with pytest.raises(TypeError, match=msg):
             "foo" - index
 
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeError, match=msg):
             np.array([True, pd.Timestamp.now()]) - index
+
+
+class MyIndex(pd.Index):
+    # Simple index subclass that tracks ops calls.
+
+    _calls: int
+
+    @classmethod
+    def _simple_new(cls, values, name=None, dtype=None):
+        result = object.__new__(cls)
+        result._data = values
+        result._index_data = values
+        result._name = name
+        result._calls = 0
+
+        return result._reset_identity()
+
+    def __add__(self, other):
+        self._calls += 1
+        return self._simple_new(self._index_data)
+
+    def __radd__(self, other):
+        return self.__add__(other)
+
+
+@pytest.mark.parametrize(
+    "other",
+    [
+        [datetime.timedelta(1), datetime.timedelta(2)],
+        [datetime.datetime(2000, 1, 1), datetime.datetime(2000, 1, 2)],
+        [pd.Period("2000"), pd.Period("2001")],
+        ["a", "b"],
+    ],
+    ids=["timedelta", "datetime", "period", "object"],
+)
+def test_index_ops_defer_to_unknown_subclasses(other):
+    # https://github.com/pandas-dev/pandas/issues/31109
+    values = np.array(
+        [datetime.date(2000, 1, 1), datetime.date(2000, 1, 2)], dtype=object
+    )
+    a = MyIndex._simple_new(values)
+    other = pd.Index(other)
+    result = other + a
+    assert isinstance(result, MyIndex)
+    assert a._calls == 1

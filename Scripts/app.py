@@ -181,8 +181,8 @@ home = dbc.Row([
                     html.Div(
                         dcc.Checklist(
                             id = 'bestfit2',
-                            options= [{'label': i, 'value': i} for i in ['Scatter','Best-fit']],
-                            value = ['Scatter','Best-fit'],
+                            options= [{'label': i, 'value': i} for i in ['Scatter','Poly-Fit','Log-Fit','Exp-Fit']],
+                            value = ['Scatter'],
                             labelStyle={"padding-right":"10px","margin":"auto"}
                         )
                     ,style={"margin":"auto"}),
@@ -191,7 +191,7 @@ home = dbc.Row([
                         html.H6("Degree:",style={"padding-top":"10px"}),
                         dcc.Slider(
                             id="input_fit2",
-                            max=4,
+                            max=3,
                             min=1,
                             value=1,
                             step=1,
@@ -199,8 +199,7 @@ home = dbc.Row([
                             marks={
                                 1: {'label': '1'},
                                 2: {'label': '2'},
-                                3: {'label': '3'},
-                                4: {'label': '4'},
+                                3: {'label': '3'}
                             }
                         )
                     ]),
@@ -379,6 +378,7 @@ home = dbc.Row([
             ],style={"background-color":"white","border-radius":"3px","border":"1px solid #cccccc","margin-left": "auto", "margin-right": "auto", "width": "80%","height":"10%"},no_gutters=True),
 
             html.Div([
+                
                 dbc.Row([
                     dcc.RadioItems(
                         id='toggle',
@@ -394,10 +394,19 @@ home = dbc.Row([
                     html.Hr(),
 
                     html.Div(
+                        dcc.RadioItems(
+                            id='addComp',
+                            options=[{'label': i, 'value': i} for i in ['No Compare','Compare']],
+                            value='No Compare',
+                            labelStyle={"padding-right":"10px","margin":"auto","padding-bottom":"10px"}
+                        )
+                    ,style={"margin":"auto"}),
+
+                    html.Div(
                         dcc.Checklist(
                             id = 'bestfit',
-                            options= [{'label': i, 'value': i} for i in ['Scatter','Best-fit']],
-                            value = ['Scatter','Best-fit'],
+                            options= [{'label': i, 'value': i} for i in ['Scatter','Poly-Fit','Log-Fit','Exp-Fit']],
+                            value = ['Scatter'],
                             labelStyle={"padding-right":"10px","margin":"auto"}
                         )
                     ,style={"margin":"auto"}),
@@ -406,7 +415,7 @@ home = dbc.Row([
                         html.H6("Degree:",style={"padding-top":"10px"}),
                         dcc.Slider(
                             id="input_fit",
-                            max=4,
+                            max=3,
                             min=1,
                             value=1,
                             step=1,
@@ -414,20 +423,10 @@ home = dbc.Row([
                             marks={
                                 1: {'label': '1'},
                                 2: {'label': '2'},
-                                3: {'label': '3'},
-                                4: {'label': '4'},
+                                3: {'label': '3'}
                             }
                         )
                     ]),
-
-                    html.Div(
-                        dcc.RadioItems(
-                            id='addComp',
-                            options=[{'label': i, 'value': i} for i in ['No Compare','Compare']],
-                            value='No Compare',
-                            labelStyle={"padding-right":"10px","margin":"auto","padding-top":"10px"}
-                        )
-                    ,style={"margin":"auto"}),
 
                 html.Hr(),
 
@@ -1206,7 +1205,7 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, sur
 
             data.append(trace)
         
-        if('Best-fit' in fit):
+        if('Poly-Fit' in fit):
             if('Scatter' in fit):
                 showLegend = False
             else:
@@ -1220,6 +1219,13 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, sur
                 z = np.polyfit(x,y,order)
                 f = np.poly1d(z)
 
+                if order == 1:
+                    equation = "y = " + str(format(f[1],'.3e')) + "x + " + str(format(f[0],'.3e'))
+                elif order == 2:
+                    equation = "y = " + str(format(f[2],'.3e')) + "x² + " + str(format(f[1],'.3e')) + "x + " + str(format(f[0],'.3e'))
+                elif order == 3:
+                    equation = "y = " + str(format(f[3],'.3e')) + "x³ + " + str(format(f[2],'.3e')) + "x² + " + str(format(f[1],'.3e')) + "x + " + str(format(f[0],'.3e'))
+                
                 x_new = np.linspace(x[0], x[-1], 50)
                 y_new = f(x_new)
 
@@ -1229,11 +1235,94 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, sur
 
                 trace = go.Scattergl(x = x_new, y = y_new,
                 hovertext= "Study: " + name_array.Study
+                + "<br />" + equation
                 + "<br />R Squared: " + str(round(r_squared,2)),
                 hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
                 name=i,showlegend=showLegend,legendgroup=group_value)
 
                 data.append(trace)
+
+            else:
+                continue
+
+        if('Log-Fit' in fit):
+            if('Scatter' in fit or "Poly-Fit" in fit):
+                showLegend = False
+            else:
+                showLegend = True
+            
+            if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0:
+                x = sorted(name_array[selected_x].values.astype(float))
+                y = name_array[selected_y].values.astype(float)
+
+                def logFit(x,y):
+                    # cache some frequently reused terms
+                    sumy = np.sum(y)
+                    sumlogx = np.sum(np.log(x))
+
+                    b = (len(x)*np.sum(y*np.log(x)) - sumy*sumlogx)/(len(x)*np.sum(np.log(x)**2) - sumlogx**2)
+                    a = (sumy - b*sumlogx)/len(x)
+
+                    return a,b
+
+                def logFunc(x, a, b):
+                    return a + b*np.log(x)
+
+                a,b = logFit(x,y)
+                equation = str(format(a,'.3e')) + " + " + str(format(b,'.3e')) + "log(x)"
+
+                xfit = np.linspace(min(x),max(x),num=30)                
+
+                correlation_matrix = np.corrcoef(x,y)
+                correlation_xy = correlation_matrix[0,1]
+                r_squared = correlation_xy**2
+
+                trace = go.Scattergl(x = xfit, y = logFunc(xfit, *logFit(x,y)),
+                hovertext= "Study: " + name_array.Study
+                + "<br />" + equation
+                + "<br />R Squared: " + str(round(r_squared,2)),
+                hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
+                name=i,showlegend=showLegend,legendgroup=group_value)
+
+                data.append(trace)
+
+            else:
+                continue
+
+        if('Exp-Fit' in fit):
+            if('Scatter' in fit or "Poly-Fit" in fit or "Log-Fit" in fit):
+                showLegend = False
+            else:
+                showLegend = True
+            
+            if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0:
+                x = sorted(name_array[selected_x].values.astype(float))
+                y = name_array[selected_y].values.astype(float)
+
+                y2 = np.log(y)
+                coef = np.polyfit(x,y2,1)
+
+                a = np.exp(coef[1])
+                b = coef[0]
+
+                equation = "y = " + str(format(a,'.3e')) + " * exp(" + str(format(b,'.3e')) + "x)"
+                
+                xfit = np.linspace(min(x),max(x),num=30)
+                yfit = np.exp(coef[1]) * np.exp(b*xfit) 
+
+                correlation_matrix = np.corrcoef(x,y)
+                correlation_xy = correlation_matrix[0,1]
+                r_squared = correlation_xy**2
+
+                trace = go.Scattergl(x = xfit, y = yfit,
+                hovertext= "Study: " + name_array.Study
+                + "<br />" + equation
+                + "<br />R Squared: " + str(round(r_squared,2)),
+                hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
+                name=i,showlegend=showLegend,legendgroup=group_value)
+
+                data.append(trace)
+
             else:
                 continue
 
@@ -1368,7 +1457,7 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, sur
 
             data.append(trace)
 
-        if('Best-fit' in fit):
+        if('Poly-Fit' in fit):
             if('Scatter' in fit):
                 showLegend = False
             else:
@@ -1382,6 +1471,13 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, sur
                 z = np.polyfit(x,y,order)
                 f = np.poly1d(z)
 
+                if order == 1:
+                    equation = "y = " + str(format(f[1],'.3e')) + "x + " + str(format(f[0],'.3e'))
+                elif order == 2:
+                    equation = "y = " + str(format(f[2],'.3e')) + "x² + " + str(format(f[1],'.3e')) + "x + " + str(format(f[0],'.3e'))
+                elif order == 3:
+                    equation = "y = " + str(format(f[3],'.3e')) + "x³ + " + str(format(f[2],'.3e')) + "x² + " + str(format(f[1],'.3e')) + "x + " + str(format(f[0],'.3e'))
+
                 x_new = np.linspace(x[0], x[-1], 50)
                 y_new = f(x_new)
 
@@ -1391,11 +1487,93 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, sur
 
                 trace = go.Scattergl(x = x_new, y = y_new,
                 hovertext= "Study: " + name_array.Study
+                + "<br />" + equation
                 + "<br />R Squared: " + str(round(r_squared,2)),
                 hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
                 name=i,showlegend=showLegend,legendgroup=group_value)
 
                 data.append(trace)
+            else:
+                continue
+            
+        if('Log-Fit' in fit):
+            if('Scatter' in fit or "Poly-Fit" in fit):
+                showLegend = False
+            else:
+                showLegend = True
+            
+            if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0:
+                x = sorted(name_array[selected_x].values.astype(float))
+                y = name_array[selected_y].values.astype(float)
+
+                def logFit(x,y):
+                    # cache some frequently reused terms
+                    sumy = np.sum(y)
+                    sumlogx = np.sum(np.log(x))
+
+                    b = (len(x)*np.sum(y*np.log(x)) - sumy*sumlogx)/(len(x)*np.sum(np.log(x)**2) - sumlogx**2)
+                    a = (sumy - b*sumlogx)/len(x)
+
+                    return a,b
+
+                def logFunc(x, a, b):
+                    return a + b*np.log(x)
+
+                a,b = logFit(x,y)
+                equation = str(format(a,'.3e')) + " + " + str(format(b,'.3e')) + "log(x)"
+
+                xfit = np.linspace(min(x),max(x),num=30)                
+
+                correlation_matrix = np.corrcoef(x,y)
+                correlation_xy = correlation_matrix[0,1]
+                r_squared = correlation_xy**2
+
+                trace = go.Scattergl(x = xfit, y = logFunc(xfit, *logFit(x,y)),
+                hovertext= "Study: " + name_array.Study
+                + "<br />" + equation
+                + "<br />R Squared: " + str(round(r_squared,2)),
+                hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
+                name=i,showlegend=showLegend,legendgroup=group_value)
+
+                data.append(trace)
+
+            else:
+                continue
+
+        if('Exp-Fit' in fit):
+            if('Scatter' in fit or "Poly-Fit" in fit):
+                showLegend = False
+            else:
+                showLegend = True
+            
+            if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0:
+                x = sorted(name_array[selected_x].values.astype(float))
+                y = name_array[selected_y].values.astype(float)
+
+                y2 = np.log(y)
+                coef = np.polyfit(x,y2,1)
+
+                a = np.exp(coef[1])
+                b = coef[0]
+
+                equation = "y = " + str(format(a,'.3e')) + " * exp(" + str(format(b,'.3e')) + "x)"
+                
+                xfit = np.linspace(min(x),max(x),num=30)
+                yfit = np.exp(coef[1]) * np.exp(b*xfit) 
+
+                correlation_matrix = np.corrcoef(x,y)
+                correlation_xy = correlation_matrix[0,1]
+                r_squared = correlation_xy**2
+
+                trace = go.Scattergl(x = xfit, y = yfit,
+                hovertext= "Study: " + name_array.Study
+                + "<br />" + equation
+                + "<br />R Squared: " + str(round(r_squared,2)),
+                hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
+                name=i,showlegend=showLegend,legendgroup=group_value)
+
+                data.append(trace)
+
             else:
                 continue
 
@@ -1463,23 +1641,6 @@ def update_comp2_2D_table(selected_x, selected_y, comp, ga, sur, surc, add, addc
     return (
         cleaned.to_dict('records'), [{'id': c, 'name': c} for c in cleaned.columns]
     )
-
-def polyfit2d(x, y, z, order):
-    ncols = (order + 1)**2
-    G = np.zeros((x.size, ncols))
-    ij = itertools.product(range(order+1), range(order+1))
-    for k, (i,j) in enumerate(ij):
-        G[:,k] = x**i * y**j
-    m, _, _, _ = np.linalg.lstsq(G, z)
-    return m
-
-def polyval2d(x, y, m):
-    order = int(np.sqrt(len(m))) - 1
-    ij = itertools.product(range(order+1), range(order+1))
-    z = np.zeros_like(x)
-    for a, (i,j) in zip(m, ij):
-        z += a * x**i * y**j
-    return z
 
 @app.callback(
     Output("comp1_3D_graph", "figure"),
@@ -1549,7 +1710,7 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, fit, order, 
 
             data.append(trace)
 
-        if('Best-fit' in fit):
+        if('Poly-Fit' in fit):
             if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0 and len(name_array[selected_z].values) != 0:
                 name_array.sort_values(by=[selected_x], inplace=True)
 
@@ -1557,26 +1718,61 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, fit, order, 
                 y = np.array(name_array[selected_y].values.astype(float))
                 z = np.array(name_array[selected_z].values.astype(float))
 
-                # Fit a 3rd order, 2d polynomial
-                m = polyfit2d(x,y,z,order)
+                d = np.c_[x,y,z]
 
-                # Evaluate it on a grid...
-                nx, ny = 20, 20
-                xx, yy = np.meshgrid(np.linspace(x.min(), x.max(), nx), 
-                                    np.linspace(y.min(), y.max(), ny))
-                zz = polyval2d(xx, yy, m)
+                # regular grid covering the domain of the data
+                mn = np.min(d, axis=0)
+                mx = np.max(d, axis=0)
+                X,Y = np.meshgrid(np.linspace(mn[0], mx[0], 20), np.linspace(mn[1], mx[1], 20))
+                XX = X.flatten()
+                YY = Y.flatten()
+
+                if order == 1:
+                    # Poly-Fit linear plane
+                    A = np.c_[d[:,0], d[:,1], np.ones(d.shape[0])]
+                    C,_,_,_ = np.linalg.lstsq(A, d[:,2])    # coefficients
+                    
+                    # evaluate it on grid
+                    # Z = C[0]*X + C[1]*Y + C[2]
+
+                    equation = "z = " + str(format(C[0],'.3e')) + "x + " + str(format(C[1],'.3e')) + "y + " + str(format(C[2],'.3e'))
+                    
+                    # or expressed using matrix/vector product
+                    Z = np.dot(np.c_[XX, YY, np.ones(XX.shape)], C).reshape(X.shape)
+
+                elif order == 2:
+                    # Poly-Fit quadratic curve
+                    # M = [ones(size(x)), x, y, x.*y, x.^2 y.^2]
+                    A = np.c_[np.ones(d.shape[0]), d[:,:2], np.prod(d[:,:2], axis=1), d[:,:2]**2]
+                    C,_,_,_ = np.linalg.lstsq(A, d[:,2])
+
+                    equation = "z = " + str(format(C[4],'.3e')) + "x² + " + str(format(C[5],'.3e')) + "y² + " + str(format(C[3],'.3e')) + "xy + " + str(format(C[1],'.3e')) + "x + " + str(format(C[2],'.3e')) + "y + " + str(format(C[0],'.3e'))
+
+                    # evaluate it on a grid
+                    Z = np.dot(np.c_[np.ones(XX.shape), XX, YY, XX*YY, XX**2, YY**2], C).reshape(X.shape)
+                    
+                elif order == 3:
+                    # M = [ones(size(x)), x, y, x.^2, x.*y, y.^2, x.^3, x.^2.*y, x.*y.^2, y.^3]
+                    A = np.c_[np.ones(d.shape[0]), d[:,:2], d[:,0]**2, np.prod(d[:,:2], axis=1), \
+                            d[:,1]**2, d[:,0]**3, np.prod(np.c_[d[:,0]**2,d[:,1]],axis=1), \
+                            np.prod(np.c_[d[:,0],d[:,1]**2],axis=1), d[:,2]**3]
+                    C,_,_,_ = np.linalg.lstsq(A, d[:,2])
+
+                    equation = "z = " + str(format(C[6],'.3e')) + "x³ + " + str(format(C[9],'.3e')) + "y³ + " + str(format(C[7],'.3e')) + "x²y + " + str(format(C[8],'.3e')) + "xy² + " + str(format(C[3],'.3e')) + "x² + " + str(format(C[5],'.3e')) + "y² + " + str(format(C[4],'.3e')) + "xy + " + str(format(C[1],'.3e')) + "x + " + str(format(C[2],'.3e')) + "y + " + str(format(C[0],'.3e'))
+                    
+                    Z = np.dot(np.c_[np.ones(XX.shape), XX, YY, XX**2, XX*YY, YY**2, XX**3, XX**2*YY, XX*YY**2, YY**3], C).reshape(X.shape)
 
                 colorscale= [[0, name_array.Color.values[0]], [1, name_array.Color.values[0]]]
 
-                trace = go.Surface(x = xx, y = yy, z = zz,
-                colorscale=colorscale,
-                hovertext= ["Study: " + name_array.Study],
-                hoverinfo='text',name=i,showscale=False, )
+                trace = go.Surface(x = X, y = Y, z = Z,
+                colorscale=colorscale, opacity=0.75,
+                hoverinfo="text", hovertext= "Study: " + i + "<br />" + equation,
+                name=i,showscale=False)
 
                 data.append(trace)
         
-        else:
-            continue
+            else:
+                continue
 
     if(comp == "No Compare"):
         legend_orientation={
@@ -1719,7 +1915,7 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, fit, order, 
 
             data.append(trace)
 
-        if('Best-fit' in fit):
+        if('Poly-Fit' in fit):
             if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0 and len(name_array[selected_z].values) != 0:
                 name_array.sort_values(by=[selected_x], inplace=True)
 
@@ -1727,19 +1923,48 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, fit, order, 
                 y = np.array(name_array[selected_y].values.astype(float))
                 z = np.array(name_array[selected_z].values.astype(float))
 
-                # Fit a 3rd order, 2d polynomial
-                m = polyfit2d(x,y,z,order)
+                d = np.c_[x,y,z]
 
-                # Evaluate it on a grid...
-                nx, ny = 20, 20
-                xx, yy = np.meshgrid(np.linspace(x.min(), x.max(), nx), 
-                                    np.linspace(y.min(), y.max(), ny))
-                zz = polyval2d(xx, yy, m)
+                # regular grid covering the domain of the data
+                mn = np.min(d, axis=0)
+                mx = np.max(d, axis=0)
+                X,Y = np.meshgrid(np.linspace(mn[0], mx[0], 20), np.linspace(mn[1], mx[1], 20))
+                XX = X.flatten()
+                YY = Y.flatten()
+
+                if order == 1:
+                    # Poly-Fit linear plane
+                    A = np.c_[d[:,0], d[:,1], np.ones(d.shape[0])]
+                    C,_,_,_ = np.linalg.lstsq(A, d[:,2])    # coefficients
+                    
+                    # evaluate it on grid
+                    # Z = C[0]*X + C[1]*Y + C[2]
+                    
+                    # or expressed using matrix/vector product
+                    Z = np.dot(np.c_[XX, YY, np.ones(XX.shape)], C).reshape(X.shape)
+
+                elif order == 2:
+                    # Poly-Fit quadratic curve
+                    # M = [ones(size(x)), x, y, x.*y, x.^2 y.^2]
+                    A = np.c_[np.ones(d.shape[0]), d[:,:2], np.prod(d[:,:2], axis=1), d[:,:2]**2]
+                    C,_,_,_ = np.linalg.lstsq(A, d[:,2])
+                    
+                    # evaluate it on a grid
+                    Z = np.dot(np.c_[np.ones(XX.shape), XX, YY, XX*YY, XX**2, YY**2], C).reshape(X.shape)
+                    
+                elif order == 3:
+                    # M = [ones(size(x)), x, y, x.^2, x.*y, y.^2, x.^3, x.^2.*y, x.*y.^2, y.^3]
+                    A = np.c_[np.ones(d.shape[0]), d[:,:2], d[:,0]**2, np.prod(d[:,:2], axis=1), \
+                            d[:,1]**2, d[:,0]**3, np.prod(np.c_[d[:,0]**2,d[:,1]],axis=1), \
+                            np.prod(np.c_[d[:,0],d[:,1]**2],axis=1), d[:,2]**3]
+                    C,_,_,_ = np.linalg.lstsq(A, d[:,2])
+                    
+                    Z = np.dot(np.c_[np.ones(XX.shape), XX, YY, XX**2, XX*YY, YY**2, XX**3, XX**2*YY, XX*YY**2, YY**3], C).reshape(X.shape)
 
                 colorscale= [[0, name_array.Color.values[0]], [1, name_array.Color.values[0]]]
 
-                trace = go.Surface(x = xx, y = yy, z = zz,
-                colorscale=colorscale,
+                trace = go.Surface(x = X, y = Y, z = Z,
+                colorscale=colorscale, opacity=0.75,
                 hovertext= ["Study: " + name_array.Study],
                 hoverinfo='text',name=i,showscale=False, )
 

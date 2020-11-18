@@ -1,5 +1,7 @@
 """
-Objects for dealing with polynomials.
+=================================================
+Power Series (:mod:`numpy.polynomial.polynomial`)
+=================================================
 
 This module provides a number of objects (mostly functions) useful for
 dealing with polynomials, including a `Polynomial` class that
@@ -7,56 +9,69 @@ encapsulates the usual arithmetic operations.  (General information
 on how this module represents and works with polynomial objects is in
 the docstring for its "parent" sub-package, `numpy.polynomial`).
 
+Classes
+-------
+.. autosummary::
+   :toctree: generated/
+
+   Polynomial
+
 Constants
 ---------
-- `polydomain` -- Polynomial default domain, [-1,1].
-- `polyzero` -- (Coefficients of the) "zero polynomial."
-- `polyone` -- (Coefficients of the) constant polynomial 1.
-- `polyx` -- (Coefficients of the) identity map polynomial, ``f(x) = x``.
+.. autosummary::
+   :toctree: generated/
+
+   polydomain
+   polyzero
+   polyone
+   polyx
 
 Arithmetic
 ----------
-- `polyadd` -- add two polynomials.
-- `polysub` -- subtract one polynomial from another.
-- `polymulx` -- multiply a polynomial in ``P_i(x)`` by ``x``.
-- `polymul` -- multiply two polynomials.
-- `polydiv` -- divide one polynomial by another.
-- `polypow` -- raise a polynomial to a positive integer power.
-- `polyval` -- evaluate a polynomial at given points.
-- `polyval2d` -- evaluate a 2D polynomial at given points.
-- `polyval3d` -- evaluate a 3D polynomial at given points.
-- `polygrid2d` -- evaluate a 2D polynomial on a Cartesian product.
-- `polygrid3d` -- evaluate a 3D polynomial on a Cartesian product.
+.. autosummary::
+   :toctree: generated/
+
+   polyadd
+   polysub
+   polymulx
+   polymul
+   polydiv
+   polypow
+   polyval
+   polyval2d
+   polyval3d
+   polygrid2d
+   polygrid3d
 
 Calculus
 --------
-- `polyder` -- differentiate a polynomial.
-- `polyint` -- integrate a polynomial.
+.. autosummary::
+   :toctree: generated/
+
+   polyder
+   polyint
 
 Misc Functions
 --------------
-- `polyfromroots` -- create a polynomial with specified roots.
-- `polyroots` -- find the roots of a polynomial.
-- `polyvalfromroots` -- evaluate a polynomial at given points from roots.
-- `polyvander` -- Vandermonde-like matrix for powers.
-- `polyvander2d` -- Vandermonde-like matrix for 2D power series.
-- `polyvander3d` -- Vandermonde-like matrix for 3D power series.
-- `polycompanion` -- companion matrix in power series form.
-- `polyfit` -- least-squares fit returning a polynomial.
-- `polytrim` -- trim leading coefficients from a polynomial.
-- `polyline` -- polynomial representing given straight line.
+.. autosummary::
+   :toctree: generated/
 
-Classes
--------
-- `Polynomial` -- polynomial class.
+   polyfromroots
+   polyroots
+   polyvalfromroots
+   polyvander
+   polyvander2d
+   polyvander3d
+   polycompanion
+   polyfit
+   polytrim
+   polyline
 
 See Also
 --------
 `numpy.polynomial`
 
 """
-from __future__ import division, absolute_import, print_function
-
 __all__ = [
     'polyzero', 'polyone', 'polyx', 'polydomain', 'polyline', 'polyadd',
     'polysub', 'polymulx', 'polymul', 'polydiv', 'polypow', 'polyval',
@@ -64,7 +79,6 @@ __all__ = [
     'polyfit', 'polytrim', 'polyroots', 'Polynomial', 'polyval2d', 'polyval3d',
     'polygrid2d', 'polygrid3d', 'polyvander2d', 'polyvander3d']
 
-import warnings
 import numpy as np
 import numpy.linalg as la
 from numpy.core.multiarray import normalize_axis_index
@@ -491,7 +505,7 @@ def polyder(c, m=1, scl=1, axis=0):
     array([  6.,  24.])
 
     """
-    c = np.array(c, ndmin=1, copy=1)
+    c = np.array(c, ndmin=1, copy=True)
     if c.dtype.char in '?bBhHiIlLqQpP':
         # astype fails with NA
         c = c + 0.0
@@ -599,7 +613,7 @@ def polyint(c, m=1, k=[], lbnd=0, scl=1, axis=0):
     array([ 0., -2., -2., -2.])
 
     """
-    c = np.array(c, ndmin=1, copy=1)
+    c = np.array(c, ndmin=1, copy=True)
     if c.dtype.char in '?bBhHiIlLqQpP':
         # astype doesn't preserve mask attribute.
         c = c + 0.0
@@ -721,7 +735,7 @@ def polyval(x, c, tensor=True):
     array([2.,  7.])
 
     """
-    c = np.array(c, ndmin=1, copy=0)
+    c = np.array(c, ndmin=1, copy=False)
     if c.dtype.char in '?bBhHiIlLqQpP':
         # astype fails with NA
         c = c + 0.0
@@ -811,7 +825,7 @@ def polyvalfromroots(x, r, tensor=True):
     >>> polyvalfromroots(b, r, tensor=False)
     array([-0.,  0.])
     """
-    r = np.array(r, ndmin=1, copy=0)
+    r = np.array(r, ndmin=1, copy=False)
     if r.dtype.char in '?bBhHiIlLqQpP':
         r = r.astype(np.double)
     if isinstance(x, (tuple, list)):
@@ -1076,7 +1090,7 @@ def polyvander(x, deg):
     if ideg < 0:
         raise ValueError("deg must be non-negative")
 
-    x = np.array(x, copy=0, ndmin=1) + 0.0
+    x = np.array(x, copy=False, ndmin=1) + 0.0
     dims = (ideg + 1,) + x.shape
     dtyp = x.dtype
     v = np.empty(dims, dtype=dtyp)
@@ -1133,7 +1147,7 @@ def polyvander2d(x, y, deg):
     polyvander, polyvander3d, polyval2d, polyval3d
 
     """
-    return pu._vander2d(polyvander, x, y, deg)
+    return pu._vander_nd_flat((polyvander, polyvander), (x, y), deg)
 
 
 def polyvander3d(x, y, z, deg):
@@ -1187,7 +1201,7 @@ def polyvander3d(x, y, z, deg):
     .. versionadded:: 1.7.0
 
     """
-    return pu._vander3d(polyvander, x, y, z, deg)
+    return pu._vander_nd_flat((polyvander, polyvander, polyvander), (x, y, z), deg)
 
 
 def polyfit(x, y, deg, rcond=None, full=False, w=None):
@@ -1484,10 +1498,10 @@ class Polynomial(ABCPolyBase):
     @staticmethod
     def _repr_latex_term(i, arg_str, needs_parens):
         if needs_parens:
-            arg_str = r'\left({}\right)'.format(arg_str)
+            arg_str = rf"\left({arg_str}\right)"
         if i == 0:
             return '1'
         elif i == 1:
             return arg_str
         else:
-            return '{}^{{{}}}'.format(arg_str, i)
+            return f"{arg_str}^{{{i}}}"
