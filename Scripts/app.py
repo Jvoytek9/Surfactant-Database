@@ -757,18 +757,21 @@ home = dbc.Row([
                         'if': {'row_index': 'odd'},
                             'backgroundColor': 'rgb(248, 248, 248)'
                     }],
-                    fixed_rows={'headers': True},
                     style_header={'backgroundColor': 'rgb(230, 230, 230)','fontWeight': 'bold'},
                     style_cell={
                         'height': 'auto',
                         'minWidth': 'auto', 'width': 'auto', 'maxWidth': 'auto',
                         'whiteSpace': 'normal'
                     },
-                    css=[{
-                        'selector': '.dash-spreadsheet-container .dash-spreadsheet-inner *, .dash-spreadsheet-container .dash-spreadsheet-inner *:after, .dash-spreadsheet-container .dash-spreadsheet-inner *:before',
-                        'rule': 'box-sizing: inherit; width: 100%;'
-                    }],
-                    style_table={'height': "87vh",'min-height': "87vh"}
+                    style_table={
+                        'height': "87vh",
+                        'min-height': "87vh",
+                        'overflowY': 'scroll',
+                        'overflowX': 'scroll',
+                        'width': '100%',
+                        'minWidth': '100%',
+                    },
+                    css=[{'selector': '.row', 'rule': 'margin: 0'}]
                 )
             ])
         ])
