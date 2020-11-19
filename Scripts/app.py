@@ -1212,7 +1212,9 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, sur
             z = np.polyfit(x,y,order)
             f = np.poly1d(z)
 
-            y_new = f(x)
+            x_new = np.linspace(x[0], x[-1], 1000)
+            y_res = f(x)
+            y_new = f(x_new)
 
             f_new = []
             for num in f:
@@ -1223,7 +1225,7 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, sur
 
             if order == 1:
                 equation = "y = " + str(f_new[1]) + "x + " + str(f_new[0])
-                residuals = y- y_new
+                residuals = y- y_res
                 ss_res = np.sum(residuals**2)
                 ss_tot = np.sum((y-np.mean(y))**2)
                 r_squared = str(np.round(1 - (ss_res / ss_tot),3))
@@ -1235,7 +1237,7 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, sur
                 equation = "y = " + str(f_new[3]) + "x³ + " + str(f_new[2]) + "x² + " + str(f_new[1]) + "x + " + str(f_new[0])
                 r_squared = "Non-Linear"
 
-            trace = go.Scattergl(x = x, y = y_new,
+            trace = go.Scattergl(x = x_new, y = y_new,
             hovertext= "Study: " + i
             + "<br />" + equation
             + "<br />R Squared: " + r_squared,
@@ -1255,7 +1257,8 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, sur
             
             popt, _ = curve_fit(logarithmic, x, y, maxfev = 999999999)
 
-            y_new = logarithmic(x, popt[0],popt[1], popt[2])
+            x_new = np.linspace(x[0], x[-1], 1000)
+            y_new = logarithmic(x_new, *popt)
 
             f_new = []
             for num in popt:
@@ -1264,7 +1267,7 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, sur
                 else:
                     f_new.append(np.round(num,3))
 
-            trace = go.Scattergl(x = x, y = y_new,
+            trace = go.Scattergl(x = x_new, y = y_new,
             hovertext= "Study: " + i
             + "<br />y = " + str(f_new[0]) + " * log(" + str(f_new[1]) + " * x) + " + str(f_new[2]),
             hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
@@ -1279,11 +1282,12 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, sur
                 showLegend = True
 
             def exponential(x, a, b, c):
-                return a * np.exp(b * x) + c
+                return a * np.exp(-b * x) + c
             
-            popt, _ = curve_fit(exponential, x, y, maxfev = 999999999)
+            popt, _ = curve_fit(exponential, x, y, p0=(1, 1e-6, 1), maxfev = 999999999)
 
-            y_new = exponential(x, popt[0],popt[1],popt[2])
+            x_new = np.linspace(x[0], x[-1], 1000)
+            y_new = exponential(x_new, *popt)
 
             f_new = []
             for num in popt:
@@ -1292,7 +1296,7 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, sur
                 else:
                     f_new.append(np.round(num,3))
 
-            trace = go.Scattergl(x = x, y = y_new,
+            trace = go.Scattergl(x = x_new, y = y_new,
             hovertext= "Study: " + i
             + "<br />y = " + str(f_new[0]) + " * e^(" + str(f_new[1]) + " * x) + " + str(f_new[2]),
             hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
@@ -1311,7 +1315,8 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, sur
             
             popt, _ = curve_fit(power, x, y, maxfev = 999999999)
 
-            y_new = power(x, popt[0],popt[1],popt[2])
+            x_new = np.linspace(x[0], x[-1], 1000)
+            y_new = power(x_new, *popt)
 
             f_new = []
             for num in popt:
@@ -1320,7 +1325,7 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, sur
                 else:
                     f_new.append(np.round(num,3))
             
-            trace = go.Scattergl(x = x, y = y_new,
+            trace = go.Scattergl(x = x_new, y = y_new,
             hovertext= "Study: " + i
             + "<br />y = " + str(f_new[0]) + " * x^(" + str(f_new[1]) + ") + " + str(f_new[2]),
             hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
@@ -1436,7 +1441,9 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, sur
             z = np.polyfit(x,y,order)
             f = np.poly1d(z)
 
-            y_new = f(x)
+            x_new = np.linspace(x[0], x[-1], 1000)
+            y_res = f(x)
+            y_new = f(x_new)
 
             f_new = []
             for num in f:
@@ -1447,7 +1454,7 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, sur
 
             if order == 1:
                 equation = "y = " + str(f_new[1]) + "x + " + str(f_new[0])
-                residuals = y- y_new
+                residuals = y- y_res
                 ss_res = np.sum(residuals**2)
                 ss_tot = np.sum((y-np.mean(y))**2)
                 r_squared = str(np.round(1 - (ss_res / ss_tot),3))
@@ -1459,7 +1466,7 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, sur
                 equation = "y = " + str(f_new[3]) + "x³ + " + str(f_new[2]) + "x² + " + str(f_new[1]) + "x + " + str(f_new[0])
                 r_squared = "Non-Linear"
 
-            trace = go.Scattergl(x = x, y = y_new,
+            trace = go.Scattergl(x = x_new, y = y_new,
             hovertext= "Study: " + i
             + "<br />" + equation
             + "<br />R Squared: " + r_squared,
@@ -1479,7 +1486,8 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, sur
             
             popt, _ = curve_fit(logarithmic, x, y, maxfev = 999999999)
 
-            y_new = logarithmic(x, popt[0],popt[1], popt[2])
+            x_new = np.linspace(x[0], x[-1], 1000)
+            y_new = logarithmic(x_new, *popt)
 
             f_new = []
             for num in popt:
@@ -1488,7 +1496,7 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, sur
                 else:
                     f_new.append(np.round(num,3))
 
-            trace = go.Scattergl(x = x, y = y_new,
+            trace = go.Scattergl(x = x_new, y = y_new,
             hovertext= "Study: " + i
             + "<br />y = " + str(f_new[0]) + " * log(" + str(f_new[1]) + " * x) + " + str(f_new[2]),
             hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
@@ -1503,11 +1511,12 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, sur
                 showLegend = True
 
             def exponential(x, a, b, c):
-                return a * np.exp(b * x) + c
+                return a * np.exp(-b * x) + c
             
-            popt, _ = curve_fit(exponential, x, y, maxfev = 999999999)
+            popt, _ = curve_fit(exponential, x, y, p0=(1, 1e-6, 1), maxfev = 999999999)
 
-            y_new = exponential(x, popt[0],popt[1],popt[2])
+            x_new = np.linspace(x[0], x[-1], 1000)
+            y_new = exponential(x_new, *popt)
 
             f_new = []
             for num in popt:
@@ -1516,7 +1525,7 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, sur
                 else:
                     f_new.append(np.round(num,3))
 
-            trace = go.Scattergl(x = x, y = y_new,
+            trace = go.Scattergl(x = x_new, y = y_new,
             hovertext= "Study: " + i
             + "<br />y = " + str(f_new[0]) + " * e^(" + str(f_new[1]) + " * x) + " + str(f_new[2]),
             hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
@@ -1535,7 +1544,8 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, sur
             
             popt, _ = curve_fit(power, x, y, maxfev = 999999999)
 
-            y_new = power(x, popt[0],popt[1],popt[2])
+            x_new = np.linspace(x[0], x[-1], 1000)
+            y_new = power(x_new, *popt)
 
             f_new = []
             for num in popt:
@@ -1544,7 +1554,7 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, sur
                 else:
                     f_new.append(np.round(num,3))
             
-            trace = go.Scattergl(x = x, y = y_new,
+            trace = go.Scattergl(x = x_new, y = y_new,
             hovertext= "Study: " + i
             + "<br />y = " + str(f_new[0]) + " * x^(" + str(f_new[1]) + ") + " + str(f_new[2]),
             hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
