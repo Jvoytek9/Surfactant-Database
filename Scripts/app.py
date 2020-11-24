@@ -3,7 +3,6 @@ from datetime import date
 import gspread
 from gspread_dataframe import get_as_dataframe
 from oauth2client.service_account import ServiceAccountCredentials
-import itertools
 import numpy as np
 np.warnings.filterwarnings('ignore')
 from scipy.optimize import curve_fit
@@ -1711,10 +1710,10 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, fit, order, 
             data.append(trace)
         
         if('Log-Fit' in fit):
-            def logarithmic(data, a, b, c):
+            def logarithmic(data, a, b, c, d):
                 x = data[0]
                 y = data[1]
-                return  a * np.log(b * x) + c
+                return  a * np.log(b * x) * np.log(c * y) + d
 
             popt, _ = curve_fit(logarithmic, [x, y], z, maxfev = 999999999)
 
@@ -1746,12 +1745,12 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, fit, order, 
             data.append(trace)
 
         if('Exp-Fit' in fit):
-            def exponential(data, a, b, c):
+            def exponential(data, a, b, c, d):
                 x = data[0]
                 y = data[1]
-                return a * np.exp(-b * x) + c
+                return a * np.exp(-b * x) * np.exp(-c * y) + d
 
-            popt, _ = curve_fit(exponential, [x, y], z, maxfev = 999999999)
+            popt, _ = curve_fit(exponential, [x, y], z, p0=(1, 1e-6, 1e-6, 1), maxfev = 999999999)
 
             # create surface function model
             # setup data points for calculating surface model
@@ -1784,7 +1783,7 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, fit, order, 
             def power(data, a, N, b):
                 x = data[0]
                 y = data[1]
-                return a * np.power(x,N) + b
+                return a * np.power(x,N) * np.power(y,N) + b
 
             popt, _ = curve_fit(power, [x, y], z, maxfev = 999999999)
 
@@ -1903,6 +1902,8 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, fit, order, 
         else:
             continue
 
+        
+        colorscale= [[0, name_array.Color.values[0]], [1, name_array.Color.values[0]]]
         if('Scatter' in fit):
             trace = go.Scatter3d(x = x, y = y, z = z,
             hovertext= "Study: " + i
@@ -1962,12 +1963,115 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, fit, order, 
                 
                 Z = np.dot(np.c_[np.ones(XX.shape), XX, YY, XX**2, XX*YY, YY**2, XX**3, XX**2*YY, XX*YY**2, YY**3], C).reshape(X.shape)
 
-            colorscale= [[0, name_array.Color.values[0]], [1, name_array.Color.values[0]]]
-
             trace = go.Surface(x = X, y = Y, z = Z,
             colorscale=colorscale, opacity=0.75,
             hoverinfo="text",
             hovertext= "Study: " + i + "<br />" + equation,
+            name=i,showscale=False)
+
+            data.append(trace)
+        
+        if('Log-Fit' in fit):
+            def logarithmic(data, a, b, c, d):
+                x = data[0]
+                y = data[1]
+                return  a * np.log(b * x) * np.log(c * y) + d
+
+            popt, _ = curve_fit(logarithmic, [x, y], z, maxfev = 999999999)
+
+            # create surface function model
+            # setup data points for calculating surface model
+            X = np.linspace(min(x), max(x), 20)
+            Y = np.linspace(min(y), max(y), 20)
+
+            # create coordinate arrays for vectorized evaluations
+            x_new, y_new = np.meshgrid(X, Y)
+
+            # calculate Z coordinate array
+            z_new = logarithmic(np.array([x_new, y_new]), *popt)
+
+            f_new = []
+            for num in popt:
+                if np.absolute(num) < 10**(1/4) or np.absolute(num) > np.power(10,3):
+                    f_new.append(format(num,'.3e'))
+                else:
+                    f_new.append(np.round(num,3))
+
+            trace = go.Surface(x = x_new, y = y_new, z = z_new,
+            colorscale=colorscale, opacity=0.75,
+            hovertext= "Study: " + i
+            + "<br />y = " + str(f_new[0]) + " * log(" + str(f_new[1]) + " * x) + " + str(f_new[2]),
+            hoverinfo="text",
+            name=i,showscale=False)
+
+            data.append(trace)
+
+        if('Exp-Fit' in fit):
+            def exponential(data, a, b, c, d):
+                x = data[0]
+                y = data[1]
+                return a * np.exp(-b * x) * np.exp(-c * y) + d
+
+            popt, _ = curve_fit(exponential, [x, y], z, p0=(1, 1e-6, 1e-6, 1), maxfev = 999999999)
+
+            # create surface function model
+            # setup data points for calculating surface model
+            X = np.linspace(min(x), max(x), 20)
+            Y = np.linspace(min(y), max(y), 20)
+
+            # create coordinate arrays for vectorized evaluations
+            x_new, y_new = np.meshgrid(X, Y)
+
+            # calculate Z coordinate array
+            z_new = exponential(np.array([x_new, y_new]), *popt)
+
+            f_new = []
+            for num in popt:
+                if np.absolute(num) < 10**(1/4) or np.absolute(num) > np.power(10,3):
+                    f_new.append(format(num,'.3e'))
+                else:
+                    f_new.append(np.round(num,3))
+
+            trace = go.Surface(x = x_new, y = y_new, z = z_new,
+            colorscale=colorscale, opacity=0.75,
+            hovertext= "Study: " + i
+            + "<br />y = " + str(f_new[0]) + " * e^(" + str(f_new[1]) + " * x) + " + str(f_new[2]),
+            hoverinfo="text",
+            name=i,showscale=False)
+
+            data.append(trace)
+
+        if('Power-Fit' in fit):
+            def power(data, a, N, b):
+                x = data[0]
+                y = data[1]
+                return a * np.power(x,N) * np.power(y,N)
+
+            popt, _ = curve_fit(power, [x, y], z, maxfev = 999999999)
+
+            # create surface function model
+            # setup data points for calculating surface model
+            X = np.linspace(min(x), max(x), 20)
+            Y = np.linspace(min(y), max(y), 20)
+
+            # create coordinate arrays for vectorized evaluations
+            x_new, y_new = np.meshgrid(X, Y)
+
+            # calculate Z coordinate array
+            z_new = power(np.array([x_new, y_new]), *popt)
+
+            f_new = []
+            for num in popt:
+                if np.absolute(num) < 10**(1/4) or np.absolute(num) > np.power(10,3):
+                    f_new.append(format(num,'.3e'))
+                else:
+                    f_new.append(np.round(num,3))
+
+            trace = go.Surface(x = x_new, y = y_new, z = z_new,
+            colorscale=colorscale, opacity=0.75,
+            hovertext= "Study: " + i
+            + "<br />y = " + str(f_new[0]) + " * x^(" + str(f_new[1]) + ") + " + str(f_new[2]),
+            hoverinfo="text",
             name=i,showscale=False)
 
             data.append(trace)
