@@ -180,6 +180,15 @@ home = dbc.Row([
                     html.Hr(),
 
                     html.Div(
+                        dcc.RadioItems(
+                            id='normalize2',
+                            options=[{'label': i, 'value': i} for i in ['No Normalize','Normalize']],
+                            value='No Normalize',
+                            labelStyle={"padding-right":"10px","margin":"auto","padding-bottom":"10px"}
+                        )
+                    ,style={"margin":"auto"}),
+
+                    html.Div(
                         dcc.Checklist(
                             id = 'bestfit2',
                             options= [{'label': i, 'value': i} for i in ['Scatter','Poly-Fit','Log-Fit','Exp-Fit',"Power-Fit"]],
@@ -399,6 +408,15 @@ home = dbc.Row([
                             id='addComp',
                             options=[{'label': i, 'value': i} for i in ['No Compare','Compare']],
                             value='No Compare',
+                            labelStyle={"padding-right":"10px","margin":"auto","padding-bottom":"10px"}
+                        )
+                    ,style={"margin":"auto"}),
+
+                    html.Div(
+                        dcc.RadioItems(
+                            id='normalize',
+                            options=[{'label': i, 'value': i} for i in ['No Normalize','Normalize']],
+                            value='No Normalize',
                             labelStyle={"padding-right":"10px","margin":"auto","padding-bottom":"10px"}
                         )
                     ,style={"margin":"auto"}),
@@ -1149,12 +1167,14 @@ def update_master_table_styles(x,y,z):
     }]
 
 @app.callback(
-    [Output("comp1_2D_graph", "figure"),
-     Output("comp1_2D_table", "data"),
-     Output("comp1_2D_table", "columns")],
+    [Output("comp1_3D_graph", "figure"),
+     Output("comp1_3D_table", "data"),
+     Output("comp1_3D_table", "columns")],
     [Input("select-xaxis", "value"),
      Input("select-yaxis", "value"),
+     Input("select-zaxis", "value"),
      Input('addComp', 'value'),
+     Input('normalize', 'value'),
      Input("bestfit", "value"),
      Input("input_fit", "value"),
      Input('gasses', 'value'),
@@ -1164,7 +1184,595 @@ def update_master_table_styles(x,y,z):
      Input('aconc', 'value'),
      Input('lp', 'value')],
 )
-def update_comp1_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, surc, add, addc, lp):
+def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, fit, order, ga, sur, surc, add, addc, lp):
+    cl = dv[dv['Gas'].isin(ga)]
+    ea = cl[cl['Surfactant'].isin(sur)]
+    n = ea[ea["Surfactant Concentration"].isin(surc)]
+    e = n[n['Additive'].isin(add)]
+    d = e[e['Additive Concentration'].isin(addc)]
+    cleaned = d[d['LiquidPhase'].isin(lp)]
+
+    data = []
+
+    for i in names:
+        name_array = cleaned[cleaned.Study == i]
+        
+        if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0 and len(name_array[selected_z].values) != 0:
+            name_array = name_array.dropna(subset=[selected_x, selected_y, selected_z],axis="rows")
+            name_array.reset_index(drop=True)
+            name_array.sort_values(by=selected_x, inplace=True)
+
+            if len(name_array[selected_x]) > 2:
+                x = np.array(name_array[selected_x])
+                y = np.array(name_array[selected_y])
+                z = np.array(name_array[selected_z])
+                if normalize == "Normalize":
+                    if max(x) == min(x):
+                        x = np.full_like(x, 0.5)
+                    else:
+                        x = (x-min(x))/(max(x)-min(x))
+                    x[x == 0] = 0.001
+                    
+                    if max(y) == min(y):
+                        y = np.full_like(y, 0.5)
+                    else:
+                        y = (y-min(y))/(max(y)-min(y))
+                    y[y == 0] = 0.001
+                    
+                    if max(z) == min(z):
+                        z = np.full_like(z, 0.5)
+                    else:
+                        z = (z-min(z))/(max(z)-min(z))
+                    z[z == 0] = 0.001
+            else:
+                continue
+        else:
+            continue
+
+        if('Scatter' in fit):
+            trace = go.Scatter3d(x = x, y = y, z = z,
+            hovertext= "Study: " + i
+            + "<br />Gas: " + name_array.Gas
+            + "<br />Surfactant: " + name_array.Surfactant
+            + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"]
+            + "<br />Additive: " + name_array.Additive
+            + "<br />Concentration Additive: " + name_array['Additive Concentration']
+            + "<br />Liquid Phase: " + name_array.LiquidPhase,
+            hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
+            name=i,legendgroup=i)
+
+            data.append(trace)
+
+        colorscale= [[0, name_array.Color.values[0]], [1, name_array.Color.values[0]]]
+        if('Poly-Fit' in fit):
+            if('Scatter' in fit):
+                showLegend = False
+            else:
+                showLegend = True
+
+            d = np.c_[x,y,z]
+
+            # regular grid covering the domain of the data
+            mn = np.min(d, axis=0)
+            mx = np.max(d, axis=0)
+            X,Y = np.meshgrid(np.linspace(mn[0], mx[0], 20), np.linspace(mn[1], mx[1], 20))
+            XX = X.flatten()
+            YY = Y.flatten()
+
+            if order == 1:
+                # Poly-Fit linear plane
+                A = np.c_[d[:,0], d[:,1], np.ones(d.shape[0])]
+                C,_,_,_ = np.linalg.lstsq(A, d[:,2])    # coefficients
+                
+                # evaluate it on grid
+                # Z = C[0]*X + C[1]*Y + C[2]
+
+                equation = "z = " + str(format(C[0],'.3e')) + "x + " + str(format(C[1],'.3e')) + "y + " + str(format(C[2],'.3e'))
+                
+                # or expressed using matrix/vector product
+                Z = np.dot(np.c_[XX, YY, np.ones(XX.shape)], C).reshape(X.shape)
+
+            elif order == 2:
+                # Poly-Fit quadratic curve
+                # M = [ones(size(x)), x, y, x.*y, x.^2 y.^2]
+                A = np.c_[np.ones(d.shape[0]), d[:,:2], np.prod(d[:,:2], axis=1), d[:,:2]**2]
+                C,_,_,_ = np.linalg.lstsq(A, d[:,2])
+
+                equation = "z = " + str(format(C[4],'.3e')) + "x² + " + str(format(C[5],'.3e')) + "y² + " + str(format(C[3],'.3e')) + "xy + " + str(format(C[1],'.3e')) + "x + " + str(format(C[2],'.3e')) + "y + " + str(format(C[0],'.3e'))
+
+                # evaluate it on a grid
+                Z = np.dot(np.c_[np.ones(XX.shape), XX, YY, XX*YY, XX**2, YY**2], C).reshape(X.shape)
+                
+            elif order == 3:
+                # M = [ones(size(x)), x, y, x.^2, x.*y, y.^2, x.^3, x.^2.*y, x.*y.^2, y.^3]
+                A = np.c_[np.ones(d.shape[0]), d[:,:2], d[:,0]**2, np.prod(d[:,:2], axis=1), \
+                        d[:,1]**2, d[:,0]**3, np.prod(np.c_[d[:,0]**2,d[:,1]],axis=1), \
+                        np.prod(np.c_[d[:,0],d[:,1]**2],axis=1), d[:,2]**3]
+                C,_,_,_ = np.linalg.lstsq(A, d[:,2])
+
+                equation = "z = " + str(format(C[6],'.3e')) + "x³ + " + str(format(C[9],'.3e')) + "y³ + " + str(format(C[7],'.3e')) + "x²y + " + str(format(C[8],'.3e')) + "xy² + " + str(format(C[3],'.3e')) + "x² + " + str(format(C[5],'.3e')) + "y² + " + str(format(C[4],'.3e')) + "xy + " + str(format(C[1],'.3e')) + "x + " + str(format(C[2],'.3e')) + "y + " + str(format(C[0],'.3e'))
+                
+                Z = np.dot(np.c_[np.ones(XX.shape), XX, YY, XX**2, XX*YY, YY**2, XX**3, XX**2*YY, XX*YY**2, YY**3], C).reshape(X.shape)
+
+            trace = go.Surface(x = X, y = Y, z = Z,
+            colorscale=colorscale, opacity=0.75,
+            hoverinfo="text",
+            hovertext= "Study: " + i + "<br />" + equation,
+            name=i,showscale=False,showlegend=showLegend,legendgroup=i)
+
+            data.append(trace)
+        
+        if('Log-Fit' in fit):
+            if('Scatter' in fit or "Poly-Fit" in fit):
+                showLegend = False
+            else:
+                showLegend = True
+
+            def logarithmic(data, a, b, c, d):
+                x = data[0]
+                y = data[1]
+                return  a * np.log(b * x) * np.log(c * y) + d
+
+            popt, _ = curve_fit(logarithmic, [x, y], z, maxfev = 999999999)
+
+            # create surface function model
+            # setup data points for calculating surface model
+            X = np.linspace(min(x), max(x), 20)
+            Y = np.linspace(min(y), max(y), 20)
+
+            # create coordinate arrays for vectorized evaluations
+            x_new, y_new = np.meshgrid(X, Y)
+
+            # calculate Z coordinate array
+            z_new = logarithmic(np.array([x_new, y_new]), *popt)
+
+            f_new = []
+            for num in popt:
+                if np.absolute(num) < 10**(1/4) or np.absolute(num) > np.power(10,3):
+                    f_new.append(format(num,'.3e'))
+                else:
+                    f_new.append(np.round(num,3))
+
+            trace = go.Surface(x = x_new, y = y_new, z = z_new,
+            colorscale=colorscale, opacity=0.75,
+            hovertext= "Study: " + i
+            + "<br />y = " + str(f_new[0]) + " * (log(" + str(f_new[1]) + " * x) " + " * log(" + str(f_new[2]) + " * y)) + " +  str(f_new[3]),
+            hoverinfo="text",
+            name=i,showscale=False,showlegend=showLegend,legendgroup=i)
+
+            data.append(trace)
+
+        if('Exp-Fit' in fit):
+            if('Scatter' in fit or "Poly-Fit" in fit or "Log-Fit" in fit):
+                showLegend = False
+            else:
+                showLegend = True
+
+            def exponential(data, a, b, c, d):
+                x = data[0]
+                y = data[1]
+                return a * np.exp(-b * x) * np.exp(-c * y) + d
+
+            popt, _ = curve_fit(exponential, [x, y], z, p0=(1, 1e-6, 1e-6, 1), maxfev = 999999999)
+
+            # create surface function model
+            # setup data points for calculating surface model
+            X = np.linspace(min(x), max(x), 20)
+            Y = np.linspace(min(y), max(y), 20)
+
+            # create coordinate arrays for vectorized evaluations
+            x_new, y_new = np.meshgrid(X, Y)
+
+            # calculate Z coordinate array
+            z_new = exponential(np.array([x_new, y_new]), *popt)
+
+            f_new = []
+            for num in popt:
+                if np.absolute(num) < 10**(1/4) or np.absolute(num) > np.power(10,3):
+                    f_new.append(format(num,'.3e'))
+                else:
+                    f_new.append(np.round(num,3))
+
+            trace = go.Surface(x = x_new, y = y_new, z = z_new,
+            colorscale=colorscale, opacity=0.75,
+            hovertext= "Study: " + i
+            + "<br />y = " + str(f_new[0]) + " * (e^(" + str(f_new[1]) + " * x) " + " * e^(" + str(f_new[2]) + " * y)) + " + str(f_new[3]),
+            hoverinfo="text",
+            name=i,showscale=False,showlegend=showLegend,legendgroup=i)
+
+            data.append(trace)
+
+        if('Power-Fit' in fit):
+            if('Scatter' in fit or "Poly-Fit" in fit or "Log-Fit" in fit or "Exp-Fit" in fit):
+                showLegend = False
+            else:
+                showLegend = True
+
+            def power(data, a, M, N, b):
+                x = data[0]
+                y = data[1]
+                return a * np.power(x,M) * np.power(y,N) + b
+
+            popt, _ = curve_fit(power, [x, y], z, maxfev = 999999999)
+
+            # create surface function model
+            # setup data points for calculating surface model
+            X = np.linspace(min(x), max(x), 20)
+            Y = np.linspace(min(y), max(y), 20)
+
+            # create coordinate arrays for vectorized evaluations
+            x_new, y_new = np.meshgrid(X, Y)
+
+            # calculate Z coordinate array
+            z_new = power(np.array([x_new, y_new]), *popt)
+
+            f_new = []
+            for num in popt:
+                if np.absolute(num) < 10**(1/4) or np.absolute(num) > np.power(10,3):
+                    f_new.append(format(num,'.3e'))
+                else:
+                    f_new.append(np.round(num,3))
+
+            trace = go.Surface(x = x_new, y = y_new, z = z_new,
+            colorscale=colorscale, opacity=0.75,
+            hovertext= "Study: " + i
+            + "<br />y = " + str(f_new[0]) + " * (x^(" + str(f_new[1]) + ") " + " * y^(" + str(f_new[2]) + ")) + " + str(f_new[3]),
+            hoverinfo="text",
+            name=i,showscale=False,showlegend=showLegend,legendgroup=i)
+
+            data.append(trace)
+
+    cleaned.dropna(subset=[selected_x, selected_y, selected_z],axis="rows", inplace=True)
+    cleaned = cleaned[[selected_x,selected_y, selected_z]]
+
+    if(comp == "No Compare"):
+        legend_orientation={
+                "font_size": 24,
+        }
+
+    if(comp == "Compare"):
+        legend_orientation={
+                "orientation":"h",
+                "xanchor":"center",
+                "x":0.5,
+                "yanchor":"bottom",
+                "y":1,
+                "valign":"middle",
+                "font_size": 20,
+        }
+
+    return [{"data": data,
+            "layout": go.Layout(
+                hovermode="closest",
+                legend=legend_orientation,
+                font={
+                    "size": 16,
+                    "family": "Times New Roman",
+                },
+                scene={
+                    "camera":{"center":dict(x=0.05,y=0,z=-0.25)},
+                    "xaxis": {"title": f"{selected_x.title()}"},
+                    "yaxis": {"title": f"{selected_y.title()}"},
+                    "zaxis": {"title": f"{selected_z.title()}"}
+                },
+                margin={
+                    "b":0,
+                    "l":0,
+                    "r":0
+                },
+                height=Graph_Height
+            )},cleaned.to_dict('records'), [{'id': c, 'name': c} for c in cleaned.columns]]
+
+@app.callback(
+    [Output("comp2_3D_graph", "figure"),
+     Output("comp2_3D_table", "data"),
+     Output("comp2_3D_table", "columns")],
+    [Input("select-xaxis2", "value"),
+     Input("select-yaxis2", "value"),
+     Input("select-zaxis2", "value"),
+     Input("addComp","value"),
+     Input("normalize2","value"),
+     Input("bestfit2", "value"),
+     Input("input_fit2", "value"),
+     Input('gasses2', 'value'),
+     Input('surfactants2', 'value'),
+     Input('sconc2', 'value'),
+     Input('additives2', 'value'),
+     Input('aconc2', 'value'),
+     Input('lp2', 'value')],
+)
+def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, fit, order, ga, sur, surc, add, addc, lp):
+    if comp == "No Compare":
+        return [{},[],[]]
+
+    cl = dv[dv['Gas'].isin(ga)]
+    ea = cl[cl['Surfactant'].isin(sur)]
+    n = ea[ea["Surfactant Concentration"].isin(surc)]
+    e = n[n['Additive'].isin(add)]
+    d = e[e['Additive Concentration'].isin(addc)]
+    cleaned = d[d['LiquidPhase'].isin(lp)]
+
+    data = []
+
+    for i in names:
+        name_array = cleaned[cleaned.Study == i]
+        
+        if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0 and len(name_array[selected_z].values) != 0:
+            name_array = name_array.dropna(subset=[selected_x, selected_y, selected_z],axis="rows")
+            name_array.reset_index(drop=True)
+            name_array.sort_values(by=selected_x, inplace=True)
+
+            if len(name_array[selected_x]) > 2:
+                x = np.array(name_array[selected_x])
+                y = np.array(name_array[selected_y])
+                z = np.array(name_array[selected_z])
+                if normalize == "Normalize":
+                    if max(x) == min(x):
+                        x = np.full_like(x, 0.5)
+                    else:
+                        x = (x-min(x))/(max(x)-min(x))
+                    x[x == 0] = 0.001
+                    
+                    if max(y) == min(y):
+                        y = np.full_like(y, 0.5)
+                    else:
+                        y = (y-min(y))/(max(y)-min(y))
+                    y[y == 0] = 0.001
+                    
+                    if max(z) == min(z):
+                        z = np.full_like(z, 0.5)
+                    else:
+                        z = (z-min(z))/(max(z)-min(z))
+                    z[z == 0] = 0.001
+            else:
+                continue
+        else:
+            continue
+        
+        colorscale= [[0, name_array.Color.values[0]], [1, name_array.Color.values[0]]]
+        if('Scatter' in fit):
+            trace = go.Scatter3d(x = x, y = y, z = z,
+            hovertext= "Study: " + i
+            + "<br />Gas: " + name_array.Gas
+            + "<br />Surfactant: " + name_array.Surfactant
+            + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"]
+            + "<br />Additive: " + name_array.Additive
+            + "<br />Concentration Additive: " + name_array['Additive Concentration']
+            + "<br />Liquid Phase: " + name_array.LiquidPhase,
+            hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
+            name=i,legendgroup=i)
+
+            data.append(trace)
+
+        if('Poly-Fit' in fit):
+            if('Scatter' in fit):
+                showLegend = False
+            else:
+                showLegend = True
+
+            d = np.c_[x,y,z]
+
+            # regular grid covering the domain of the data
+            mn = np.min(d, axis=0)
+            mx = np.max(d, axis=0)
+            X,Y = np.meshgrid(np.linspace(mn[0], mx[0], 20), np.linspace(mn[1], mx[1], 20))
+            XX = X.flatten()
+            YY = Y.flatten()
+
+            if order == 1:
+                # Poly-Fit linear plane
+                A = np.c_[d[:,0], d[:,1], np.ones(d.shape[0])]
+                C,_,_,_ = np.linalg.lstsq(A, d[:,2])    # coefficients
+                
+                # evaluate it on grid
+                # Z = C[0]*X + C[1]*Y + C[2]
+
+                equation = "z = " + str(format(C[0],'.3e')) + "x + " + str(format(C[1],'.3e')) + "y + " + str(format(C[2],'.3e'))
+                
+                # or expressed using matrix/vector product
+                Z = np.dot(np.c_[XX, YY, np.ones(XX.shape)], C).reshape(X.shape)
+
+            elif order == 2:
+                # Poly-Fit quadratic curve
+                # M = [ones(size(x)), x, y, x.*y, x.^2 y.^2]
+                A = np.c_[np.ones(d.shape[0]), d[:,:2], np.prod(d[:,:2], axis=1), d[:,:2]**2]
+                C,_,_,_ = np.linalg.lstsq(A, d[:,2])
+
+                equation = "z = " + str(format(C[4],'.3e')) + "x² + " + str(format(C[5],'.3e')) + "y² + " + str(format(C[3],'.3e')) + "xy + " + str(format(C[1],'.3e')) + "x + " + str(format(C[2],'.3e')) + "y + " + str(format(C[0],'.3e'))
+
+                # evaluate it on a grid
+                Z = np.dot(np.c_[np.ones(XX.shape), XX, YY, XX*YY, XX**2, YY**2], C).reshape(X.shape)
+                
+            elif order == 3:
+                # M = [ones(size(x)), x, y, x.^2, x.*y, y.^2, x.^3, x.^2.*y, x.*y.^2, y.^3]
+                A = np.c_[np.ones(d.shape[0]), d[:,:2], d[:,0]**2, np.prod(d[:,:2], axis=1), \
+                        d[:,1]**2, d[:,0]**3, np.prod(np.c_[d[:,0]**2,d[:,1]],axis=1), \
+                        np.prod(np.c_[d[:,0],d[:,1]**2],axis=1), d[:,2]**3]
+                C,_,_,_ = np.linalg.lstsq(A, d[:,2])
+
+                equation = "z = " + str(format(C[6],'.3e')) + "x³ + " + str(format(C[9],'.3e')) + "y³ + " + str(format(C[7],'.3e')) + "x²y + " + str(format(C[8],'.3e')) + "xy² + " + str(format(C[3],'.3e')) + "x² + " + str(format(C[5],'.3e')) + "y² + " + str(format(C[4],'.3e')) + "xy + " + str(format(C[1],'.3e')) + "x + " + str(format(C[2],'.3e')) + "y + " + str(format(C[0],'.3e'))
+                
+                Z = np.dot(np.c_[np.ones(XX.shape), XX, YY, XX**2, XX*YY, YY**2, XX**3, XX**2*YY, XX*YY**2, YY**3], C).reshape(X.shape)
+
+            trace = go.Surface(x = X, y = Y, z = Z,
+            colorscale=colorscale, opacity=0.75,
+            hoverinfo="text",
+            hovertext= "Study: " + i + "<br />" + equation,
+            name=i,showscale=False,showlegend=showLegend,legendgroup=i)
+
+            data.append(trace)
+        
+        if('Log-Fit' in fit):
+            if('Scatter' in fit or "Poly-Fit" in fit):
+                showLegend = False
+            else:
+                showLegend = True
+
+            def logarithmic(data, a, b, c, d):
+                x = data[0]
+                y = data[1]
+                return  a * np.log(b * x) * np.log(c * y) + d
+
+            popt, _ = curve_fit(logarithmic, [x, y], z, maxfev = 999999999)
+
+            # create surface function model
+            # setup data points for calculating surface model
+            X = np.linspace(min(x), max(x), 20)
+            Y = np.linspace(min(y), max(y), 20)
+
+            # create coordinate arrays for vectorized evaluations
+            x_new, y_new = np.meshgrid(X, Y)
+
+            # calculate Z coordinate array
+            z_new = logarithmic(np.array([x_new, y_new]), *popt)
+
+            f_new = []
+            for num in popt:
+                if np.absolute(num) < 10**(1/4) or np.absolute(num) > np.power(10,3):
+                    f_new.append(format(num,'.3e'))
+                else:
+                    f_new.append(np.round(num,3))
+
+            trace = go.Surface(x = x_new, y = y_new, z = z_new,
+            colorscale=colorscale, opacity=0.75,
+            hovertext= "Study: " + i
+            + "<br />y = " + str(f_new[0]) + " * (log(" + str(f_new[1]) + " * x) " + " * log(" + str(f_new[2]) + " * y)) + " +  str(f_new[3]),
+            hoverinfo="text",
+            name=i,showscale=False,showlegend=showLegend,legendgroup=i)
+
+            data.append(trace)
+
+        if('Exp-Fit' in fit):
+            if('Scatter' in fit or "Poly-Fit" in fit or "Log-Fit" in fit):
+                showLegend = False
+            else:
+                showLegend = True
+
+            def exponential(data, a, b, c, d):
+                x = data[0]
+                y = data[1]
+                return a * np.exp(-b * x) * np.exp(-c * y) + d
+
+            popt, _ = curve_fit(exponential, [x, y], z, p0=(1, 1e-6, 1e-6, 1), maxfev = 999999999)
+
+            # create surface function model
+            # setup data points for calculating surface model
+            X = np.linspace(min(x), max(x), 20)
+            Y = np.linspace(min(y), max(y), 20)
+
+            # create coordinate arrays for vectorized evaluations
+            x_new, y_new = np.meshgrid(X, Y)
+
+            # calculate Z coordinate array
+            z_new = exponential(np.array([x_new, y_new]), *popt)
+
+            f_new = []
+            for num in popt:
+                if np.absolute(num) < 10**(1/4) or np.absolute(num) > np.power(10,3):
+                    f_new.append(format(num,'.3e'))
+                else:
+                    f_new.append(np.round(num,3))
+
+            trace = go.Surface(x = x_new, y = y_new, z = z_new,
+            colorscale=colorscale, opacity=0.75,
+            hovertext= "Study: " + i
+            + "<br />y = " + str(f_new[0]) + " * (e^(" + str(f_new[1]) + " * x) " + " * e^(" + str(f_new[2]) + " * y)) + " + str(f_new[3]),
+            hoverinfo="text",
+            name=i,showscale=False,showlegend=showLegend,legendgroup=i)
+
+            data.append(trace)
+
+        if('Power-Fit' in fit):
+            if('Scatter' in fit or "Poly-Fit" in fit or "Log-Fit" in fit or "Exp-Fit" in fit):
+                showLegend = False
+            else:
+                showLegend = True
+
+            def power(data, a, M, N, b):
+                x = data[0]
+                y = data[1]
+                return a * np.power(x,M) * np.power(y,N) + b
+
+            popt, _ = curve_fit(power, [x, y], z, maxfev = 999999999)
+
+            # create surface function model
+            # setup data points for calculating surface model
+            X = np.linspace(min(x), max(x), 20)
+            Y = np.linspace(min(y), max(y), 20)
+
+            # create coordinate arrays for vectorized evaluations
+            x_new, y_new = np.meshgrid(X, Y)
+
+            # calculate Z coordinate array
+            z_new = power(np.array([x_new, y_new]), *popt)
+
+            f_new = []
+            for num in popt:
+                if np.absolute(num) < 10**(1/4) or np.absolute(num) > np.power(10,3):
+                    f_new.append(format(num,'.3e'))
+                else:
+                    f_new.append(np.round(num,3))
+
+            trace = go.Surface(x = x_new, y = y_new, z = z_new,
+            colorscale=colorscale, opacity=0.75,
+            hovertext= "Study: " + i
+            + "<br />y = " + str(f_new[0]) + " * (x^(" + str(f_new[1]) + ") " + " * y^(" + str(f_new[2]) + ")) + " + str(f_new[3]),
+            hoverinfo="text",
+            name=i,showscale=False,showlegend=showLegend,legendgroup=i)
+
+            data.append(trace)
+
+    cleaned.dropna(subset=[selected_x, selected_y, selected_z],axis="rows", inplace=True)
+    cleaned = cleaned[[selected_x,selected_y, selected_z]]
+
+    return [{"data": data,
+            "layout": go.Layout(
+                hovermode="closest",
+                legend={
+                    "orientation":"h",
+                    "xanchor":"center",
+                    "x":0.5,
+                    "yanchor":"bottom",
+                    "y":1,
+                    "valign":"middle",
+                    "font_size": 20,
+                },
+                font={
+                    "size": 16,
+                    "family": "Times New Roman",
+                },
+                scene={
+                    "camera":{"center":dict(x=0.05,y=0,z=-0.25)},
+                    "xaxis": {"title": f"{selected_x.title()}"},
+                    "yaxis": {"title": f"{selected_y.title()}"},
+                    "zaxis": {"title": f"{selected_z.title()}"}
+                },
+                margin={
+                    "b":0,
+                    "l":0,
+                    "r":0
+                },
+                height=Graph_Height
+            )},cleaned.to_dict('records'), [{'id': c, 'name': c} for c in cleaned.columns]]
+
+@app.callback(
+    [Output("comp1_2D_graph", "figure"),
+     Output("comp1_2D_table", "data"),
+     Output("comp1_2D_table", "columns")],
+    [Input("select-xaxis", "value"),
+     Input("select-yaxis", "value"),
+     Input('addComp', 'value'),
+     Input('normalize', 'value'),
+     Input("bestfit", "value"),
+     Input("input_fit", "value"),
+     Input('gasses', 'value'),
+     Input('surfactants', 'value'),
+     Input('sconc', 'value'),
+     Input('additives', 'value'),
+     Input('aconc', 'value'),
+     Input('lp', 'value')],
+)
+def update_comp1_2D_graph(selected_x, selected_y, comp, normalize, fit, order, ga, sur, surc, add, addc, lp):
     cl = dv[dv['Gas'].isin(ga)]
     ea = cl[cl['Surfactant'].isin(sur)]
     n = ea[ea["Surfactant Concentration"].isin(surc)]
@@ -1186,6 +1794,18 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, sur
             if len(name_array[selected_x]) > 2:
                 x = np.array(name_array[selected_x])
                 y = np.array(name_array[selected_y])
+                if normalize == "Normalize":
+                    if max(x) == min(x):
+                        x = np.full_like(x, 0.5)
+                    else:
+                        x = (x-min(x))/(max(x)-min(x))
+                    x[x == 0] = 0.001
+                    
+                    if max(y) == min(y):
+                        y = np.full_like(y, 0.5)
+                    else:
+                        y = (y-min(y))/(max(y)-min(y))
+                    y[y == 0] = 0.001
             else:
                 continue
         else:
@@ -1382,6 +2002,7 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, sur
     [Input("select-xaxis2", "value"),
      Input("select-yaxis2", "value"),
      Input('addComp', 'value'),
+     Input('normalize2', 'value'),
      Input("bestfit2", "value"),
      Input("input_fit2", "value"),
      Input('gasses2', 'value'),
@@ -1391,7 +2012,7 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, sur
      Input('aconc2', 'value'),
      Input('lp2', 'value')],
 )
-def update_comp2_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, surc, add, addc, lp):
+def update_comp2_2D_graph(selected_x, selected_y, comp, normalize, fit, order, ga, sur, surc, add, addc, lp):
     if comp == "No Compare":
         return [{},[],[]]
 
@@ -1415,6 +2036,18 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, sur
             if len(name_array[selected_x]) > 2:
                 x = np.array(name_array[selected_x])
                 y = np.array(name_array[selected_y])
+                if normalize == "Normalize":
+                    if max(x) == min(x):
+                        x = np.full_like(x, 0.5)
+                    else:
+                        x = (x-min(x))/(max(x)-min(x))
+                    x[x == 0] = 0.001
+                    
+                    if max(y) == min(y):
+                        y = np.full_like(y, 0.5)
+                    else:
+                        y = (y-min(y))/(max(y)-min(y))
+                    y[y == 0] = 0.001
             else:
                 continue
         else:
@@ -1596,518 +2229,6 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, fit, order, ga, sur, sur
             height=Graph_Height
         )
     },cleaned.to_dict('records'), [{'id': c, 'name': c} for c in cleaned.columns]]
-
-@app.callback(
-    [Output("comp1_3D_graph", "figure"),
-     Output("comp1_3D_table", "data"),
-     Output("comp1_3D_table", "columns")],
-    [Input("select-xaxis", "value"),
-     Input("select-yaxis", "value"),
-     Input("select-zaxis", "value"),
-     Input('addComp', 'value'),
-     Input("bestfit", "value"),
-     Input("input_fit", "value"),
-     Input('gasses', 'value'),
-     Input('surfactants', 'value'),
-     Input('sconc', 'value'),
-     Input('additives', 'value'),
-     Input('aconc', 'value'),
-     Input('lp', 'value')],
-)
-def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, fit, order, ga, sur, surc, add, addc, lp):
-    cl = dv[dv['Gas'].isin(ga)]
-    ea = cl[cl['Surfactant'].isin(sur)]
-    n = ea[ea["Surfactant Concentration"].isin(surc)]
-    e = n[n['Additive'].isin(add)]
-    d = e[e['Additive Concentration'].isin(addc)]
-    cleaned = d[d['LiquidPhase'].isin(lp)]
-
-    data = []
-
-    for i in names:
-        name_array = cleaned[cleaned.Study == i]
-        
-        if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0 and len(name_array[selected_z].values) != 0:
-            name_array = name_array.dropna(subset=[selected_x, selected_y, selected_z],axis="rows")
-            name_array.reset_index(drop=True)
-            name_array.sort_values(by=selected_x, inplace=True)
-
-            if len(name_array[selected_x]) > 2:
-                x = np.array(name_array[selected_x])
-                y = np.array(name_array[selected_y])
-                z = np.array(name_array[selected_z])
-            else:
-                continue
-        else:
-            continue
-
-        if('Scatter' in fit):
-            trace = go.Scatter3d(x = x, y = y, z = z,
-            hovertext= "Study: " + i
-            + "<br />Gas: " + name_array.Gas
-            + "<br />Surfactant: " + name_array.Surfactant
-            + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"]
-            + "<br />Additive: " + name_array.Additive
-            + "<br />Concentration Additive: " + name_array['Additive Concentration']
-            + "<br />Liquid Phase: " + name_array.LiquidPhase,
-            hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
-            name=i,legendgroup=i)
-
-            data.append(trace)
-
-        colorscale= [[0, name_array.Color.values[0]], [1, name_array.Color.values[0]]]
-        if('Poly-Fit' in fit):
-            d = np.c_[x,y,z]
-
-            # regular grid covering the domain of the data
-            mn = np.min(d, axis=0)
-            mx = np.max(d, axis=0)
-            X,Y = np.meshgrid(np.linspace(mn[0], mx[0], 20), np.linspace(mn[1], mx[1], 20))
-            XX = X.flatten()
-            YY = Y.flatten()
-
-            if order == 1:
-                # Poly-Fit linear plane
-                A = np.c_[d[:,0], d[:,1], np.ones(d.shape[0])]
-                C,_,_,_ = np.linalg.lstsq(A, d[:,2])    # coefficients
-                
-                # evaluate it on grid
-                # Z = C[0]*X + C[1]*Y + C[2]
-
-                equation = "z = " + str(format(C[0],'.3e')) + "x + " + str(format(C[1],'.3e')) + "y + " + str(format(C[2],'.3e'))
-                
-                # or expressed using matrix/vector product
-                Z = np.dot(np.c_[XX, YY, np.ones(XX.shape)], C).reshape(X.shape)
-
-            elif order == 2:
-                # Poly-Fit quadratic curve
-                # M = [ones(size(x)), x, y, x.*y, x.^2 y.^2]
-                A = np.c_[np.ones(d.shape[0]), d[:,:2], np.prod(d[:,:2], axis=1), d[:,:2]**2]
-                C,_,_,_ = np.linalg.lstsq(A, d[:,2])
-
-                equation = "z = " + str(format(C[4],'.3e')) + "x² + " + str(format(C[5],'.3e')) + "y² + " + str(format(C[3],'.3e')) + "xy + " + str(format(C[1],'.3e')) + "x + " + str(format(C[2],'.3e')) + "y + " + str(format(C[0],'.3e'))
-
-                # evaluate it on a grid
-                Z = np.dot(np.c_[np.ones(XX.shape), XX, YY, XX*YY, XX**2, YY**2], C).reshape(X.shape)
-                
-            elif order == 3:
-                # M = [ones(size(x)), x, y, x.^2, x.*y, y.^2, x.^3, x.^2.*y, x.*y.^2, y.^3]
-                A = np.c_[np.ones(d.shape[0]), d[:,:2], d[:,0]**2, np.prod(d[:,:2], axis=1), \
-                        d[:,1]**2, d[:,0]**3, np.prod(np.c_[d[:,0]**2,d[:,1]],axis=1), \
-                        np.prod(np.c_[d[:,0],d[:,1]**2],axis=1), d[:,2]**3]
-                C,_,_,_ = np.linalg.lstsq(A, d[:,2])
-
-                equation = "z = " + str(format(C[6],'.3e')) + "x³ + " + str(format(C[9],'.3e')) + "y³ + " + str(format(C[7],'.3e')) + "x²y + " + str(format(C[8],'.3e')) + "xy² + " + str(format(C[3],'.3e')) + "x² + " + str(format(C[5],'.3e')) + "y² + " + str(format(C[4],'.3e')) + "xy + " + str(format(C[1],'.3e')) + "x + " + str(format(C[2],'.3e')) + "y + " + str(format(C[0],'.3e'))
-                
-                Z = np.dot(np.c_[np.ones(XX.shape), XX, YY, XX**2, XX*YY, YY**2, XX**3, XX**2*YY, XX*YY**2, YY**3], C).reshape(X.shape)
-
-            trace = go.Surface(x = X, y = Y, z = Z,
-            colorscale=colorscale, opacity=0.75,
-            hoverinfo="text",
-            hovertext= "Study: " + i + "<br />" + equation,
-            name=i,showscale=False)
-
-            data.append(trace)
-        
-        if('Log-Fit' in fit):
-            def logarithmic(data, a, b, c, d):
-                x = data[0]
-                y = data[1]
-                return  a * np.log(b * x) * np.log(c * y) + d
-
-            popt, _ = curve_fit(logarithmic, [x, y], z, maxfev = 999999999)
-
-            # create surface function model
-            # setup data points for calculating surface model
-            X = np.linspace(min(x), max(x), 20)
-            Y = np.linspace(min(y), max(y), 20)
-
-            # create coordinate arrays for vectorized evaluations
-            x_new, y_new = np.meshgrid(X, Y)
-
-            # calculate Z coordinate array
-            z_new = logarithmic(np.array([x_new, y_new]), *popt)
-
-            f_new = []
-            for num in popt:
-                if np.absolute(num) < 10**(1/4) or np.absolute(num) > np.power(10,3):
-                    f_new.append(format(num,'.3e'))
-                else:
-                    f_new.append(np.round(num,3))
-
-            trace = go.Surface(x = x_new, y = y_new, z = z_new,
-            colorscale=colorscale, opacity=0.75,
-            hovertext= "Study: " + i
-            + "<br />y = " + str(f_new[0]) + " * log(" + str(f_new[1]) + " * x) + " + str(f_new[2]),
-            hoverinfo="text",
-            name=i,showscale=False)
-
-            data.append(trace)
-
-        if('Exp-Fit' in fit):
-            def exponential(data, a, b, c, d):
-                x = data[0]
-                y = data[1]
-                return a * np.exp(-b * x) * np.exp(-c * y) + d
-
-            popt, _ = curve_fit(exponential, [x, y], z, p0=(1, 1e-6, 1e-6, 1), maxfev = 999999999)
-
-            # create surface function model
-            # setup data points for calculating surface model
-            X = np.linspace(min(x), max(x), 20)
-            Y = np.linspace(min(y), max(y), 20)
-
-            # create coordinate arrays for vectorized evaluations
-            x_new, y_new = np.meshgrid(X, Y)
-
-            # calculate Z coordinate array
-            z_new = exponential(np.array([x_new, y_new]), *popt)
-
-            f_new = []
-            for num in popt:
-                if np.absolute(num) < 10**(1/4) or np.absolute(num) > np.power(10,3):
-                    f_new.append(format(num,'.3e'))
-                else:
-                    f_new.append(np.round(num,3))
-
-            trace = go.Surface(x = x_new, y = y_new, z = z_new,
-            colorscale=colorscale, opacity=0.75,
-            hovertext= "Study: " + i
-            + "<br />y = " + str(f_new[0]) + " * e^(" + str(f_new[1]) + " * x) + " + str(f_new[2]),
-            hoverinfo="text",
-            name=i,showscale=False)
-
-            data.append(trace)
-
-        if('Power-Fit' in fit):
-            def power(data, a, N, b):
-                x = data[0]
-                y = data[1]
-                return a * np.power(x,N) * np.power(y,N) + b
-
-            popt, _ = curve_fit(power, [x, y], z, maxfev = 999999999)
-
-            # create surface function model
-            # setup data points for calculating surface model
-            X = np.linspace(min(x), max(x), 20)
-            Y = np.linspace(min(y), max(y), 20)
-
-            # create coordinate arrays for vectorized evaluations
-            x_new, y_new = np.meshgrid(X, Y)
-
-            # calculate Z coordinate array
-            z_new = power(np.array([x_new, y_new]), *popt)
-
-            f_new = []
-            for num in popt:
-                if np.absolute(num) < 10**(1/4) or np.absolute(num) > np.power(10,3):
-                    f_new.append(format(num,'.3e'))
-                else:
-                    f_new.append(np.round(num,3))
-
-            trace = go.Surface(x = x_new, y = y_new, z = z_new,
-            colorscale=colorscale, opacity=0.75,
-            hovertext= "Study: " + i
-            + "<br />y = " + str(f_new[0]) + " * x^(" + str(f_new[1]) + ") + " + str(f_new[2]),
-            hoverinfo="text",
-            name=i,showscale=False)
-
-            data.append(trace)
-
-    cleaned.dropna(subset=[selected_x, selected_y, selected_z],axis="rows", inplace=True)
-    cleaned = cleaned[[selected_x,selected_y, selected_z]]
-
-    if(comp == "No Compare"):
-        legend_orientation={
-                "font_size": 24,
-        }
-
-    if(comp == "Compare"):
-        legend_orientation={
-                "orientation":"h",
-                "xanchor":"center",
-                "x":0.5,
-                "yanchor":"bottom",
-                "y":1,
-                "valign":"middle",
-                "font_size": 20,
-        }
-
-    return [{"data": data,
-            "layout": go.Layout(
-                hovermode="closest",
-                legend=legend_orientation,
-                font={
-                    "size": 16,
-                    "family": "Times New Roman",
-                },
-                scene={
-                    "camera":{"center":dict(x=0.05,y=0,z=-0.25)},
-                    "xaxis": {"title": f"{selected_x.title()}"},
-                    "yaxis": {"title": f"{selected_y.title()}"},
-                    "zaxis": {"title": f"{selected_z.title()}"}
-                },
-                margin={
-                    "b":0,
-                    "l":0,
-                    "r":0
-                },
-                height=Graph_Height
-            )},cleaned.to_dict('records'), [{'id': c, 'name': c} for c in cleaned.columns]]
-
-@app.callback(
-    [Output("comp2_3D_graph", "figure"),
-     Output("comp2_3D_table", "data"),
-     Output("comp2_3D_table", "columns")],
-    [Input("select-xaxis2", "value"),
-     Input("select-yaxis2", "value"),
-     Input("select-zaxis2", "value"),
-     Input("addComp","value"),
-     Input("bestfit2", "value"),
-     Input("input_fit2", "value"),
-     Input('gasses2', 'value'),
-     Input('surfactants2', 'value'),
-     Input('sconc2', 'value'),
-     Input('additives2', 'value'),
-     Input('aconc2', 'value'),
-     Input('lp2', 'value')],
-)
-def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, fit, order, ga, sur, surc, add, addc, lp):
-    if comp == "No Compare":
-        return [{},[],[]]
-
-    cl = dv[dv['Gas'].isin(ga)]
-    ea = cl[cl['Surfactant'].isin(sur)]
-    n = ea[ea["Surfactant Concentration"].isin(surc)]
-    e = n[n['Additive'].isin(add)]
-    d = e[e['Additive Concentration'].isin(addc)]
-    cleaned = d[d['LiquidPhase'].isin(lp)]
-
-    data = []
-
-    for i in names:
-        name_array = cleaned[cleaned.Study == i]
-        
-        if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0 and len(name_array[selected_z].values) != 0:
-            name_array = name_array.dropna(subset=[selected_x, selected_y, selected_z],axis="rows")
-            name_array.reset_index(drop=True)
-            name_array.sort_values(by=selected_x, inplace=True)
-
-            if len(name_array[selected_x]) > 2:
-                x = np.array(name_array[selected_x])
-                y = np.array(name_array[selected_y])
-                z = np.array(name_array[selected_z])
-            else:
-                continue
-        else:
-            continue
-
-        
-        colorscale= [[0, name_array.Color.values[0]], [1, name_array.Color.values[0]]]
-        if('Scatter' in fit):
-            trace = go.Scatter3d(x = x, y = y, z = z,
-            hovertext= "Study: " + i
-            + "<br />Gas: " + name_array.Gas
-            + "<br />Surfactant: " + name_array.Surfactant
-            + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"]
-            + "<br />Additive: " + name_array.Additive
-            + "<br />Concentration Additive: " + name_array['Additive Concentration']
-            + "<br />Liquid Phase: " + name_array.LiquidPhase,
-            hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
-            name=i,legendgroup=i)
-
-            data.append(trace)
-
-        if('Poly-Fit' in fit):
-            d = np.c_[x,y,z]
-
-            # regular grid covering the domain of the data
-            mn = np.min(d, axis=0)
-            mx = np.max(d, axis=0)
-            X,Y = np.meshgrid(np.linspace(mn[0], mx[0], 20), np.linspace(mn[1], mx[1], 20))
-            XX = X.flatten()
-            YY = Y.flatten()
-
-            if order == 1:
-                # Poly-Fit linear plane
-                A = np.c_[d[:,0], d[:,1], np.ones(d.shape[0])]
-                C,_,_,_ = np.linalg.lstsq(A, d[:,2])    # coefficients
-                
-                # evaluate it on grid
-                # Z = C[0]*X + C[1]*Y + C[2]
-
-                equation = "z = " + str(format(C[0],'.3e')) + "x + " + str(format(C[1],'.3e')) + "y + " + str(format(C[2],'.3e'))
-                
-                # or expressed using matrix/vector product
-                Z = np.dot(np.c_[XX, YY, np.ones(XX.shape)], C).reshape(X.shape)
-
-            elif order == 2:
-                # Poly-Fit quadratic curve
-                # M = [ones(size(x)), x, y, x.*y, x.^2 y.^2]
-                A = np.c_[np.ones(d.shape[0]), d[:,:2], np.prod(d[:,:2], axis=1), d[:,:2]**2]
-                C,_,_,_ = np.linalg.lstsq(A, d[:,2])
-
-                equation = "z = " + str(format(C[4],'.3e')) + "x² + " + str(format(C[5],'.3e')) + "y² + " + str(format(C[3],'.3e')) + "xy + " + str(format(C[1],'.3e')) + "x + " + str(format(C[2],'.3e')) + "y + " + str(format(C[0],'.3e'))
-
-                # evaluate it on a grid
-                Z = np.dot(np.c_[np.ones(XX.shape), XX, YY, XX*YY, XX**2, YY**2], C).reshape(X.shape)
-                
-            elif order == 3:
-                # M = [ones(size(x)), x, y, x.^2, x.*y, y.^2, x.^3, x.^2.*y, x.*y.^2, y.^3]
-                A = np.c_[np.ones(d.shape[0]), d[:,:2], d[:,0]**2, np.prod(d[:,:2], axis=1), \
-                        d[:,1]**2, d[:,0]**3, np.prod(np.c_[d[:,0]**2,d[:,1]],axis=1), \
-                        np.prod(np.c_[d[:,0],d[:,1]**2],axis=1), d[:,2]**3]
-                C,_,_,_ = np.linalg.lstsq(A, d[:,2])
-
-                equation = "z = " + str(format(C[6],'.3e')) + "x³ + " + str(format(C[9],'.3e')) + "y³ + " + str(format(C[7],'.3e')) + "x²y + " + str(format(C[8],'.3e')) + "xy² + " + str(format(C[3],'.3e')) + "x² + " + str(format(C[5],'.3e')) + "y² + " + str(format(C[4],'.3e')) + "xy + " + str(format(C[1],'.3e')) + "x + " + str(format(C[2],'.3e')) + "y + " + str(format(C[0],'.3e'))
-                
-                Z = np.dot(np.c_[np.ones(XX.shape), XX, YY, XX**2, XX*YY, YY**2, XX**3, XX**2*YY, XX*YY**2, YY**3], C).reshape(X.shape)
-
-            trace = go.Surface(x = X, y = Y, z = Z,
-            colorscale=colorscale, opacity=0.75,
-            hoverinfo="text",
-            hovertext= "Study: " + i + "<br />" + equation,
-            name=i,showscale=False)
-
-            data.append(trace)
-        
-        if('Log-Fit' in fit):
-            def logarithmic(data, a, b, c, d):
-                x = data[0]
-                y = data[1]
-                return  a * np.log(b * x) * np.log(c * y) + d
-
-            popt, _ = curve_fit(logarithmic, [x, y], z, maxfev = 999999999)
-
-            # create surface function model
-            # setup data points for calculating surface model
-            X = np.linspace(min(x), max(x), 20)
-            Y = np.linspace(min(y), max(y), 20)
-
-            # create coordinate arrays for vectorized evaluations
-            x_new, y_new = np.meshgrid(X, Y)
-
-            # calculate Z coordinate array
-            z_new = logarithmic(np.array([x_new, y_new]), *popt)
-
-            f_new = []
-            for num in popt:
-                if np.absolute(num) < 10**(1/4) or np.absolute(num) > np.power(10,3):
-                    f_new.append(format(num,'.3e'))
-                else:
-                    f_new.append(np.round(num,3))
-
-            trace = go.Surface(x = x_new, y = y_new, z = z_new,
-            colorscale=colorscale, opacity=0.75,
-            hovertext= "Study: " + i
-            + "<br />y = " + str(f_new[0]) + " * log(" + str(f_new[1]) + " * x) + " + str(f_new[2]),
-            hoverinfo="text",
-            name=i,showscale=False)
-
-            data.append(trace)
-
-        if('Exp-Fit' in fit):
-            def exponential(data, a, b, c, d):
-                x = data[0]
-                y = data[1]
-                return a * np.exp(-b * x) * np.exp(-c * y) + d
-
-            popt, _ = curve_fit(exponential, [x, y], z, p0=(1, 1e-6, 1e-6, 1), maxfev = 999999999)
-
-            # create surface function model
-            # setup data points for calculating surface model
-            X = np.linspace(min(x), max(x), 20)
-            Y = np.linspace(min(y), max(y), 20)
-
-            # create coordinate arrays for vectorized evaluations
-            x_new, y_new = np.meshgrid(X, Y)
-
-            # calculate Z coordinate array
-            z_new = exponential(np.array([x_new, y_new]), *popt)
-
-            f_new = []
-            for num in popt:
-                if np.absolute(num) < 10**(1/4) or np.absolute(num) > np.power(10,3):
-                    f_new.append(format(num,'.3e'))
-                else:
-                    f_new.append(np.round(num,3))
-
-            trace = go.Surface(x = x_new, y = y_new, z = z_new,
-            colorscale=colorscale, opacity=0.75,
-            hovertext= "Study: " + i
-            + "<br />y = " + str(f_new[0]) + " * e^(" + str(f_new[1]) + " * x) + " + str(f_new[2]),
-            hoverinfo="text",
-            name=i,showscale=False)
-
-            data.append(trace)
-
-        if('Power-Fit' in fit):
-            def power(data, a, N, b):
-                x = data[0]
-                y = data[1]
-                return a * np.power(x,N) * np.power(y,N)
-
-            popt, _ = curve_fit(power, [x, y], z, maxfev = 999999999)
-
-            # create surface function model
-            # setup data points for calculating surface model
-            X = np.linspace(min(x), max(x), 20)
-            Y = np.linspace(min(y), max(y), 20)
-
-            # create coordinate arrays for vectorized evaluations
-            x_new, y_new = np.meshgrid(X, Y)
-
-            # calculate Z coordinate array
-            z_new = power(np.array([x_new, y_new]), *popt)
-
-            f_new = []
-            for num in popt:
-                if np.absolute(num) < 10**(1/4) or np.absolute(num) > np.power(10,3):
-                    f_new.append(format(num,'.3e'))
-                else:
-                    f_new.append(np.round(num,3))
-
-            trace = go.Surface(x = x_new, y = y_new, z = z_new,
-            colorscale=colorscale, opacity=0.75,
-            hovertext= "Study: " + i
-            + "<br />y = " + str(f_new[0]) + " * x^(" + str(f_new[1]) + ") + " + str(f_new[2]),
-            hoverinfo="text",
-            name=i,showscale=False)
-
-            data.append(trace)
-
-    cleaned.dropna(subset=[selected_x, selected_y, selected_z],axis="rows", inplace=True)
-    cleaned = cleaned[[selected_x,selected_y, selected_z]]
-
-    return [{"data": data,
-            "layout": go.Layout(
-                hovermode="closest",
-                legend={
-                    "orientation":"h",
-                    "xanchor":"center",
-                    "x":0.5,
-                    "yanchor":"bottom",
-                    "y":1,
-                    "valign":"middle",
-                    "font_size": 20,
-                },
-                font={
-                    "size": 16,
-                    "family": "Times New Roman",
-                },
-                scene={
-                    "camera":{"center":dict(x=0.05,y=0,z=-0.25)},
-                    "xaxis": {"title": f"{selected_x.title()}"},
-                    "yaxis": {"title": f"{selected_y.title()}"},
-                    "zaxis": {"title": f"{selected_z.title()}"}
-                },
-                margin={
-                    "b":0,
-                    "l":0,
-                    "r":0
-                },
-                height=Graph_Height
-            )},cleaned.to_dict('records'), [{'id': c, 'name': c} for c in cleaned.columns]]
 
 if __name__ == '__main__':
     app.run_server(debug=True)
