@@ -364,6 +364,15 @@ home = dbc.Row([
             style={'text-align':"center", "margin-right":"auto","margin-left":"auto", 'color':"white","width": "80%","padding-top":"20%"}),
 
         html.Div([
+            html.Div(
+                dcc.RadioItems(
+                    id='addComp',
+                    options=[{'label': i, 'value': i} for i in ['No Compare','Compare']],
+                    value='No Compare',
+                    labelStyle={"padding-right":"10px","margin":"auto","padding-bottom":"10px","color":"white"}
+                )
+            ,style={"margin":"auto"}),
+
             dbc.Row([
                 dbc.Col(html.H6("X: "),style={"margin":"auto","width":"10%","height":"100%"}),
                 html.Div(dcc.Dropdown(id="select-xaxis", placeholder = "Select x-axis", value = "Pressure (Psi)",
@@ -402,15 +411,6 @@ home = dbc.Row([
                 html.Div(id='controls-container', children=[
 
                     html.Hr(),
-
-                    html.Div(
-                        dcc.RadioItems(
-                            id='addComp',
-                            options=[{'label': i, 'value': i} for i in ['No Compare','Compare']],
-                            value='No Compare',
-                            labelStyle={"padding-right":"10px","margin":"auto","padding-bottom":"10px"}
-                        )
-                    ,style={"margin":"auto"}),
 
                     html.Div(
                         dcc.RadioItems(
@@ -1194,6 +1194,13 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
     data = []
 
+    x_min = 99999
+    x_max = 0
+    y_min = 99999
+    y_max = 0
+    z_min = 99999
+    z_max = 0
+
     for i in names:
         name_array = cleaned[cleaned.Study == i]
         
@@ -1224,6 +1231,34 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
                     else:
                         z = (z-min(z))/(max(z)-min(z))
                     z[z == 0] = 0.001
+
+                    x_min = 0
+                    x_max = 1
+                    y_min = 0
+                    y_max = 1
+                    z_min = 0
+                    z_max = 1
+                else:
+                    x_min2 = min(x)
+                    x_max2 = max(x)
+                    if x_min2 < x_min:
+                        x_min = x_min2
+                    if x_max2 > x_max:
+                        x_max = x_max2
+
+                    y_min2 = min(y)
+                    y_max2 = max(y)
+                    if y_min2 < y_min:
+                        y_min = y_min2
+                    if y_max2 > y_max:
+                        y_max = y_max2
+
+                    z_min2 = min(z)
+                    z_max2 = max(z)
+                    if z_min2 < z_min:
+                        z_min = z_min2
+                    if z_max2 > z_max:
+                        z_max = z_max2
             else:
                 continue
         else:
@@ -1263,11 +1298,18 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
                 # Poly-Fit linear plane
                 A = np.c_[d[:,0], d[:,1], np.ones(d.shape[0])]
                 C,_,_,_ = np.linalg.lstsq(A, d[:,2])    # coefficients
+
+                f_new = []
+                for num in C:
+                    if np.absolute(num) <= 0.000999 or np.absolute(num) > np.power(10,4):
+                        f_new.append(format(num,'.3e'))
+                    else:
+                        f_new.append(np.round(num,3))
                 
                 # evaluate it on grid
                 # Z = C[0]*X + C[1]*Y + C[2]
 
-                equation = "z = " + str(format(C[0],'.3e')) + "x + " + str(format(C[1],'.3e')) + "y + " + str(format(C[2],'.3e'))
+                equation = "z = {a}x + {b}y + {c}".format(a=f_new[0], b=f_new[1], c=f_new[2])
                 
                 # or expressed using matrix/vector product
                 Z = np.dot(np.c_[XX, YY, np.ones(XX.shape)], C).reshape(X.shape)
@@ -1278,7 +1320,14 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
                 A = np.c_[np.ones(d.shape[0]), d[:,:2], np.prod(d[:,:2], axis=1), d[:,:2]**2]
                 C,_,_,_ = np.linalg.lstsq(A, d[:,2])
 
-                equation = "z = " + str(format(C[4],'.3e')) + "x² + " + str(format(C[5],'.3e')) + "y² + " + str(format(C[3],'.3e')) + "xy + " + str(format(C[1],'.3e')) + "x + " + str(format(C[2],'.3e')) + "y + " + str(format(C[0],'.3e'))
+                f_new = []
+                for num in C:
+                    if np.absolute(num) <= 0.000999 or np.absolute(num) > np.power(10,4):
+                        f_new.append(format(num,'.3e'))
+                    else:
+                        f_new.append(np.round(num,3))
+
+                equation = "z = {a}x² + {b}y² + {c}xy + {d}x + {e}y + {f}".format(a=f_new[0],b=f_new[1],c=f_new[2],d=f_new[3],e=f_new[4],f=f_new[5])
 
                 # evaluate it on a grid
                 Z = np.dot(np.c_[np.ones(XX.shape), XX, YY, XX*YY, XX**2, YY**2], C).reshape(X.shape)
@@ -1290,14 +1339,23 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
                         np.prod(np.c_[d[:,0],d[:,1]**2],axis=1), d[:,2]**3]
                 C,_,_,_ = np.linalg.lstsq(A, d[:,2])
 
-                equation = "z = " + str(format(C[6],'.3e')) + "x³ + " + str(format(C[9],'.3e')) + "y³ + " + str(format(C[7],'.3e')) + "x²y + " + str(format(C[8],'.3e')) + "xy² + " + str(format(C[3],'.3e')) + "x² + " + str(format(C[5],'.3e')) + "y² + " + str(format(C[4],'.3e')) + "xy + " + str(format(C[1],'.3e')) + "x + " + str(format(C[2],'.3e')) + "y + " + str(format(C[0],'.3e'))
+                f_new = []
+                for num in C:
+                    if np.absolute(num) <= 0.000999 or np.absolute(num) > np.power(10,4):
+                        f_new.append(format(num,'.3e'))
+                    else:
+                        f_new.append(np.round(num,3))
+
+                equation = "z = {a}x³ + {b}y³ + {c}x²y + {d}xy² + {e}x² + {f}y² + {g}xy + {h}x + {i}y + {j}".format(a=f_new[0],b=f_new[1],c=f_new[2],d=f_new[3],e=f_new[4],f=f_new[5],g=f_new[6],h=f_new[7],i=f_new[8],j=f_new[9])
                 
                 Z = np.dot(np.c_[np.ones(XX.shape), XX, YY, XX**2, XX*YY, YY**2, XX**3, XX**2*YY, XX*YY**2, YY**3], C).reshape(X.shape)
 
             trace = go.Surface(x = X, y = Y, z = Z,
             colorscale=colorscale, opacity=0.75,
             hoverinfo="text",
-            hovertext= "Study: " + i + "<br />" + equation,
+            hovertext= "Study: " + i
+            + "<br />" 
+            + equation,
             name=i,showscale=False,showlegend=showLegend,legendgroup=i)
 
             data.append(trace)
@@ -1328,7 +1386,7 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
             f_new = []
             for num in popt:
-                if np.absolute(num) < 10**(1/4) or np.absolute(num) > np.power(10,3):
+                if np.absolute(num) <= 0.000999 or np.absolute(num) > np.power(10,4):
                     f_new.append(format(num,'.3e'))
                 else:
                     f_new.append(np.round(num,3))
@@ -1336,7 +1394,8 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
             trace = go.Surface(x = x_new, y = y_new, z = z_new,
             colorscale=colorscale, opacity=0.75,
             hovertext= "Study: " + i
-            + "<br />y = " + str(f_new[0]) + " * (log(" + str(f_new[1]) + " * x) " + " * log(" + str(f_new[2]) + " * y)) + " +  str(f_new[3]),
+            + "<br />" + 
+            "y = {a} * log({b} * x) * log({c} * y) + {d}".format(a=f_new[0],b=f_new[1],c=f_new[2],d=f_new[3]),
             hoverinfo="text",
             name=i,showscale=False,showlegend=showLegend,legendgroup=i)
 
@@ -1368,7 +1427,7 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
             f_new = []
             for num in popt:
-                if np.absolute(num) < 10**(1/4) or np.absolute(num) > np.power(10,3):
+                if np.absolute(num) <= 0.000999 or np.absolute(num) > np.power(10,4):
                     f_new.append(format(num,'.3e'))
                 else:
                     f_new.append(np.round(num,3))
@@ -1376,7 +1435,8 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
             trace = go.Surface(x = x_new, y = y_new, z = z_new,
             colorscale=colorscale, opacity=0.75,
             hovertext= "Study: " + i
-            + "<br />y = " + str(f_new[0]) + " * (e^(" + str(f_new[1]) + " * x) " + " * e^(" + str(f_new[2]) + " * y)) + " + str(f_new[3]),
+            + "<br />" + 
+            "y = {a} * e<sup>({b} * x)</sup> * e<sup>({c} * y)</sup> + {d}".format(a=f_new[0],b=f_new[1],c=f_new[2],d=f_new[3]),
             hoverinfo="text",
             name=i,showscale=False,showlegend=showLegend,legendgroup=i)
 
@@ -1408,7 +1468,7 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
             f_new = []
             for num in popt:
-                if np.absolute(num) < 10**(1/4) or np.absolute(num) > np.power(10,3):
+                if np.absolute(num) <= 0.000999 or np.absolute(num) > np.power(10,4):
                     f_new.append(format(num,'.3e'))
                 else:
                     f_new.append(np.round(num,3))
@@ -1416,7 +1476,8 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
             trace = go.Surface(x = x_new, y = y_new, z = z_new,
             colorscale=colorscale, opacity=0.75,
             hovertext= "Study: " + i
-            + "<br />y = " + str(f_new[0]) + " * (x^(" + str(f_new[1]) + ") " + " * y^(" + str(f_new[2]) + ")) + " + str(f_new[3]),
+            + "<br />" + 
+            "y = {a} * x<sup>{M}</sup> * y<sup>{N}</sup> + {d}".format(a=f_new[0],M=f_new[1],N=f_new[2],d=f_new[3]),
             hoverinfo="text",
             name=i,showscale=False,showlegend=showLegend,legendgroup=i)
 
@@ -1451,9 +1512,9 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
                 },
                 scene={
                     "camera":{"center":dict(x=0.05,y=0,z=-0.25)},
-                    "xaxis": {"title": f"{selected_x.title()}"},
-                    "yaxis": {"title": f"{selected_y.title()}"},
-                    "zaxis": {"title": f"{selected_z.title()}"}
+                    "xaxis": {"title": f"{selected_x.title()}","range":[x_min,x_max]},
+                    "yaxis": {"title": f"{selected_y.title()}","range":[y_min,y_max]},
+                    "zaxis": {"title": f"{selected_z.title()}","range":[z_min,z_max]}
                 },
                 margin={
                     "b":0,
@@ -1494,6 +1555,13 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
     data = []
 
+    x_min = 99999
+    x_max = 0
+    y_min = 99999
+    y_max = 0
+    z_min = 99999
+    z_max = 0
+
     for i in names:
         name_array = cleaned[cleaned.Study == i]
         
@@ -1524,6 +1592,34 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
                     else:
                         z = (z-min(z))/(max(z)-min(z))
                     z[z == 0] = 0.001
+
+                    x_min = 0
+                    x_max = 1
+                    y_min = 0
+                    y_max = 1
+                    z_min = 0
+                    z_max = 1
+                else:
+                    x_min2 = min(x)
+                    x_max2 = max(x)
+                    if x_min2 < x_min:
+                        x_min = x_min2
+                    if x_max2 > x_max:
+                        x_max = x_max2
+
+                    y_min2 = min(y)
+                    y_max2 = max(y)
+                    if y_min2 < y_min:
+                        y_min = y_min2
+                    if y_max2 > y_max:
+                        y_max = y_max2
+
+                    z_min2 = min(z)
+                    z_max2 = max(z)
+                    if z_min2 < z_min:
+                        z_min = z_min2
+                    if z_max2 > z_max:
+                        z_max = z_max2
             else:
                 continue
         else:
@@ -1563,11 +1659,18 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
                 # Poly-Fit linear plane
                 A = np.c_[d[:,0], d[:,1], np.ones(d.shape[0])]
                 C,_,_,_ = np.linalg.lstsq(A, d[:,2])    # coefficients
+
+                f_new = []
+                for num in C:
+                    if np.absolute(num) <= 0.000999 or np.absolute(num) > np.power(10,4):
+                        f_new.append(format(num,'.3e'))
+                    else:
+                        f_new.append(np.round(num,3))
                 
                 # evaluate it on grid
                 # Z = C[0]*X + C[1]*Y + C[2]
 
-                equation = "z = " + str(format(C[0],'.3e')) + "x + " + str(format(C[1],'.3e')) + "y + " + str(format(C[2],'.3e'))
+                equation = "z = {a}x + {b}y + {c}".format(a=f_new[0], b=f_new[1], c=f_new[2])
                 
                 # or expressed using matrix/vector product
                 Z = np.dot(np.c_[XX, YY, np.ones(XX.shape)], C).reshape(X.shape)
@@ -1578,7 +1681,14 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
                 A = np.c_[np.ones(d.shape[0]), d[:,:2], np.prod(d[:,:2], axis=1), d[:,:2]**2]
                 C,_,_,_ = np.linalg.lstsq(A, d[:,2])
 
-                equation = "z = " + str(format(C[4],'.3e')) + "x² + " + str(format(C[5],'.3e')) + "y² + " + str(format(C[3],'.3e')) + "xy + " + str(format(C[1],'.3e')) + "x + " + str(format(C[2],'.3e')) + "y + " + str(format(C[0],'.3e'))
+                f_new = []
+                for num in C:
+                    if np.absolute(num) <= 0.000999 or np.absolute(num) > np.power(10,4):
+                        f_new.append(format(num,'.3e'))
+                    else:
+                        f_new.append(np.round(num,3))
+
+                equation = "z = {a}x² + {b}y² + {c}xy + {d}x + {e}y + {f}".format(a=f_new[0],b=f_new[1],c=f_new[2],d=f_new[3],e=f_new[4],f=f_new[5])
 
                 # evaluate it on a grid
                 Z = np.dot(np.c_[np.ones(XX.shape), XX, YY, XX*YY, XX**2, YY**2], C).reshape(X.shape)
@@ -1590,14 +1700,23 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
                         np.prod(np.c_[d[:,0],d[:,1]**2],axis=1), d[:,2]**3]
                 C,_,_,_ = np.linalg.lstsq(A, d[:,2])
 
-                equation = "z = " + str(format(C[6],'.3e')) + "x³ + " + str(format(C[9],'.3e')) + "y³ + " + str(format(C[7],'.3e')) + "x²y + " + str(format(C[8],'.3e')) + "xy² + " + str(format(C[3],'.3e')) + "x² + " + str(format(C[5],'.3e')) + "y² + " + str(format(C[4],'.3e')) + "xy + " + str(format(C[1],'.3e')) + "x + " + str(format(C[2],'.3e')) + "y + " + str(format(C[0],'.3e'))
+                f_new = []
+                for num in C:
+                    if np.absolute(num) <= 0.000999 or np.absolute(num) > np.power(10,4):
+                        f_new.append(format(num,'.3e'))
+                    else:
+                        f_new.append(np.round(num,3))
+
+                equation = "z = {a}x³ + {b}y³ + {c}x²y + {d}xy² + {e}x² + {f}y² + {g}xy + {h}x + {i}y + {j}".format(a=f_new[0],b=f_new[1],c=f_new[2],d=f_new[3],e=f_new[4],f=f_new[5],g=f_new[6],h=f_new[7],i=f_new[8],j=f_new[9])
                 
                 Z = np.dot(np.c_[np.ones(XX.shape), XX, YY, XX**2, XX*YY, YY**2, XX**3, XX**2*YY, XX*YY**2, YY**3], C).reshape(X.shape)
 
             trace = go.Surface(x = X, y = Y, z = Z,
             colorscale=colorscale, opacity=0.75,
             hoverinfo="text",
-            hovertext= "Study: " + i + "<br />" + equation,
+            hovertext= "Study: " + i
+            + "<br />" 
+            + equation,
             name=i,showscale=False,showlegend=showLegend,legendgroup=i)
 
             data.append(trace)
@@ -1628,7 +1747,7 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
             f_new = []
             for num in popt:
-                if np.absolute(num) < 10**(1/4) or np.absolute(num) > np.power(10,3):
+                if np.absolute(num) <= 0.000999 or np.absolute(num) > np.power(10,4):
                     f_new.append(format(num,'.3e'))
                 else:
                     f_new.append(np.round(num,3))
@@ -1636,7 +1755,8 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
             trace = go.Surface(x = x_new, y = y_new, z = z_new,
             colorscale=colorscale, opacity=0.75,
             hovertext= "Study: " + i
-            + "<br />y = " + str(f_new[0]) + " * (log(" + str(f_new[1]) + " * x) " + " * log(" + str(f_new[2]) + " * y)) + " +  str(f_new[3]),
+            + "<br />" + 
+            "y = {a} * log({b} * x) * log({c} * y) + {d}".format(a=f_new[0],b=f_new[1],c=f_new[2],d=f_new[3]),
             hoverinfo="text",
             name=i,showscale=False,showlegend=showLegend,legendgroup=i)
 
@@ -1668,7 +1788,7 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
             f_new = []
             for num in popt:
-                if np.absolute(num) < 10**(1/4) or np.absolute(num) > np.power(10,3):
+                if np.absolute(num) <= 0.000999 or np.absolute(num) > np.power(10,4):
                     f_new.append(format(num,'.3e'))
                 else:
                     f_new.append(np.round(num,3))
@@ -1676,7 +1796,8 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
             trace = go.Surface(x = x_new, y = y_new, z = z_new,
             colorscale=colorscale, opacity=0.75,
             hovertext= "Study: " + i
-            + "<br />y = " + str(f_new[0]) + " * (e^(" + str(f_new[1]) + " * x) " + " * e^(" + str(f_new[2]) + " * y)) + " + str(f_new[3]),
+            + "<br />" + 
+            "y = {a} * e<sup>({b} * x)</sup> * e<sup>({c} * y)</sup> + {d}".format(a=f_new[0],b=f_new[1],c=f_new[2],d=f_new[3]),
             hoverinfo="text",
             name=i,showscale=False,showlegend=showLegend,legendgroup=i)
 
@@ -1708,7 +1829,7 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
             f_new = []
             for num in popt:
-                if np.absolute(num) < 10**(1/4) or np.absolute(num) > np.power(10,3):
+                if np.absolute(num) <= 0.000999 or np.absolute(num) > np.power(10,4):
                     f_new.append(format(num,'.3e'))
                 else:
                     f_new.append(np.round(num,3))
@@ -1716,7 +1837,8 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
             trace = go.Surface(x = x_new, y = y_new, z = z_new,
             colorscale=colorscale, opacity=0.75,
             hovertext= "Study: " + i
-            + "<br />y = " + str(f_new[0]) + " * (x^(" + str(f_new[1]) + ") " + " * y^(" + str(f_new[2]) + ")) + " + str(f_new[3]),
+            + "<br />" + 
+            "y = {a} * x<sup>{M}</sup> * y<sup>{N}</sup> + {d}".format(a=f_new[0],M=f_new[1],N=f_new[2],d=f_new[3]),
             hoverinfo="text",
             name=i,showscale=False,showlegend=showLegend,legendgroup=i)
 
@@ -1743,9 +1865,9 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
                 },
                 scene={
                     "camera":{"center":dict(x=0.05,y=0,z=-0.25)},
-                    "xaxis": {"title": f"{selected_x.title()}"},
-                    "yaxis": {"title": f"{selected_y.title()}"},
-                    "zaxis": {"title": f"{selected_z.title()}"}
+                    "xaxis": {"title": f"{selected_x.title()}","range":[x_min,x_max]},
+                    "yaxis": {"title": f"{selected_y.title()}","range":[y_min,y_max]},
+                    "zaxis": {"title": f"{selected_z.title()}","range":[z_min,z_max]}
                 },
                 margin={
                     "b":0,
@@ -1840,23 +1962,23 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
 
             f_new = []
             for num in f:
-                if np.absolute(num) < 10**(1/4) or np.absolute(num) > np.power(10,3):
+                if np.absolute(num) <= 0.000999 or np.absolute(num) > np.power(10,4):
                     f_new.append(format(num,'.3e'))
                 else:
                     f_new.append(np.round(num,3))
 
             if order == 1:
-                equation = "y = " + str(f_new[1]) + "x + " + str(f_new[0])
+                equation = "y = {a}x + {b}".format(a=f_new[0],b=f_new[1])
                 residuals = y- y_res
                 ss_res = np.sum(residuals**2)
                 ss_tot = np.sum((y-np.mean(y))**2)
                 r_squared = str(np.round(1 - (ss_res / ss_tot),3))
 
             elif order == 2:
-                equation = "y = " + str(f_new[2]) + "x² + " + str(f_new[1]) + "x + " + str(f_new[0])
+                equation = "y = {a}x² + {b}x + {c}".format(a=f_new[0],b=f_new[1],c=f_new[2])
                 r_squared = "Non-Linear"
             elif order == 3:
-                equation = "y = " + str(f_new[3]) + "x³ + " + str(f_new[2]) + "x² + " + str(f_new[1]) + "x + " + str(f_new[0])
+                equation = "y = {a}x³ + {b}x² + {c}x + {d}".format(a=f_new[0],b=f_new[1],c=f_new[2],d=f_new[3])
                 r_squared = "Non-Linear"
 
             trace = go.Scattergl(x = x_new, y = y_new,
@@ -1884,14 +2006,15 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
 
             f_new = []
             for num in popt:
-                if np.absolute(num) < 10**(1/4) or np.absolute(num) > np.power(10,3):
+                if np.absolute(num) <= 0.000999 or np.absolute(num) > np.power(10,4):
                     f_new.append(format(num,'.3e'))
                 else:
                     f_new.append(np.round(num,3))
 
             trace = go.Scattergl(x = x_new, y = y_new,
             hovertext= "Study: " + i
-            + "<br />y = " + str(f_new[0]) + " * log(" + str(f_new[1]) + " * x) + " + str(f_new[2]),
+            + "<br />" +
+            "y = {a} * log({b} * x) + {c}".format(a=f_new[0],b=f_new[1],c=f_new[2]),
             hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
             name=i,showlegend=showLegend,legendgroup=i)
 
@@ -1913,14 +2036,15 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
 
             f_new = []
             for num in popt:
-                if np.absolute(num) < 10**(1/4) or np.absolute(num) > np.power(10,3):
+                if np.absolute(num) <= 0.000999 or np.absolute(num) > np.power(10,4):
                     f_new.append(format(num,'.3e'))
                 else:
                     f_new.append(np.round(num,3))
 
             trace = go.Scattergl(x = x_new, y = y_new,
             hovertext= "Study: " + i
-            + "<br />y = " + str(f_new[0]) + " * e^(" + str(f_new[1]) + " * x) + " + str(f_new[2]),
+            + "<br />" +
+            "y = {a} * e<sup>({b} * x)</sup> + {c}".format(a=f_new[0],b=f_new[1],c=f_new[2]),
             hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
             name=i,showlegend=showLegend,legendgroup=i)
 
@@ -1942,14 +2066,15 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
 
             f_new = []
             for num in popt:
-                if np.absolute(num) < 10**(1/4) or np.absolute(num) > np.power(10,3):
+                if np.absolute(num) <= 0.000999 or np.absolute(num) > np.power(10,4):
                     f_new.append(format(num,'.3e'))
                 else:
                     f_new.append(np.round(num,3))
             
             trace = go.Scattergl(x = x_new, y = y_new,
             hovertext= "Study: " + i
-            + "<br />y = " + str(f_new[0]) + " * x^(" + str(f_new[1]) + ") + " + str(f_new[2]),
+            + "<br />" +
+            "y = {a} * x<sup>{N}</sup> + {c}".format(a=f_new[0],N=f_new[1],c=f_new[2]),
             hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
             name=i,showlegend=showLegend,legendgroup=i)
 
@@ -2082,23 +2207,23 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
 
             f_new = []
             for num in f:
-                if np.absolute(num) < 10**(1/4) or np.absolute(num) > np.power(10,3):
+                if np.absolute(num) <= 0.000999 or np.absolute(num) > np.power(10,4):
                     f_new.append(format(num,'.3e'))
                 else:
                     f_new.append(np.round(num,3))
 
             if order == 1:
-                equation = "y = " + str(f_new[1]) + "x + " + str(f_new[0])
+                equation = "y = {a}x + {b}".format(a=f_new[0],b=f_new[1])
                 residuals = y- y_res
                 ss_res = np.sum(residuals**2)
                 ss_tot = np.sum((y-np.mean(y))**2)
                 r_squared = str(np.round(1 - (ss_res / ss_tot),3))
 
             elif order == 2:
-                equation = "y = " + str(f_new[2]) + "x² + " + str(f_new[1]) + "x + " + str(f_new[0])
+                equation = "y = {a}x² + {b}x + {c}".format(a=f_new[0],b=f_new[1],c=f_new[2])
                 r_squared = "Non-Linear"
             elif order == 3:
-                equation = "y = " + str(f_new[3]) + "x³ + " + str(f_new[2]) + "x² + " + str(f_new[1]) + "x + " + str(f_new[0])
+                equation = "y = {a}x³ + {b}x² + {c}x + {d}".format(a=f_new[0],b=f_new[1],c=f_new[2],d=f_new[3])
                 r_squared = "Non-Linear"
 
             trace = go.Scattergl(x = x_new, y = y_new,
@@ -2126,14 +2251,15 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
 
             f_new = []
             for num in popt:
-                if np.absolute(num) < 10**(1/4) or np.absolute(num) > np.power(10,3):
+                if np.absolute(num) <= 0.000999 or np.absolute(num) > np.power(10,4):
                     f_new.append(format(num,'.3e'))
                 else:
                     f_new.append(np.round(num,3))
 
             trace = go.Scattergl(x = x_new, y = y_new,
             hovertext= "Study: " + i
-            + "<br />y = " + str(f_new[0]) + " * log(" + str(f_new[1]) + " * x) + " + str(f_new[2]),
+            + "<br />" +
+            "y = {a} * log({b} * x) + {c}".format(a=f_new[0],b=f_new[1],c=f_new[2]),
             hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
             name=i,showlegend=showLegend,legendgroup=i)
 
@@ -2155,14 +2281,15 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
 
             f_new = []
             for num in popt:
-                if np.absolute(num) < 10**(1/4) or np.absolute(num) > np.power(10,3):
+                if np.absolute(num) <= 0.000999 or np.absolute(num) > np.power(10,4):
                     f_new.append(format(num,'.3e'))
                 else:
                     f_new.append(np.round(num,3))
 
             trace = go.Scattergl(x = x_new, y = y_new,
             hovertext= "Study: " + i
-            + "<br />y = " + str(f_new[0]) + " * e^(" + str(f_new[1]) + " * x) + " + str(f_new[2]),
+            + "<br />" +
+            "y = {a} * e<sup>({b} * x)</sup> + {c}".format(a=f_new[0],b=f_new[1],c=f_new[2]),
             hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
             name=i,showlegend=showLegend,legendgroup=i)
 
@@ -2184,14 +2311,15 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
 
             f_new = []
             for num in popt:
-                if np.absolute(num) < 10**(1/4) or np.absolute(num) > np.power(10,3):
+                if np.absolute(num) <= 0.000999 or np.absolute(num) > np.power(10,4):
                     f_new.append(format(num,'.3e'))
                 else:
                     f_new.append(np.round(num,3))
             
             trace = go.Scattergl(x = x_new, y = y_new,
             hovertext= "Study: " + i
-            + "<br />y = " + str(f_new[0]) + " * x^(" + str(f_new[1]) + ") + " + str(f_new[2]),
+            + "<br />" +
+            "y = {a} * x<sup>{N}</sup> + {c}".format(a=f_new[0],N=f_new[1],c=f_new[2]),
             hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
             name=i,showlegend=showLegend,legendgroup=i)
 
