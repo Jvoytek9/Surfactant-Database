@@ -180,10 +180,10 @@ home = dbc.Row([
                     html.Hr(),
 
                     html.Div(
-                        dcc.RadioItems(
+                        dcc.Checklist(
                             id='normalize2',
-                            options=[{'label': i, 'value': i} for i in ['No Normalize','Normalize']],
-                            value='No Normalize',
+                            options=[{'label': i, 'value': i} for i in ['Normalize X','Normalize Y','Normalize Z']],
+                            value=[],
                             labelStyle={"padding-right":"10px","margin":"auto","padding-bottom":"10px"}
                         )
                     ,style={"margin":"auto"}),
@@ -413,10 +413,10 @@ home = dbc.Row([
                     html.Hr(),
 
                     html.Div(
-                        dcc.RadioItems(
+                        dcc.Checklist(
                             id='normalize',
-                            options=[{'label': i, 'value': i} for i in ['No Normalize','Normalize']],
-                            value='No Normalize',
+                            options=[{'label': i, 'value': i} for i in ['Normalize X','Normalize Y','Normalize Z']],
+                            value=[],
                             labelStyle={"padding-right":"10px","margin":"auto","padding-bottom":"10px"}
                         )
                     ,style={"margin":"auto"}),
@@ -1194,13 +1194,6 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
     data = []
 
-    x_min = 99999
-    x_max = 0
-    y_min = 99999
-    y_max = 0
-    z_min = 99999
-    z_max = 0
-
     for i in names:
         name_array = cleaned[cleaned.Study == i]
         
@@ -1213,52 +1206,26 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
                 x = np.array(name_array[selected_x])
                 y = np.array(name_array[selected_y])
                 z = np.array(name_array[selected_z])
-                if normalize == "Normalize":
+                if "Normalize X" in normalize:
                     if max(x) == min(x):
                         x = np.full_like(x, 0.5)
                     else:
                         x = (x-min(x))/(max(x)-min(x))
                     x[x == 0] = 0.001
-                    
+                
+                if "Normalize Y" in normalize:
                     if max(y) == min(y):
                         y = np.full_like(y, 0.5)
                     else:
                         y = (y-min(y))/(max(y)-min(y))
                     y[y == 0] = 0.001
                     
+                if "Normalize Z" in normalize:
                     if max(z) == min(z):
                         z = np.full_like(z, 0.5)
                     else:
                         z = (z-min(z))/(max(z)-min(z))
                     z[z == 0] = 0.001
-
-                    x_min = 0
-                    x_max = 1
-                    y_min = 0
-                    y_max = 1
-                    z_min = 0
-                    z_max = 1
-                else:
-                    x_min2 = min(x)
-                    x_max2 = max(x)
-                    if x_min2 < x_min:
-                        x_min = x_min2
-                    if x_max2 > x_max:
-                        x_max = x_max2
-
-                    y_min2 = min(y)
-                    y_max2 = max(y)
-                    if y_min2 < y_min:
-                        y_min = y_min2
-                    if y_max2 > y_max:
-                        y_max = y_max2
-
-                    z_min2 = min(z)
-                    z_max2 = max(z)
-                    if z_min2 < z_min:
-                        z_min = z_min2
-                    if z_max2 > z_max:
-                        z_max = z_max2
             else:
                 continue
         else:
@@ -1512,9 +1479,9 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
                 },
                 scene={
                     "camera":{"center":dict(x=0.05,y=0,z=-0.25)},
-                    "xaxis": {"title": f"{selected_x.title()}","range":[x_min,x_max]},
-                    "yaxis": {"title": f"{selected_y.title()}","range":[y_min,y_max]},
-                    "zaxis": {"title": f"{selected_z.title()}","range":[z_min,z_max]}
+                    "xaxis": {"title": f"{selected_x.title()}"},
+                    "yaxis": {"title": f"{selected_y.title()}"},
+                    "zaxis": {"title": f"{selected_z.title()}"}
                 },
                 margin={
                     "b":0,
@@ -1555,13 +1522,6 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
     data = []
 
-    x_min = 99999
-    x_max = 0
-    y_min = 99999
-    y_max = 0
-    z_min = 99999
-    z_max = 0
-
     for i in names:
         name_array = cleaned[cleaned.Study == i]
         
@@ -1574,52 +1534,26 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
                 x = np.array(name_array[selected_x])
                 y = np.array(name_array[selected_y])
                 z = np.array(name_array[selected_z])
-                if normalize == "Normalize":
+                if "Normalize X" in normalize:
                     if max(x) == min(x):
                         x = np.full_like(x, 0.5)
                     else:
                         x = (x-min(x))/(max(x)-min(x))
                     x[x == 0] = 0.001
-                    
+                
+                if "Normalize Y" in normalize:
                     if max(y) == min(y):
                         y = np.full_like(y, 0.5)
                     else:
                         y = (y-min(y))/(max(y)-min(y))
                     y[y == 0] = 0.001
                     
+                if "Normalize Z" in normalize:
                     if max(z) == min(z):
                         z = np.full_like(z, 0.5)
                     else:
                         z = (z-min(z))/(max(z)-min(z))
                     z[z == 0] = 0.001
-
-                    x_min = 0
-                    x_max = 1
-                    y_min = 0
-                    y_max = 1
-                    z_min = 0
-                    z_max = 1
-                else:
-                    x_min2 = min(x)
-                    x_max2 = max(x)
-                    if x_min2 < x_min:
-                        x_min = x_min2
-                    if x_max2 > x_max:
-                        x_max = x_max2
-
-                    y_min2 = min(y)
-                    y_max2 = max(y)
-                    if y_min2 < y_min:
-                        y_min = y_min2
-                    if y_max2 > y_max:
-                        y_max = y_max2
-
-                    z_min2 = min(z)
-                    z_max2 = max(z)
-                    if z_min2 < z_min:
-                        z_min = z_min2
-                    if z_max2 > z_max:
-                        z_max = z_max2
             else:
                 continue
         else:
@@ -1865,9 +1799,9 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
                 },
                 scene={
                     "camera":{"center":dict(x=0.05,y=0,z=-0.25)},
-                    "xaxis": {"title": f"{selected_x.title()}","range":[x_min,x_max]},
-                    "yaxis": {"title": f"{selected_y.title()}","range":[y_min,y_max]},
-                    "zaxis": {"title": f"{selected_z.title()}","range":[z_min,z_max]}
+                    "xaxis": {"title": f"{selected_x.title()}"},
+                    "yaxis": {"title": f"{selected_y.title()}"},
+                    "zaxis": {"title": f"{selected_z.title()}"}
                 },
                 margin={
                     "b":0,
@@ -1916,13 +1850,14 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
             if len(name_array[selected_x]) > 2:
                 x = np.array(name_array[selected_x])
                 y = np.array(name_array[selected_y])
-                if normalize == "Normalize":
+                if "Normalize X" in normalize:
                     if max(x) == min(x):
                         x = np.full_like(x, 0.5)
                     else:
                         x = (x-min(x))/(max(x)-min(x))
                     x[x == 0] = 0.001
-                    
+                
+                if "Normalize Y" in normalize:
                     if max(y) == min(y):
                         y = np.full_like(y, 0.5)
                     else:
@@ -2161,13 +2096,14 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
             if len(name_array[selected_x]) > 2:
                 x = np.array(name_array[selected_x])
                 y = np.array(name_array[selected_y])
-                if normalize == "Normalize":
+                if "Normalize X" in normalize:
                     if max(x) == min(x):
                         x = np.full_like(x, 0.5)
                     else:
                         x = (x-min(x))/(max(x)-min(x))
                     x[x == 0] = 0.001
-                    
+                
+                if "Normalize Y" in normalize:
                     if max(y) == min(y):
                         y = np.full_like(y, 0.5)
                     else:
