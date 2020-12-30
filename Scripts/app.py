@@ -14,6 +14,7 @@ import dash_html_components as html
 import dash_bootstrap_components as dbc
 import dash_table as dt
 import plotly.graph_objs as go
+import cv2
 
 scope = ['https://spreadsheets.google.com/feeds',
 'https://www.googleapis.com/auth/drive']
@@ -803,6 +804,37 @@ about = html.Div([
         ),
         dbc.Col([
             dcc.Tabs(id="tabs", children=[
+                dcc.Tab(label='Bubble Analyzer', children=[
+                    html.Div(id='output-data-upload'),
+                    html.Div([
+                            dcc.Graph(id="output-data-upload",
+                            config = {'toImageButtonOptions':
+                            {'width': None,
+                            'height': None,
+                            'format': 'png',
+                            'filename': 'Image_Graph'}
+                            })
+                        ]),
+                    dcc.Upload(
+                        id='upload-data',
+                        children=html.Div([
+                            'Drag and Drop or ',
+                            html.A('Select Files')
+                        ]),
+                        style={
+                            'width': '100%',
+                            'height': '60px',
+                            'lineHeight': '60px',
+                            'borderWidth': '1px',
+                            'borderStyle': 'dashed',
+                            'borderRadius': '5px',
+                            'textAlign': 'center',
+                            'margin': '10px'
+                        },
+                        # Allow multiple files to be uploaded
+                        multiple=False
+                    )
+                ]),
                 dcc.Tab(label='About Us', children=[
                     html.Br(),
                     html.H1("Team",style={"text-align":"center"}),
@@ -889,6 +921,55 @@ def display_page(pathname):
         return about
     else:
         return home
+
+@app.callback(Output('output-data-upload', 'figure'),
+              Input('upload-data', 'contents'),
+              State('upload-data', 'filename'),
+              State('upload-data', 'last_modified'))
+def update_output(list_of_contents, list_of_names, list_of_dates):
+    if list_of_contents is not None:
+        print(list_of_contents)
+        return{
+            'data': [],
+            'layout': go.Layout(
+                yaxis={
+                    "title":"X Position(mm)",
+                    "titlefont_size":20,
+                    "tickfont_size":18,
+                },
+                xaxis={
+                    "title":"Y Position(mm)",
+                    "titlefont_size":20,
+                    "tickfont_size":18
+                },
+                font={
+                    "family":"Times New Roman",
+                },
+                hovermode="closest",
+                height=610
+            )
+        }
+    else:
+        return{
+            'data': [],
+            'layout': go.Layout(
+                yaxis={
+                    "title":"X Position(mm)",
+                    "titlefont_size":20,
+                    "tickfont_size":18,
+                },
+                xaxis={
+                    "title":"Y Position(mm)",
+                    "titlefont_size":20,
+                    "tickfont_size":18
+                },
+                font={
+                    "family":"Times New Roman",
+                },
+                hovermode="closest",
+                height=610
+            )
+        }
 
 @app.callback(
     Output('controls-container', 'style'),
