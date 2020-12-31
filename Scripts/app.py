@@ -4,6 +4,7 @@ import gspread
 from gspread_dataframe import get_as_dataframe
 from oauth2client.service_account import ServiceAccountCredentials
 import numpy as np
+import pandas as pd
 np.warnings.filterwarnings('ignore')
 from scipy.optimize import curve_fit
 #pylint: disable=unbalanced-tuple-unpacking
@@ -14,7 +15,9 @@ import dash_html_components as html
 import dash_bootstrap_components as dbc
 import dash_table as dt
 import plotly.graph_objs as go
-import cv2
+from cv2 import cv2
+import base64
+import tempfile
 
 scope = ['https://spreadsheets.google.com/feeds',
 'https://www.googleapis.com/auth/drive']
@@ -805,7 +808,6 @@ about = html.Div([
         dbc.Col([
             dcc.Tabs(id="tabs", children=[
                 dcc.Tab(label='Bubble Analyzer', children=[
-                    html.Div(id='output-data-upload'),
                     html.Div([
                             dcc.Graph(id="output-data-upload",
                             config = {'toImageButtonOptions':
@@ -815,25 +817,43 @@ about = html.Div([
                             'filename': 'Image_Graph'}
                             })
                         ]),
-                    dcc.Upload(
-                        id='upload-data',
-                        children=html.Div([
-                            'Drag and Drop or ',
-                            html.A('Select Files')
+                    html.Div([
+                            dcc.Graph(id="output-data-upload2",
+                            config = {'toImageButtonOptions':
+                            {'width': None,
+                            'height': None,
+                            'format': 'png',
+                            'filename': 'Image_Graph2'}
+                            })
                         ]),
-                        style={
-                            'width': '100%',
-                            'height': '60px',
-                            'lineHeight': '60px',
-                            'borderWidth': '1px',
-                            'borderStyle': 'dashed',
-                            'borderRadius': '5px',
-                            'textAlign': 'center',
-                            'margin': '10px'
-                        },
-                        # Allow multiple files to be uploaded
-                        multiple=False
-                    )
+
+                    html.Div(
+                        dcc.Upload(
+                            id='upload-data',
+                            children=html.Div([
+                                'Drag and Drop or ',
+                                html.A('Select Files')
+                            ]),
+                            style={
+                                'width': '100%',
+                                'height': '60px',
+                                'lineHeight': '60px',
+                                'borderWidth': '1px',
+                                'borderStyle': 'dashed',
+                                'borderRadius': '5px',
+                                'textAlign': 'center',
+                                'margin': '10px'
+                            },
+                            # Allow multiple files to be uploaded
+                            multiple=False,
+                            max_size = 3000000,
+                            accept = "video/*"
+                        ),
+                    id="upload-container"),
+                    
+                    html.Div(
+                        dbc.Button('Continue', id='continue', n_clicks=0,size="lg",outline=True,color="dark",style={"display":"None"})
+                    ,style={"margin":"auto","position":"absolute","right":10,"bottom":10})
                 ]),
                 dcc.Tab(label='About Us', children=[
                     html.Br(),
@@ -922,54 +942,189 @@ def display_page(pathname):
     else:
         return home
 
-@app.callback(Output('output-data-upload', 'figure'),
-              Input('upload-data', 'contents'),
-              State('upload-data', 'filename'),
-              State('upload-data', 'last_modified'))
-def update_output(list_of_contents, list_of_names, list_of_dates):
+@app.callback([Output('output-data-upload', 'figure'),
+              Output('output-data-upload', 'style'),
+              Output('output-data-upload2', 'figure'),
+              Output('output-data-upload2', 'style'),
+              Output('continue', 'style'),
+              Output('upload-container', 'style')],
+              [Input('upload-data', 'contents'),
+              Input('continue', 'n_clicks')])
+def update_output(list_of_contents,conbut):
     if list_of_contents is not None:
-        print(list_of_contents)
-        return{
-            'data': [],
-            'layout': go.Layout(
-                yaxis={
-                    "title":"X Position(mm)",
-                    "titlefont_size":20,
-                    "tickfont_size":18,
+        list_of_contents = list_of_contents.split(",")
+        list_of_contents = list_of_contents[1].strip()
+        if len(list_of_contents) % 4:
+            list_of_contents += '=' * (4 - len(list_of_contents) % 4)
+
+        temp_path = tempfile.gettempdir()
+        decoded_string = base64.b64decode(list_of_contents)
+
+        with open(temp_path+'/video.mp4', 'wb') as wfile:
+            wfile.write(decoded_string)
+
+        vidObj = cv2.VideoCapture(temp_path+'/video.mp4')
+
+        changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+
+        final_data= []
+        data = []
+        data2 = []
+        iteration = 0
+        success = True
+        tracked = False
+        multiTracker = cv2.MultiTracker_create()
+
+        def Find_Circles(img):
+            # Convert to gray-scale
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            # Blur the image to reduce noise
+            img_blur = cv2.bilateralFilter(gray, 7, 50, 50)
+            # Apply hough transform on the image
+            circles = cv2.HoughCircles(img_blur, cv2.HOUGH_GRADIENT, 1, 70, param1=110, param2=10, minRadius=20, maxRadius=100)
+            
+            return circles
+
+        def Draw_and_Track_Circles(img,circles,tracked,count,iteration):
+            if circles is not None:
+                circles = np.int16(np.around(circles))
+                
+                if tracked is False:
+                    for i in circles[0, :]:
+                        cv2.circle(img, (i[0], i[1]), i[2], (0, 255, 0),2)
+                        cv2.putText(img,str(count),(i[0], i[1]),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255),2)
+                        
+                        box = (i[0], i[1], 2*i[2], 2*i[2])
+                        multiTracker.add(cv2.TrackerCSRT_create(), img, box)
+                        final_data.append([count,iteration,i[0]/100,i[1]/100,(np.pi*i[2]**2)/(100**2)])
+                        count += 1
+                        
+                else:
+                    (_, circles) = multiTracker.update(img)
+                    circles = np.int16(np.around(circles))
+                    for circle in circles:
+                        radius = int(circle[2]/2)
+                        
+                        cv2.circle(img, (circle[0], circle[1]), radius, (0, 255, 0),2)
+                        cv2.putText(img,str(count),(circle[0], circle[1]),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255),2)
+                        
+                        final_data.append([count,iteration,circle[0]/100,circle[1]/100,(np.pi * radius**2)/(100**2)])
+                        
+                        count += 1
+                
+                return(None)
+            
+            else:
+                return(final_data)
+        
+        if changed_id == 'continue.n_clicks':
+
+            while success:
+                iteration += 1
+                success, img = vidObj.read()
+                
+                if img is not None:
+                    _ = Draw_and_Track_Circles(img, Find_Circles(img),tracked,1,iteration)
+                    tracked = True
+
+                else:
+                    success = False
+                    final_data = Draw_and_Track_Circles(np.array([]), None,tracked,0,iteration)
+                    df = pd.DataFrame(final_data, columns =['Number', 'Iterations', 'X', 'Y', 'Area'])
+
+                    numbers = sorted(list(dict.fromkeys(df['Number'])))
+                    
+                    for i in numbers:
+                        num_array = df[df.Number == i]
+                        trace = go.Scattergl(x = num_array['Iterations'], y = num_array['Area'],name="Bubble " + str(i))
+                        data2.append(trace)
+
+                    return[{
+                        'data': [],
+                        'layout': go.Layout(
+                            height=610
+                        ),
+                    },
+                    {"display":"None"},
+                    {
+                        'data': data2,
+                        'layout': go.Layout(
+                            yaxis={
+                                "title":"Area(mm²)",
+                                "titlefont_size":20,
+                                "tickfont_size":18,
+                            },
+                            xaxis={
+                                "title":"Iterations(frames)",
+                                "titlefont_size":20,
+                                "tickfont_size":18
+                            },
+                            font={
+                                "family":"Times New Roman",
+                            },
+                            hovermode="closest",
+                            height=610
+                        ),
+                    },
+                    {"display":"block"},
+                    {"display":"None"},
+                    {"display":"block"}]
+        
+        else:
+            _, img = vidObj.read()
+            _ = Draw_and_Track_Circles(img, Find_Circles(img),False,1,1)
+            trace = go.Image(z=img)
+            data = []
+            data2 = []
+            data.append(trace)
+            return({
+                    'data': data,
+                    'layout': go.Layout(
+                        yaxis={
+                            "title":"Y Position(mm)",
+                            "titlefont_size":20,
+                            "tickfont_size":18
+                        },
+                        xaxis={
+                            "title":"X Position(mm)",
+                            "titlefont_size":20,
+                            "tickfont_size":18
+                        },
+                        font={
+                            "family":"Times New Roman",
+                        },
+                        hovermode="closest",
+                        height=610
+                    ),
                 },
-                xaxis={
-                    "title":"Y Position(mm)",
-                    "titlefont_size":20,
-                    "tickfont_size":18
+                {"display":"block"},
+                {
+                    'data': [],
+                    'layout': go.Layout(
+                        height=610
+                    ),
                 },
-                font={
-                    "family":"Times New Roman",
-                },
-                hovermode="closest",
-                height=610
-            )
-        }
+                {"display":"None"},
+                {"display":"block"},
+                {"display":"None"},)
+            
     else:
-        return{
+        return[{
             'data': [],
             'layout': go.Layout(
-                yaxis={
-                    "title":"X Position(mm)",
-                    "titlefont_size":20,
-                    "tickfont_size":18,
-                },
-                xaxis={
-                    "title":"Y Position(mm)",
-                    "titlefont_size":20,
-                    "tickfont_size":18
-                },
-                font={
-                    "family":"Times New Roman",
-                },
-                hovermode="closest",
                 height=610
             )
-        }
+        },
+        {"display":"block"},
+        {
+            'data': [],
+            'layout': go.Layout(
+                height=610
+            )
+        },
+        {"display":"None"},
+        {"display":"None"},
+        {"display":"block"}]
 
 @app.callback(
     Output('controls-container', 'style'),
