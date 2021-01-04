@@ -195,7 +195,7 @@ home = dbc.Row([
                     html.Div(
                         dcc.Checklist(
                             id = 'bestfit2',
-                            options= [{'label': i, 'value': i} for i in ['Scatter','Poly-Fit','Log-Fit','Exp-Fit',"Power-Fit"]],
+                            options= [{'label': i, 'value': i} for i in ['Scatter','Line','Poly-Fit','Log-Fit','Exp-Fit',"Power-Fit"]],
                             value = ['Scatter'],
                             labelStyle={"padding-right":"10px","margin":"auto"}
                         )
@@ -401,7 +401,7 @@ home = dbc.Row([
             ],style={"background-color":"white","border-radius":"3px","border":"1px solid #cccccc","margin-left": "auto", "margin-right": "auto", "width": "80%","height":"10%"},no_gutters=True),
 
             html.Div([
-                
+
                 dbc.Row([
                     dcc.RadioItems(
                         id='toggle',
@@ -428,7 +428,7 @@ home = dbc.Row([
                     html.Div(
                         dcc.Checklist(
                             id = 'bestfit',
-                            options= [{'label': i, 'value': i} for i in ['Scatter','Poly-Fit','Log-Fit','Exp-Fit',"Power-Fit"]],
+                            options= [{'label': i, 'value': i} for i in ['Scatter','Line','Poly-Fit','Log-Fit','Exp-Fit',"Power-Fit"]],
                             value = ['Scatter'],
                             labelStyle={"padding-right":"10px","margin":"auto"}
                         )
@@ -598,7 +598,7 @@ home = dbc.Row([
 
         dcc.Link('About', href='/about',style={'position':'absolute','top':0, 'left':0,"padding":5,"color":"white","font-size":18})
 
-    ],style={'backgroundColor': '#9E1B34'},width=2),
+    ],style={'backgroundColor': '#9E1B34','width':'20%'}),
 
     dbc.Col([
         dcc.Tabs(id="tabs", children=[
@@ -645,10 +645,7 @@ home = dbc.Row([
                                 'minWidth': 'auto', 'width': 'auto', 'maxWidth': 'auto',
                                 'whiteSpace': 'normal'
                             },
-                            css=[{
-                                'selector': '.dash-spreadsheet-container .dash-spreadsheet-inner *, .dash-spreadsheet-container .dash-spreadsheet-inner *:after, .dash-spreadsheet-container .dash-spreadsheet-inner *:before',
-                                'rule': 'box-sizing: inherit; width: 100%;'
-                            }],
+                            css=[{'selector': '.row', 'rule': 'margin: 0'}]
                         ),
                     style={"padding-left":20,"padding-right":20}),
 
@@ -672,10 +669,7 @@ home = dbc.Row([
                                 'minWidth': 'auto', 'width': 'auto', 'maxWidth': 'auto',
                                 'whiteSpace': 'normal'
                             },
-                            css=[{
-                                'selector': '.dash-spreadsheet-container .dash-spreadsheet-inner *, .dash-spreadsheet-container .dash-spreadsheet-inner *:after, .dash-spreadsheet-container .dash-spreadsheet-inner *:before',
-                                'rule': 'box-sizing: inherit; width: 100%;'
-                            }],
+                            css=[{'selector': '.row', 'rule': 'margin: 0'}]
                         )
                     ,style={"display":"None"},id="compare_table")
                 ],no_gutters=True)
@@ -729,10 +723,7 @@ home = dbc.Row([
                                 'minWidth': 'auto', 'width': 'auto', 'maxWidth': 'auto',
                                 'whiteSpace': 'normal'
                             },
-                            css=[{
-                                'selector': '.dash-spreadsheet-container .dash-spreadsheet-inner *, .dash-spreadsheet-container .dash-spreadsheet-inner *:after, .dash-spreadsheet-container .dash-spreadsheet-inner *:before',
-                                'rule': 'box-sizing: inherit; width: 100%;'
-                            }],
+                            css=[{'selector': '.row', 'rule': 'margin: 0'}]
                         ),style={"padding-left":20,"padding-right":20}
                     ),
 
@@ -757,10 +748,7 @@ home = dbc.Row([
                                 'minWidth': 'auto', 'width': 'auto', 'maxWidth': 'auto',
                                 'whiteSpace': 'normal'
                             },
-                            css=[{
-                                'selector': '.dash-spreadsheet-container .dash-spreadsheet-inner *, .dash-spreadsheet-container .dash-spreadsheet-inner *:after, .dash-spreadsheet-container .dash-spreadsheet-inner *:before',
-                                'rule': 'box-sizing: inherit; width: 100%;'
-                            }],
+                            css=[{'selector': '.row', 'rule': 'margin: 0'}]
                         )
                     ,style={"display":"None"},id="compare_table_2D")
                 ],no_gutters=True)
@@ -796,15 +784,12 @@ home = dbc.Row([
                 )
             ])
         ])
-    ])
+    ],width=10)
 ],no_gutters=True,style={"height":"100vh"})
 
 about = html.Div([
     dbc.Row([
-        dbc.Col(
-            dcc.Link('Home', href='/',style={'position':'absolute','top':0, 'left':0,"padding":5,"color":"white","font-size":18}),
-            width=3
-        ),
+        dbc.Col(dcc.Link('Home', href='/',style={'position':'absolute','top':0, 'left':0,"padding":5,"color":"white","font-size":18,'width':'20%'})),
         dbc.Col([
             dcc.Tabs(id="tabs", children=[
                 dcc.Tab(label='Bubble Analyzer', children=[
@@ -850,7 +835,7 @@ about = html.Div([
                             accept = "video/*"
                         ),
                     id="upload-container"),
-                    
+
                     html.Div(
                         dbc.Button('Continue', id='continue', n_clicks=0,size="lg",outline=True,color="dark",style={"display":"None"})
                     ,style={"margin":"auto","position":"absolute","right":10,"bottom":10})
@@ -929,8 +914,8 @@ about = html.Div([
                     html.P("Last Updated: " + today,style={"text-align":"center"})
                 ]),
             ]),
-        ],style={"backgroundColor":"white"}),
-        dbc.Col(style={'backgroundColor': '#9E1B34',"height":"100vh"},width=3)
+        ],style={"backgroundColor":"white"},width=8),
+        dbc.Col(style={'backgroundColor': '#9E1B34',"height":"100vh",'width':'20%'})
     ],style={'backgroundColor': '#9E1B34',"height":"100%"},no_gutters=True)
 ])
 
@@ -982,47 +967,47 @@ def update_output(list_of_contents,conbut):
             img_blur = cv2.bilateralFilter(gray, 7, 50, 50)
             # Apply hough transform on the image
             circles = cv2.HoughCircles(img_blur, cv2.HOUGH_GRADIENT, 1, 70, param1=110, param2=10, minRadius=20, maxRadius=100)
-            
+
             return circles
 
         def Draw_and_Track_Circles(img,circles,tracked,count,iteration):
             if circles is not None:
                 circles = np.int16(np.around(circles))
-                
+
                 if tracked is False:
                     for i in circles[0, :]:
                         cv2.circle(img, (i[0], i[1]), i[2], (0, 255, 0),2)
                         cv2.putText(img,str(count),(i[0], i[1]),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255),2)
-                        
+
                         box = (i[0], i[1], 2*i[2], 2*i[2])
                         multiTracker.add(cv2.TrackerCSRT_create(), img, box)
                         final_data.append([count,iteration,i[0]/100,i[1]/100,(np.pi*i[2]**2)/(100**2)])
                         count += 1
-                        
+
                 else:
                     (_, circles) = multiTracker.update(img)
                     circles = np.int16(np.around(circles))
                     for circle in circles:
                         radius = int(circle[2]/2)
-                        
+
                         cv2.circle(img, (circle[0], circle[1]), radius, (0, 255, 0),2)
                         cv2.putText(img,str(count),(circle[0], circle[1]),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255),2)
-                        
+
                         final_data.append([count,iteration,circle[0]/100,circle[1]/100,(np.pi * radius**2)/(100**2)])
-                        
+
                         count += 1
-                
+
                 return(None)
-            
+
             else:
                 return(final_data)
-        
+
         if changed_id == 'continue.n_clicks':
 
             while success:
                 iteration += 1
                 success, img = vidObj.read()
-                
+
                 if img is not None:
                     _ = Draw_and_Track_Circles(img, Find_Circles(img),tracked,1,iteration)
                     tracked = True
@@ -1033,7 +1018,7 @@ def update_output(list_of_contents,conbut):
                     df = pd.DataFrame(final_data, columns =['Number', 'Iterations', 'X', 'Y', 'Area'])
 
                     numbers = sorted(list(dict.fromkeys(df['Number'])))
-                    
+
                     for i in numbers:
                         num_array = df[df.Number == i]
                         trace = go.Scattergl(x = num_array['Iterations'], y = num_array['Area'],name="Bubble " + str(i))
@@ -1069,7 +1054,7 @@ def update_output(list_of_contents,conbut):
                     {"display":"block"},
                     {"display":"None"},
                     {"display":"block"}]
-        
+
         else:
             _, img = vidObj.read()
             _ = Draw_and_Track_Circles(img, Find_Circles(img),False,1,1)
@@ -1107,7 +1092,7 @@ def update_output(list_of_contents,conbut):
                 {"display":"None"},
                 {"display":"block"},
                 {"display":"None"},)
-            
+
     else:
         return[{
             'data': [],
@@ -1155,7 +1140,7 @@ def toggle_showmore_container2(toggle_value):
 )
 def select_deselect_all_gasses(allgas,dallgas,gas_value,gas_options):
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
-    
+
     if changed_id == 'allgas.n_clicks':
         return([[value['value'] for value in gas_options]])
     elif changed_id == 'dallgas.n_clicks':
@@ -1172,7 +1157,7 @@ def select_deselect_all_gasses(allgas,dallgas,gas_value,gas_options):
 )
 def select_deselect_all_gasses2(allgas,dallgas,gas_value,gas_options):
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
-    
+
     if changed_id == 'allgas2.n_clicks':
         return([[value['value'] for value in gas_options]])
     elif changed_id == 'dallgas2.n_clicks':
@@ -1187,7 +1172,7 @@ def select_deselect_all_gasses2(allgas,dallgas,gas_value,gas_options):
     [State('surfactants', 'value'),
      State('surfactants', 'options')]
 )
-def select_deselect_all_surfactants(allsurf,dallsurf,surf_value,surf_options):          
+def select_deselect_all_surfactants(allsurf,dallsurf,surf_value,surf_options):
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
 
     if changed_id == 'allsurf.n_clicks':
@@ -1204,7 +1189,7 @@ def select_deselect_all_surfactants(allsurf,dallsurf,surf_value,surf_options):
     [State('surfactants2', 'value'),
      State('surfactants2', 'options')]
 )
-def select_deselect_all_surfactants2(allsurf,dallsurf,surf_value,surf_options):          
+def select_deselect_all_surfactants2(allsurf,dallsurf,surf_value,surf_options):
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
 
     if changed_id == 'allsurf2.n_clicks':
@@ -1223,7 +1208,7 @@ def select_deselect_all_surfactants2(allsurf,dallsurf,surf_value,surf_options):
 )
 def select_deselect_all_surfconc(allsconc,dallscon,sconc_value,sconc_options):
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
-    
+
     if changed_id == 'allsconc.n_clicks':
         return([[value['value'] for value in sconc_options]])
     elif changed_id == 'dallsconc.n_clicks':
@@ -1240,7 +1225,7 @@ def select_deselect_all_surfconc(allsconc,dallscon,sconc_value,sconc_options):
 )
 def select_deselect_all_surfconc2(allsconc,dallscon,sconc_value,sconc_options):
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
-    
+
     if changed_id == 'allsconc2.n_clicks':
         return([[value['value'] for value in sconc_options]])
     elif changed_id == 'dallsconc2.n_clicks':
@@ -1432,7 +1417,7 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
     for i in names:
         name_array = cleaned[cleaned.Study == i]
-        
+
         if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0 and len(name_array[selected_z].values) != 0:
             name_array = name_array.dropna(subset=[selected_x, selected_y, selected_z],axis="rows")
             name_array.reset_index(drop=True)
@@ -1448,14 +1433,14 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
                     else:
                         x = (x-min(x))/(max(x)-min(x))
                     x[x == 0] = 0.001
-                
+
                 if "Normalize Y" in normalize:
                     if max(y) == min(y):
                         y = np.full_like(y, 0.5)
                     else:
                         y = (y-min(y))/(max(y)-min(y))
                     y[y == 0] = 0.001
-                    
+
                 if "Normalize Z" in normalize:
                     if max(z) == min(z):
                         z = np.full_like(z, 0.5)
@@ -1468,6 +1453,34 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
             continue
 
         if('Scatter' in fit):
+            if('Line' in fit):
+                trace = go.Scatter3d(x = x, y = y, z = z,
+                hovertext= "Study: " + i
+                + "<br />Gas: " + name_array.Gas
+                + "<br />Surfactant: " + name_array.Surfactant
+                + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"]
+                + "<br />Additive: " + name_array.Additive
+                + "<br />Concentration Additive: " + name_array['Additive Concentration']
+                + "<br />Liquid Phase: " + name_array.LiquidPhase,
+                hoverinfo='text',mode='lines+markers', line={'color' : name_array.Color.values[0]},
+                marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
+                name=i,legendgroup=i)
+
+            else:
+                trace = go.Scatter3d(x = x, y = y, z = z,
+                hovertext= "Study: " + i
+                + "<br />Gas: " + name_array.Gas
+                + "<br />Surfactant: " + name_array.Surfactant
+                + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"]
+                + "<br />Additive: " + name_array.Additive
+                + "<br />Concentration Additive: " + name_array['Additive Concentration']
+                + "<br />Liquid Phase: " + name_array.LiquidPhase,
+                hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
+                name=i,legendgroup=i)
+
+            data.append(trace)
+
+        elif('Line' in fit):
             trace = go.Scatter3d(x = x, y = y, z = z,
             hovertext= "Study: " + i
             + "<br />Gas: " + name_array.Gas
@@ -1476,7 +1489,7 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
             + "<br />Additive: " + name_array.Additive
             + "<br />Concentration Additive: " + name_array['Additive Concentration']
             + "<br />Liquid Phase: " + name_array.LiquidPhase,
-            hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
+            hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
             name=i,legendgroup=i)
 
             data.append(trace)
@@ -1508,12 +1521,12 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
                         f_new.append(format(num,'.3e'))
                     else:
                         f_new.append(np.round(num,3))
-                
+
                 # evaluate it on grid
                 # Z = C[0]*X + C[1]*Y + C[2]
 
                 equation = "z = {a}x + {b}y + {c}".format(a=f_new[0], b=f_new[1], c=f_new[2])
-                
+
                 # or expressed using matrix/vector product
                 Z = np.dot(np.c_[XX, YY, np.ones(XX.shape)], C).reshape(X.shape)
 
@@ -1534,7 +1547,7 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
                 # evaluate it on a grid
                 Z = np.dot(np.c_[np.ones(XX.shape), XX, YY, XX*YY, XX**2, YY**2], C).reshape(X.shape)
-                
+
             elif order == 3:
                 # M = [ones(size(x)), x, y, x.^2, x.*y, y.^2, x.^3, x.^2.*y, x.*y.^2, y.^3]
                 A = np.c_[np.ones(d.shape[0]), d[:,:2], d[:,0]**2, np.prod(d[:,:2], axis=1), \
@@ -1550,19 +1563,19 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
                         f_new.append(np.round(num,3))
 
                 equation = "z = {a}x³ + {b}y³ + {c}x²y + {d}xy² + {e}x² + {f}y² + {g}xy + {h}x + {i}y + {j}".format(a=f_new[0],b=f_new[1],c=f_new[2],d=f_new[3],e=f_new[4],f=f_new[5],g=f_new[6],h=f_new[7],i=f_new[8],j=f_new[9])
-                
+
                 Z = np.dot(np.c_[np.ones(XX.shape), XX, YY, XX**2, XX*YY, YY**2, XX**3, XX**2*YY, XX*YY**2, YY**3], C).reshape(X.shape)
 
             trace = go.Surface(x = X, y = Y, z = Z,
             colorscale=colorscale, opacity=0.75,
             hoverinfo="text",
             hovertext= "Study: " + i
-            + "<br />" 
+            + "<br />"
             + equation,
             name=i,showscale=False,showlegend=showLegend,legendgroup=i)
 
             data.append(trace)
-        
+
         if('Log-Fit' in fit):
             if('Scatter' in fit or "Poly-Fit" in fit):
                 showLegend = False
@@ -1597,7 +1610,7 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
             trace = go.Surface(x = x_new, y = y_new, z = z_new,
             colorscale=colorscale, opacity=0.75,
             hovertext= "Study: " + i
-            + "<br />" + 
+            + "<br />" +
             "y = {a} * log({b} * x) * log({c} * y) + {d}".format(a=f_new[0],b=f_new[1],c=f_new[2],d=f_new[3]),
             hoverinfo="text",
             name=i,showscale=False,showlegend=showLegend,legendgroup=i)
@@ -1638,7 +1651,7 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
             trace = go.Surface(x = x_new, y = y_new, z = z_new,
             colorscale=colorscale, opacity=0.75,
             hovertext= "Study: " + i
-            + "<br />" + 
+            + "<br />" +
             "y = {a} * e<sup>({b} * x)</sup> * e<sup>({c} * y)</sup> + {d}".format(a=f_new[0],b=f_new[1],c=f_new[2],d=f_new[3]),
             hoverinfo="text",
             name=i,showscale=False,showlegend=showLegend,legendgroup=i)
@@ -1679,7 +1692,7 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
             trace = go.Surface(x = x_new, y = y_new, z = z_new,
             colorscale=colorscale, opacity=0.75,
             hovertext= "Study: " + i
-            + "<br />" + 
+            + "<br />" +
             "y = {a} * x<sup>{M}</sup> * y<sup>{N}</sup> + {d}".format(a=f_new[0],M=f_new[1],N=f_new[2],d=f_new[3]),
             hoverinfo="text",
             name=i,showscale=False,showlegend=showLegend,legendgroup=i)
@@ -1760,7 +1773,7 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
     for i in names:
         name_array = cleaned[cleaned.Study == i]
-        
+
         if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0 and len(name_array[selected_z].values) != 0:
             name_array = name_array.dropna(subset=[selected_x, selected_y, selected_z],axis="rows")
             name_array.reset_index(drop=True)
@@ -1776,14 +1789,14 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
                     else:
                         x = (x-min(x))/(max(x)-min(x))
                     x[x == 0] = 0.001
-                
+
                 if "Normalize Y" in normalize:
                     if max(y) == min(y):
                         y = np.full_like(y, 0.5)
                     else:
                         y = (y-min(y))/(max(y)-min(y))
                     y[y == 0] = 0.001
-                    
+
                 if "Normalize Z" in normalize:
                     if max(z) == min(z):
                         z = np.full_like(z, 0.5)
@@ -1794,9 +1807,36 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
                 continue
         else:
             continue
-        
-        colorscale= [[0, name_array.Color.values[0]], [1, name_array.Color.values[0]]]
+
         if('Scatter' in fit):
+            if('Line' in fit):
+                trace = go.Scatter3d(x = x, y = y, z = z,
+                hovertext= "Study: " + i
+                + "<br />Gas: " + name_array.Gas
+                + "<br />Surfactant: " + name_array.Surfactant
+                + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"]
+                + "<br />Additive: " + name_array.Additive
+                + "<br />Concentration Additive: " + name_array['Additive Concentration']
+                + "<br />Liquid Phase: " + name_array.LiquidPhase,
+                hoverinfo='text',mode='lines+markers', line={'color' : name_array.Color.values[0]},
+                marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
+                name=i,legendgroup=i)
+
+            else:
+                trace = go.Scatter3d(x = x, y = y, z = z,
+                hovertext= "Study: " + i
+                + "<br />Gas: " + name_array.Gas
+                + "<br />Surfactant: " + name_array.Surfactant
+                + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"]
+                + "<br />Additive: " + name_array.Additive
+                + "<br />Concentration Additive: " + name_array['Additive Concentration']
+                + "<br />Liquid Phase: " + name_array.LiquidPhase,
+                hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
+                name=i,legendgroup=i)
+
+            data.append(trace)
+
+        elif('Line' in fit):
             trace = go.Scatter3d(x = x, y = y, z = z,
             hovertext= "Study: " + i
             + "<br />Gas: " + name_array.Gas
@@ -1805,10 +1845,12 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
             + "<br />Additive: " + name_array.Additive
             + "<br />Concentration Additive: " + name_array['Additive Concentration']
             + "<br />Liquid Phase: " + name_array.LiquidPhase,
-            hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
+            hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
             name=i,legendgroup=i)
 
             data.append(trace)
+
+        colorscale= [[0, name_array.Color.values[0]], [1, name_array.Color.values[0]]]
 
         if('Poly-Fit' in fit):
             if('Scatter' in fit):
@@ -1836,12 +1878,12 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
                         f_new.append(format(num,'.3e'))
                     else:
                         f_new.append(np.round(num,3))
-                
+
                 # evaluate it on grid
                 # Z = C[0]*X + C[1]*Y + C[2]
 
                 equation = "z = {a}x + {b}y + {c}".format(a=f_new[0], b=f_new[1], c=f_new[2])
-                
+
                 # or expressed using matrix/vector product
                 Z = np.dot(np.c_[XX, YY, np.ones(XX.shape)], C).reshape(X.shape)
 
@@ -1862,7 +1904,7 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
                 # evaluate it on a grid
                 Z = np.dot(np.c_[np.ones(XX.shape), XX, YY, XX*YY, XX**2, YY**2], C).reshape(X.shape)
-                
+
             elif order == 3:
                 # M = [ones(size(x)), x, y, x.^2, x.*y, y.^2, x.^3, x.^2.*y, x.*y.^2, y.^3]
                 A = np.c_[np.ones(d.shape[0]), d[:,:2], d[:,0]**2, np.prod(d[:,:2], axis=1), \
@@ -1878,19 +1920,19 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
                         f_new.append(np.round(num,3))
 
                 equation = "z = {a}x³ + {b}y³ + {c}x²y + {d}xy² + {e}x² + {f}y² + {g}xy + {h}x + {i}y + {j}".format(a=f_new[0],b=f_new[1],c=f_new[2],d=f_new[3],e=f_new[4],f=f_new[5],g=f_new[6],h=f_new[7],i=f_new[8],j=f_new[9])
-                
+
                 Z = np.dot(np.c_[np.ones(XX.shape), XX, YY, XX**2, XX*YY, YY**2, XX**3, XX**2*YY, XX*YY**2, YY**3], C).reshape(X.shape)
 
             trace = go.Surface(x = X, y = Y, z = Z,
             colorscale=colorscale, opacity=0.75,
             hoverinfo="text",
             hovertext= "Study: " + i
-            + "<br />" 
+            + "<br />"
             + equation,
             name=i,showscale=False,showlegend=showLegend,legendgroup=i)
 
             data.append(trace)
-        
+
         if('Log-Fit' in fit):
             if('Scatter' in fit or "Poly-Fit" in fit):
                 showLegend = False
@@ -1925,7 +1967,7 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
             trace = go.Surface(x = x_new, y = y_new, z = z_new,
             colorscale=colorscale, opacity=0.75,
             hovertext= "Study: " + i
-            + "<br />" + 
+            + "<br />" +
             "y = {a} * log({b} * x) * log({c} * y) + {d}".format(a=f_new[0],b=f_new[1],c=f_new[2],d=f_new[3]),
             hoverinfo="text",
             name=i,showscale=False,showlegend=showLegend,legendgroup=i)
@@ -1966,7 +2008,7 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
             trace = go.Surface(x = x_new, y = y_new, z = z_new,
             colorscale=colorscale, opacity=0.75,
             hovertext= "Study: " + i
-            + "<br />" + 
+            + "<br />" +
             "y = {a} * e<sup>({b} * x)</sup> * e<sup>({c} * y)</sup> + {d}".format(a=f_new[0],b=f_new[1],c=f_new[2],d=f_new[3]),
             hoverinfo="text",
             name=i,showscale=False,showlegend=showLegend,legendgroup=i)
@@ -2007,7 +2049,7 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
             trace = go.Surface(x = x_new, y = y_new, z = z_new,
             colorscale=colorscale, opacity=0.75,
             hovertext= "Study: " + i
-            + "<br />" + 
+            + "<br />" +
             "y = {a} * x<sup>{M}</sup> * y<sup>{N}</sup> + {d}".format(a=f_new[0],M=f_new[1],N=f_new[2],d=f_new[3]),
             hoverinfo="text",
             name=i,showscale=False,showlegend=showLegend,legendgroup=i)
@@ -2077,7 +2119,7 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
 
     for i in names:
         name_array = cleaned[cleaned.Study == i]
-        
+
         if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0:
             name_array.dropna(subset=[selected_x, selected_y],axis="rows", inplace=True)
             name_array.reset_index(drop=True)
@@ -2092,7 +2134,7 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
                     else:
                         x = (x-min(x))/(max(x)-min(x))
                     x[x == 0] = 0.001
-                
+
                 if "Normalize Y" in normalize:
                     if max(y) == min(y):
                         y = np.full_like(y, 0.5)
@@ -2105,7 +2147,35 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
             continue
 
         if('Scatter' in fit):
-            trace = go.Scattergl(x=x,y=y,
+            if('Line' in fit):
+                trace = go.Scattergl(x = x, y = y,
+                hovertext= "Study: " + i
+                + "<br />Gas: " + name_array.Gas
+                + "<br />Surfactant: " + name_array.Surfactant
+                + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"]
+                + "<br />Additive: " + name_array.Additive
+                + "<br />Concentration Additive: " + name_array['Additive Concentration']
+                + "<br />Liquid Phase: " + name_array.LiquidPhase,
+                hoverinfo='text',mode='lines+markers', line={'color' : name_array.Color.values[0]},
+                marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
+                name=i,legendgroup=i)
+
+            else:
+                trace = go.Scattergl(x = x, y = y,
+                hovertext= "Study: " + i
+                + "<br />Gas: " + name_array.Gas
+                + "<br />Surfactant: " + name_array.Surfactant
+                + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"]
+                + "<br />Additive: " + name_array.Additive
+                + "<br />Concentration Additive: " + name_array['Additive Concentration']
+                + "<br />Liquid Phase: " + name_array.LiquidPhase,
+                hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
+                name=i,legendgroup=i)
+
+            data.append(trace)
+
+        elif('Line' in fit):
+            trace = go.Scattergl(x = x, y = y,
             hovertext= "Study: " + i
             + "<br />Gas: " + name_array.Gas
             + "<br />Surfactant: " + name_array.Surfactant
@@ -2113,17 +2183,17 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
             + "<br />Additive: " + name_array.Additive
             + "<br />Concentration Additive: " + name_array['Additive Concentration']
             + "<br />Liquid Phase: " + name_array.LiquidPhase,
-            hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
+            hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
             name=i,legendgroup=i)
 
             data.append(trace)
-        
+
         if('Poly-Fit' in fit):
             if('Scatter' in fit):
                 showLegend = False
             else:
                 showLegend = True
-                
+
             z = np.polyfit(x,y,order)
             f = np.poly1d(z)
 
@@ -2169,7 +2239,7 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
 
             def logarithmic(x, a, b, c):
                 return  a * np.log(b * x) + c
-            
+
             popt, _ = curve_fit(logarithmic, x, y, maxfev = 999999999)
 
             x_new = np.linspace(x[0], x[-1], 1000)
@@ -2199,7 +2269,7 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
 
             def exponential(x, a, b, c):
                 return a * np.exp(-b * x) + c
-            
+
             popt, _ = curve_fit(exponential, x, y, p0=(1, 1e-6, 1), maxfev = 999999999)
 
             x_new = np.linspace(x[0], x[-1], 1000)
@@ -2229,7 +2299,7 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
 
             def power(x, a, N, b):
                 return a * np.power(x,N) + b
-            
+
             popt, _ = curve_fit(power, x, y, maxfev = 999999999)
 
             x_new = np.linspace(x[0], x[-1], 1000)
@@ -2241,7 +2311,7 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
                     f_new.append(format(num,'.3e'))
                 else:
                     f_new.append(np.round(num,3))
-            
+
             trace = go.Scattergl(x = x_new, y = y_new,
             hovertext= "Study: " + i
             + "<br />" +
@@ -2323,7 +2393,7 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
 
     for i in names:
         name_array = cleaned[cleaned.Study == i]
-        
+
         if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0:
             name_array = name_array.dropna(subset=[selected_x, selected_y],axis="rows")
             name_array.reset_index(drop=True)
@@ -2338,7 +2408,7 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
                     else:
                         x = (x-min(x))/(max(x)-min(x))
                     x[x == 0] = 0.001
-                
+
                 if "Normalize Y" in normalize:
                     if max(y) == min(y):
                         y = np.full_like(y, 0.5)
@@ -2351,7 +2421,35 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
             continue
 
         if('Scatter' in fit):
-            trace = go.Scattergl(x=x,y=y,
+            if('Line' in fit):
+                trace = go.Scattergl(x = x, y = y,
+                hovertext= "Study: " + i
+                + "<br />Gas: " + name_array.Gas
+                + "<br />Surfactant: " + name_array.Surfactant
+                + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"]
+                + "<br />Additive: " + name_array.Additive
+                + "<br />Concentration Additive: " + name_array['Additive Concentration']
+                + "<br />Liquid Phase: " + name_array.LiquidPhase,
+                hoverinfo='text',mode='lines+markers', line={'color' : name_array.Color.values[0]},
+                marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
+                name=i,legendgroup=i)
+
+            else:
+                trace = go.Scattergl(x = x, y = y,
+                hovertext= "Study: " + i
+                + "<br />Gas: " + name_array.Gas
+                + "<br />Surfactant: " + name_array.Surfactant
+                + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"]
+                + "<br />Additive: " + name_array.Additive
+                + "<br />Concentration Additive: " + name_array['Additive Concentration']
+                + "<br />Liquid Phase: " + name_array.LiquidPhase,
+                hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
+                name=i,legendgroup=i)
+
+            data.append(trace)
+
+        elif('Line' in fit):
+            trace = go.Scattergl(x = x, y = y,
             hovertext= "Study: " + i
             + "<br />Gas: " + name_array.Gas
             + "<br />Surfactant: " + name_array.Surfactant
@@ -2359,17 +2457,17 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
             + "<br />Additive: " + name_array.Additive
             + "<br />Concentration Additive: " + name_array['Additive Concentration']
             + "<br />Liquid Phase: " + name_array.LiquidPhase,
-            hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
+            hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
             name=i,legendgroup=i)
 
             data.append(trace)
-        
+
         if('Poly-Fit' in fit):
             if('Scatter' in fit):
                 showLegend = False
             else:
                 showLegend = True
-                
+
             z = np.polyfit(x,y,order)
             f = np.poly1d(z)
 
@@ -2415,7 +2513,7 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
 
             def logarithmic(x, a, b, c):
                 return  a * np.log(b * x) + c
-            
+
             popt, _ = curve_fit(logarithmic, x, y, maxfev = 999999999)
 
             x_new = np.linspace(x[0], x[-1], 1000)
@@ -2445,7 +2543,7 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
 
             def exponential(x, a, b, c):
                 return a * np.exp(-b * x) + c
-            
+
             popt, _ = curve_fit(exponential, x, y, p0=(1, 1e-6, 1), maxfev = 999999999)
 
             x_new = np.linspace(x[0], x[-1], 1000)
@@ -2475,7 +2573,7 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
 
             def power(x, a, N, b):
                 return a * np.power(x,N) + b
-            
+
             popt, _ = curve_fit(power, x, y, maxfev = 999999999)
 
             x_new = np.linspace(x[0], x[-1], 1000)
@@ -2487,7 +2585,7 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
                     f_new.append(format(num,'.3e'))
                 else:
                     f_new.append(np.round(num,3))
-            
+
             trace = go.Scattergl(x = x_new, y = y_new,
             hovertext= "Study: " + i
             + "<br />" +
