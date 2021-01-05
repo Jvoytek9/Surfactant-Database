@@ -802,22 +802,12 @@ about = html.Div([
                             'filename': 'Image_Graph'}
                             })
                         ]),
-                    html.Div([
-                            dcc.Graph(id="output-data-upload2",
-                            config = {'toImageButtonOptions':
-                            {'width': None,
-                            'height': None,
-                            'format': 'png',
-                            'filename': 'Image_Graph2'}
-                            })
-                        ]),
 
                     html.Div(
                         dcc.Upload(
                             id='upload-data',
                             children=html.Div([
-                                'Drag and Drop or ',
-                                html.A('Select Files')
+                                html.P('Drag and Drop or Select Video(10 mb Limit)',style={"display":"inline"})
                             ]),
                             style={
                                 'width': '100%',
@@ -827,11 +817,12 @@ about = html.Div([
                                 'borderStyle': 'dashed',
                                 'borderRadius': '5px',
                                 'textAlign': 'center',
-                                'margin': '10px'
+                                'margin': '10px',
+                                'cursor': 'pointer'
                             },
                             # Allow multiple files to be uploaded
                             multiple=False,
-                            max_size = 3000000,
+                            max_size = 10000000,
                             accept = "video/*"
                         ),
                     id="upload-container"),
@@ -928,9 +919,6 @@ def display_page(pathname):
         return home
 
 @app.callback([Output('output-data-upload', 'figure'),
-              Output('output-data-upload', 'style'),
-              Output('output-data-upload2', 'figure'),
-              Output('output-data-upload2', 'style'),
               Output('continue', 'style'),
               Output('upload-container', 'style')],
               [Input('upload-data', 'contents'),
@@ -1024,13 +1012,7 @@ def update_output(list_of_contents,conbut):
                         trace = go.Scattergl(x = num_array['Iterations'], y = num_array['Area'],name="Bubble " + str(i))
                         data2.append(trace)
 
-                    return[{
-                        'data': [],
-                        'layout': go.Layout(
-                            height=610
-                        ),
-                    },
-                    {"display":"None"},
+                    return[
                     {
                         'data': data2,
                         'layout': go.Layout(
@@ -1051,7 +1033,6 @@ def update_output(list_of_contents,conbut):
                             height=610
                         ),
                     },
-                    {"display":"block"},
                     {"display":"None"},
                     {"display":"block"}]
 
@@ -1059,10 +1040,9 @@ def update_output(list_of_contents,conbut):
             _, img = vidObj.read()
             _ = Draw_and_Track_Circles(img, Find_Circles(img),False,1,1)
             trace = go.Image(z=img)
-            data = []
-            data2 = []
             data.append(trace)
-            return({
+            return(
+                {
                     'data': data,
                     'layout': go.Layout(
                         yaxis={
@@ -1083,31 +1063,16 @@ def update_output(list_of_contents,conbut):
                     ),
                 },
                 {"display":"block"},
-                {
-                    'data': [],
-                    'layout': go.Layout(
-                        height=610
-                    ),
-                },
-                {"display":"None"},
-                {"display":"block"},
                 {"display":"None"},)
 
     else:
-        return[{
-            'data': [],
-            'layout': go.Layout(
-                height=610
-            )
-        },
-        {"display":"block"},
+        return[
         {
             'data': [],
             'layout': go.Layout(
                 height=610
             )
         },
-        {"display":"None"},
         {"display":"None"},
         {"display":"block"}]
 
