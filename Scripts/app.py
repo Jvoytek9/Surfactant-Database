@@ -180,42 +180,49 @@ home = dbc.Row([
 
             html.Div([
                 html.Div(id='controls-container2', children=[
+                    html.Hr(),
+
+                    html.Details([
+                        html.Summary("Data Formatting"),
+                        html.Div(
+                            dcc.Checklist(
+                                id='normalize2',
+                                options=[{'label': i, 'value': i} for i in ['Normalize X','Normalize Y','Normalize Z','Average Y-axis']],
+                                value=[],
+                                labelStyle={"padding-right":"10px","margin":"auto","padding-bottom":"10px"}
+                            )
+                        ,style={"margin":"auto"})
+                    ]),
 
                     html.Hr(),
 
-                    html.Div(
-                        dcc.Checklist(
-                            id='normalize2',
-                            options=[{'label': i, 'value': i} for i in ['Normalize X','Normalize Y','Normalize Z']],
-                            value=[],
-                            labelStyle={"padding-right":"10px","margin":"auto","padding-bottom":"10px"}
-                        )
-                    ,style={"margin":"auto"}),
+                    html.Details([
+                        html.Summary("Data Fitting"),
+                        html.Div(
+                            dcc.Checklist(
+                                id = 'bestfit2',
+                                options= [{'label': i, 'value': i} for i in ['Scatter','Line','Poly-Fit','Log-Fit','Exp-Fit',"Power-Fit"]],
+                                value = ['Scatter'],
+                                labelStyle={"padding-right":"10px","margin":"auto"}
+                            )
+                        ,style={"margin":"auto"}),
 
-                    html.Div(
-                        dcc.Checklist(
-                            id = 'bestfit2',
-                            options= [{'label': i, 'value': i} for i in ['Scatter','Line','Poly-Fit','Log-Fit','Exp-Fit',"Power-Fit"]],
-                            value = ['Scatter'],
-                            labelStyle={"padding-right":"10px","margin":"auto"}
-                        )
-                    ,style={"margin":"auto"}),
-
-                    html.Div([
-                        html.H6("Degree:",style={"padding-top":"10px"}),
-                        dcc.Slider(
-                            id="input_fit2",
-                            max=3,
-                            min=1,
-                            value=1,
-                            step=1,
-                            included=False,
-                            marks={
-                                1: {'label': '1'},
-                                2: {'label': '2'},
-                                3: {'label': '3'}
-                            }
-                        )
+                        html.Div([
+                            html.H6("Degree:",style={"padding-top":"10px"}),
+                            dcc.Slider(
+                                id="input_fit2",
+                                max=3,
+                                min=1,
+                                value=1,
+                                step=1,
+                                included=False,
+                                marks={
+                                    1: {'label': '1'},
+                                    2: {'label': '2'},
+                                    3: {'label': '3'}
+                                }
+                            )
+                        ])
                     ]),
 
                 html.Hr(),
@@ -416,180 +423,188 @@ home = dbc.Row([
 
                     html.Hr(),
 
-                    html.Div(
-                        dcc.Checklist(
-                            id='normalize',
-                            options=[{'label': i, 'value': i} for i in ['Normalize X','Normalize Y','Normalize Z']],
-                            value=[],
-                            labelStyle={"padding-right":"10px","margin":"auto","padding-bottom":"10px"}
-                        )
-                    ,style={"margin":"auto"}),
+                    html.Details([
+                        html.Summary("Data Formatting"),
+                        html.Div(
+                            dcc.Checklist(
+                                id='normalize',
+                                options=[{'label': i, 'value': i} for i in ['Normalize X','Normalize Y','Normalize Z','Average Y-axis']],
+                                value=[],
+                                labelStyle={"padding-right":"10px","margin":"auto","padding-bottom":"10px"}
+                            )
+                        ,style={"margin":"auto"})
+                    ]),
 
-                    html.Div(
-                        dcc.Checklist(
-                            id = 'bestfit',
-                            options= [{'label': i, 'value': i} for i in ['Scatter','Line','Poly-Fit','Log-Fit','Exp-Fit',"Power-Fit"]],
-                            value = ['Scatter'],
-                            labelStyle={"padding-right":"10px","margin":"auto"}
-                        )
-                    ,style={"margin":"auto"}),
+                    html.Hr(),
 
-                    html.Div([
-                        html.H6("Degree:",style={"padding-top":"10px"}),
-                        dcc.Slider(
-                            id="input_fit",
-                            max=3,
-                            min=1,
-                            value=1,
-                            step=1,
-                            included=False,
-                            marks={
-                                1: {'label': '1'},
-                                2: {'label': '2'},
-                                3: {'label': '3'}
-                            }
+                    html.Details([
+                        html.Summary("Data Fitting"),
+                        html.Div(
+                            dcc.Checklist(
+                                id = 'bestfit',
+                                options= [{'label': i, 'value': i} for i in ['Scatter','Line','Poly-Fit','Log-Fit','Exp-Fit',"Power-Fit"]],
+                                value = ['Scatter'],
+                                labelStyle={"padding-right":"10px","margin":"auto"}
+                            )
+                        ,style={"margin":"auto"}),
+
+                        html.Div([
+                            html.H6("Degree:",style={"padding-top":"10px"}),
+                            dcc.Slider(
+                                id="input_fit",
+                                max=3,
+                                min=1,
+                                value=1,
+                                step=1,
+                                included=False,
+                                marks={
+                                    1: {'label': '1'},
+                                    2: {'label': '2'},
+                                    3: {'label': '3'}
+                                }
+                            )
+                        ])
+                    ]),
+
+                    html.Hr(),
+
+                    html.Details([
+                        html.Summary("Gasses"),
+
+                        dbc.Row([
+                            dbc.Col(
+                                dbc.Button('Select All', id='allgas', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                            ,style={"padding-right":"5px"}),
+
+                            dbc.Col(
+                                dbc.Button('Deselect All', id='dallgas', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                            ,style={"padding-left":"5px"}),
+                        ],style={"margin":"auto","padding-top":"10px","padding-left":"10px","padding-right":"10px"},no_gutters=True),
+
+                        dcc.Checklist(
+                            id = 'gasses',
+                            options= [{'label': gas, 'value': gas} for gas in sorted(list(dict.fromkeys(dv['Gas'])))],
+                            value = list(dict.fromkeys(dv['Gas'])),
+                            labelStyle={'display': 'block'}
                         )
                     ]),
 
-                html.Hr(),
+                    html.Hr(),
 
-                html.Details([
-                    html.Summary("Gasses"),
+                    html.Details([
+                        html.Summary("Surfactants"),
 
-                    dbc.Row([
-                        dbc.Col(
-                            dbc.Button('Select All', id='allgas', n_clicks=0,size="sm",block=True,outline=True,color="dark")
-                        ,style={"padding-right":"5px"}),
+                        dbc.Row([
+                            dbc.Col(
+                                dbc.Button('Select All', id='allsurf', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                            ,style={"padding-right":"5px"}),
 
-                        dbc.Col(
-                            dbc.Button('Deselect All', id='dallgas', n_clicks=0,size="sm",block=True,outline=True,color="dark")
-                        ,style={"padding-left":"5px"}),
-                    ],style={"margin":"auto","padding-top":"10px","padding-left":"10px","padding-right":"10px"},no_gutters=True),
+                            dbc.Col(
+                                dbc.Button('Deselect All', id='dallsurf', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                            ,style={"padding-left":"5px"}),
+                        ],style={"margin":"auto","padding-top":"10px","padding-left":"10px","padding-right":"10px"},no_gutters=True),
 
-                    dcc.Checklist(
-                        id = 'gasses',
-                        options= [{'label': gas, 'value': gas} for gas in sorted(list(dict.fromkeys(dv['Gas'])))],
-                        value = list(dict.fromkeys(dv['Gas'])),
-                        labelStyle={'display': 'block'}
-                    )
-                ]),
+                        dcc.Checklist(
+                            id = 'surfactants',
+                            options= [{'label': surfactant, 'value': surfactant} for surfactant in sorted(list(dict.fromkeys(dv['Surfactant'])))],
+                            value = list(dict.fromkeys(dv['Surfactant'])),
+                            labelStyle={'display': 'block'}
+                        ),
+                    ]),
 
-                html.Hr(),
+                    html.Hr(),
 
-                html.Details([
-                    html.Summary("Surfactants"),
+                    html.Details([
+                        html.Summary("Surfactant Concentrations"),
 
-                    dbc.Row([
-                        dbc.Col(
-                            dbc.Button('Select All', id='allsurf', n_clicks=0,size="sm",block=True,outline=True,color="dark")
-                        ,style={"padding-right":"5px"}),
+                        dbc.Row([
+                            dbc.Col(
+                                dbc.Button('Select All', id='allsconc', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                            ,style={"padding-right":"5px"}),
 
-                        dbc.Col(
-                            dbc.Button('Deselect All', id='dallsurf', n_clicks=0,size="sm",block=True,outline=True,color="dark")
-                        ,style={"padding-left":"5px"}),
-                    ],style={"margin":"auto","padding-top":"10px","padding-left":"10px","padding-right":"10px"},no_gutters=True),
+                            dbc.Col(
+                                dbc.Button('Deselect All', id='dallsconc', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                            ,style={"padding-left":"5px"}),
+                        ],style={"margin":"auto","padding-top":"10px","padding-left":"10px","padding-right":"10px"},no_gutters=True),
 
-                    dcc.Checklist(
-                        id = 'surfactants',
-                        options= [{'label': surfactant, 'value': surfactant} for surfactant in sorted(list(dict.fromkeys(dv['Surfactant'])))],
-                        value = list(dict.fromkeys(dv['Surfactant'])),
-                        labelStyle={'display': 'block'}
-                    ),
-                ]),
+                        dcc.Checklist(
+                            id = 'sconc',
+                            options= [{'label': sc, 'value': sc} for sc in sorted(list(dict.fromkeys(dv['Surfactant Concentration'])))],
+                            value = list(dict.fromkeys(dv['Surfactant Concentration'])),
+                            labelStyle={'display': 'block'}
+                        ),
+                    ]),
 
-                html.Hr(),
+                    html.Hr(),
 
-                html.Details([
-                    html.Summary("Surfactant Concentrations"),
+                    html.Details([
+                        html.Summary("Additives"),
 
-                    dbc.Row([
-                        dbc.Col(
-                            dbc.Button('Select All', id='allsconc', n_clicks=0,size="sm",block=True,outline=True,color="dark")
-                        ,style={"padding-right":"5px"}),
+                        dbc.Row([
+                            dbc.Col(
+                                dbc.Button('Select All', id='alladd', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                            ,style={"padding-right":"5px"}),
 
-                        dbc.Col(
-                            dbc.Button('Deselect All', id='dallsconc', n_clicks=0,size="sm",block=True,outline=True,color="dark")
-                        ,style={"padding-left":"5px"}),
-                    ],style={"margin":"auto","padding-top":"10px","padding-left":"10px","padding-right":"10px"},no_gutters=True),
+                            dbc.Col(
+                                dbc.Button('Deselect All', id='dalladd', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                            ,style={"padding-left":"5px"}),
+                        ],style={"margin":"auto","padding-top":"10px","padding-left":"10px","padding-right":"10px"},no_gutters=True),
 
-                    dcc.Checklist(
-                        id = 'sconc',
-                        options= [{'label': sc, 'value': sc} for sc in sorted(list(dict.fromkeys(dv['Surfactant Concentration'])))],
-                        value = list(dict.fromkeys(dv['Surfactant Concentration'])),
-                        labelStyle={'display': 'block'}
-                    ),
-                ]),
+                        dcc.Checklist(
+                            id = 'additives',
+                            options= [{'label': ad, 'value': ad} for ad in sorted(list(dict.fromkeys(dv['Additive'])))],
+                            value = list(dict.fromkeys(dv['Additive'])),
+                            labelStyle={'display': 'block'}
+                        ),
+                    ]),
 
-                html.Hr(),
+                    html.Hr(),
 
-                html.Details([
-                    html.Summary("Additives"),
+                    html.Details([
+                        html.Summary("Additive Concentrations"),
 
-                    dbc.Row([
-                        dbc.Col(
-                            dbc.Button('Select All', id='alladd', n_clicks=0,size="sm",block=True,outline=True,color="dark")
-                        ,style={"padding-right":"5px"}),
+                        dbc.Row([
+                            dbc.Col(
+                                dbc.Button('Select All', id='allaconc', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                            ,style={"padding-right":"5px"}),
 
-                        dbc.Col(
-                            dbc.Button('Deselect All', id='dalladd', n_clicks=0,size="sm",block=True,outline=True,color="dark")
-                        ,style={"padding-left":"5px"}),
-                    ],style={"margin":"auto","padding-top":"10px","padding-left":"10px","padding-right":"10px"},no_gutters=True),
+                            dbc.Col(
+                                dbc.Button('Deselect All', id='dallaconc', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                            ,style={"padding-left":"5px"}),
+                        ],style={"margin":"auto","padding-top":"10px","padding-left":"10px","padding-right":"10px"},no_gutters=True),
 
-                    dcc.Checklist(
-                        id = 'additives',
-                        options= [{'label': ad, 'value': ad} for ad in sorted(list(dict.fromkeys(dv['Additive'])))],
-                        value = list(dict.fromkeys(dv['Additive'])),
-                        labelStyle={'display': 'block'}
-                    ),
-                ]),
+                        dcc.Checklist(
+                            id = 'aconc',
+                            options= [{'label': adc, 'value': adc} for adc in sorted(list(dict.fromkeys(dv['Additive Concentration'])))],
+                            value = list(dict.fromkeys(dv['Additive Concentration'])),
+                            labelStyle={'display': 'block'}
+                        ),
+                    ]),
 
-                html.Hr(),
+                    html.Hr(),
 
-                html.Details([
-                    html.Summary("Additive Concentrations"),
+                    html.Details([
+                        html.Summary("Liquid Phase"),
 
-                    dbc.Row([
-                        dbc.Col(
-                            dbc.Button('Select All', id='allaconc', n_clicks=0,size="sm",block=True,outline=True,color="dark")
-                        ,style={"padding-right":"5px"}),
+                        dbc.Row([
+                            dbc.Col(
+                                dbc.Button('Select All', id='alllp', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                            ,style={"padding-right":"5px"}),
 
-                        dbc.Col(
-                            dbc.Button('Deselect All', id='dallaconc', n_clicks=0,size="sm",block=True,outline=True,color="dark")
-                        ,style={"padding-left":"5px"}),
-                    ],style={"margin":"auto","padding-top":"10px","padding-left":"10px","padding-right":"10px"},no_gutters=True),
+                            dbc.Col(
+                                dbc.Button('Deselect All', id='dalllp', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                            ,style={"padding-left":"5px"}),
+                        ],style={"margin":"auto","padding-top":"10px","padding-left":"10px","padding-right":"10px"},no_gutters=True),
 
-                    dcc.Checklist(
-                        id = 'aconc',
-                        options= [{'label': adc, 'value': adc} for adc in sorted(list(dict.fromkeys(dv['Additive Concentration'])))],
-                        value = list(dict.fromkeys(dv['Additive Concentration'])),
-                        labelStyle={'display': 'block'}
-                    ),
-                ]),
+                        dcc.Checklist(
+                            id = 'lp',
+                            options= [{'label': li, 'value': li} for li in sorted(list(dict.fromkeys(dv['LiquidPhase'])))],
+                            value = list(dict.fromkeys(dv['LiquidPhase'])),
+                            labelStyle={'display': 'block'}
+                        ),
+                    ]),
 
-                html.Hr(),
-
-                html.Details([
-                    html.Summary("Liquid Phase"),
-
-                    dbc.Row([
-                        dbc.Col(
-                            dbc.Button('Select All', id='alllp', n_clicks=0,size="sm",block=True,outline=True,color="dark")
-                        ,style={"padding-right":"5px"}),
-
-                        dbc.Col(
-                            dbc.Button('Deselect All', id='dalllp', n_clicks=0,size="sm",block=True,outline=True,color="dark")
-                        ,style={"padding-left":"5px"}),
-                    ],style={"margin":"auto","padding-top":"10px","padding-left":"10px","padding-right":"10px"},no_gutters=True),
-
-                    dcc.Checklist(
-                        id = 'lp',
-                        options= [{'label': li, 'value': li} for li in sorted(list(dict.fromkeys(dv['LiquidPhase'])))],
-                        value = list(dict.fromkeys(dv['LiquidPhase'])),
-                        labelStyle={'display': 'block'}
-                    ),
-                ]),
-
-                html.Hr(),
+                    html.Hr(),
 
                 ],style={"display":"none"}),
             ],style={"text-align":"center", "margin-left": "auto", "margin-right": "auto", "width": "80%", "backgroundColor": 'white', "border-radius":3,"position":"relative"}),
@@ -1420,41 +1435,38 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
         if('Scatter' in fit):
             if('Line' in fit):
                 trace = go.Scatter3d(x = x, y = y, z = z,
-                hovertext= "Study: " + i
-                + "<br />Gas: " + name_array.Gas
+                hovertemplate= "Gas: " + name_array.Gas
                 + "<br />Surfactant: " + name_array.Surfactant
                 + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"]
                 + "<br />Additive: " + name_array.Additive
                 + "<br />Concentration Additive: " + name_array['Additive Concentration']
                 + "<br />Liquid Phase: " + name_array.LiquidPhase,
-                hoverinfo='text',mode='lines+markers', line={'color' : name_array.Color.values[0]},
+                mode='lines+markers', line={'color' : name_array.Color.values[0]},
                 marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
                 name=i,legendgroup=i)
 
             else:
                 trace = go.Scatter3d(x = x, y = y, z = z,
-                hovertext= "Study: " + i
-                + "<br />Gas: " + name_array.Gas
+                hovertemplate= "Gas: " + name_array.Gas
                 + "<br />Surfactant: " + name_array.Surfactant
                 + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"]
                 + "<br />Additive: " + name_array.Additive
                 + "<br />Concentration Additive: " + name_array['Additive Concentration']
                 + "<br />Liquid Phase: " + name_array.LiquidPhase,
-                hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
+                mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
                 name=i,legendgroup=i)
 
             data.append(trace)
 
         elif('Line' in fit):
             trace = go.Scatter3d(x = x, y = y, z = z,
-            hovertext= "Study: " + i
-            + "<br />Gas: " + name_array.Gas
+            hovertemplate= "Gas: " + name_array.Gas
             + "<br />Surfactant: " + name_array.Surfactant
             + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"]
             + "<br />Additive: " + name_array.Additive
             + "<br />Concentration Additive: " + name_array['Additive Concentration']
             + "<br />Liquid Phase: " + name_array.LiquidPhase,
-            hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
+            mode='lines', line={'color' : name_array.Color.values[0]},
             name=i,legendgroup=i)
 
             data.append(trace)
@@ -1533,10 +1545,7 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
             trace = go.Surface(x = X, y = Y, z = Z,
             colorscale=colorscale, opacity=0.75,
-            hoverinfo="text",
-            hovertext= "Study: " + i
-            + "<br />"
-            + equation,
+            hovertemplate= equation,
             name=i,showscale=False,showlegend=showLegend,legendgroup=i)
 
             data.append(trace)
@@ -1574,10 +1583,7 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
             trace = go.Surface(x = x_new, y = y_new, z = z_new,
             colorscale=colorscale, opacity=0.75,
-            hovertext= "Study: " + i
-            + "<br />" +
-            "y = {a} * log({b} * x) * log({c} * y) + {d}".format(a=f_new[0],b=f_new[1],c=f_new[2],d=f_new[3]),
-            hoverinfo="text",
+            hovertemplate= "y = {a} * log({b} * x) * log({c} * y) + {d}".format(a=f_new[0],b=f_new[1],c=f_new[2],d=f_new[3]),
             name=i,showscale=False,showlegend=showLegend,legendgroup=i)
 
             data.append(trace)
@@ -1615,10 +1621,7 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
             trace = go.Surface(x = x_new, y = y_new, z = z_new,
             colorscale=colorscale, opacity=0.75,
-            hovertext= "Study: " + i
-            + "<br />" +
-            "y = {a} * e<sup>({b} * x)</sup> * e<sup>({c} * y)</sup> + {d}".format(a=f_new[0],b=f_new[1],c=f_new[2],d=f_new[3]),
-            hoverinfo="text",
+            hovertemplate= "y = {a} * e<sup>({b} * x)</sup> * e<sup>({c} * y)</sup> + {d}".format(a=f_new[0],b=f_new[1],c=f_new[2],d=f_new[3]),
             name=i,showscale=False,showlegend=showLegend,legendgroup=i)
 
             data.append(trace)
@@ -1656,10 +1659,7 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
             trace = go.Surface(x = x_new, y = y_new, z = z_new,
             colorscale=colorscale, opacity=0.75,
-            hovertext= "Study: " + i
-            + "<br />" +
-            "y = {a} * x<sup>{M}</sup> * y<sup>{N}</sup> + {d}".format(a=f_new[0],M=f_new[1],N=f_new[2],d=f_new[3]),
-            hoverinfo="text",
+            hovertemplate= "y = {a} * x<sup>{M}</sup> * y<sup>{N}</sup> + {d}".format(a=f_new[0],M=f_new[1],N=f_new[2],d=f_new[3]),
             name=i,showscale=False,showlegend=showLegend,legendgroup=i)
 
             data.append(trace)
@@ -1776,41 +1776,38 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
         if('Scatter' in fit):
             if('Line' in fit):
                 trace = go.Scatter3d(x = x, y = y, z = z,
-                hovertext= "Study: " + i
-                + "<br />Gas: " + name_array.Gas
+                hovertemplate= "Gas: " + name_array.Gas
                 + "<br />Surfactant: " + name_array.Surfactant
                 + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"]
                 + "<br />Additive: " + name_array.Additive
                 + "<br />Concentration Additive: " + name_array['Additive Concentration']
                 + "<br />Liquid Phase: " + name_array.LiquidPhase,
-                hoverinfo='text',mode='lines+markers', line={'color' : name_array.Color.values[0]},
+                mode='lines+markers', line={'color' : name_array.Color.values[0]},
                 marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
                 name=i,legendgroup=i)
 
             else:
                 trace = go.Scatter3d(x = x, y = y, z = z,
-                hovertext= "Study: " + i
-                + "<br />Gas: " + name_array.Gas
+                hovertemplate= "Gas: " + name_array.Gas
                 + "<br />Surfactant: " + name_array.Surfactant
                 + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"]
                 + "<br />Additive: " + name_array.Additive
                 + "<br />Concentration Additive: " + name_array['Additive Concentration']
                 + "<br />Liquid Phase: " + name_array.LiquidPhase,
-                hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
+                mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
                 name=i,legendgroup=i)
 
             data.append(trace)
 
         elif('Line' in fit):
             trace = go.Scatter3d(x = x, y = y, z = z,
-            hovertext= "Study: " + i
-            + "<br />Gas: " + name_array.Gas
+            hovertemplate= "Gas: " + name_array.Gas
             + "<br />Surfactant: " + name_array.Surfactant
             + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"]
             + "<br />Additive: " + name_array.Additive
             + "<br />Concentration Additive: " + name_array['Additive Concentration']
             + "<br />Liquid Phase: " + name_array.LiquidPhase,
-            hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
+            mode='lines', line={'color' : name_array.Color.values[0]},
             name=i,legendgroup=i)
 
             data.append(trace)
@@ -1890,10 +1887,7 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
             trace = go.Surface(x = X, y = Y, z = Z,
             colorscale=colorscale, opacity=0.75,
-            hoverinfo="text",
-            hovertext= "Study: " + i
-            + "<br />"
-            + equation,
+            hovertemplate= equation,
             name=i,showscale=False,showlegend=showLegend,legendgroup=i)
 
             data.append(trace)
@@ -1931,10 +1925,7 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
             trace = go.Surface(x = x_new, y = y_new, z = z_new,
             colorscale=colorscale, opacity=0.75,
-            hovertext= "Study: " + i
-            + "<br />" +
-            "y = {a} * log({b} * x) * log({c} * y) + {d}".format(a=f_new[0],b=f_new[1],c=f_new[2],d=f_new[3]),
-            hoverinfo="text",
+            hovertemplate= "y = {a} * log({b} * x) * log({c} * y) + {d}".format(a=f_new[0],b=f_new[1],c=f_new[2],d=f_new[3]),
             name=i,showscale=False,showlegend=showLegend,legendgroup=i)
 
             data.append(trace)
@@ -1972,10 +1963,7 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
             trace = go.Surface(x = x_new, y = y_new, z = z_new,
             colorscale=colorscale, opacity=0.75,
-            hovertext= "Study: " + i
-            + "<br />" +
-            "y = {a} * e<sup>({b} * x)</sup> * e<sup>({c} * y)</sup> + {d}".format(a=f_new[0],b=f_new[1],c=f_new[2],d=f_new[3]),
-            hoverinfo="text",
+            hovertemplate= "y = {a} * e<sup>({b} * x)</sup> * e<sup>({c} * y)</sup> + {d}".format(a=f_new[0],b=f_new[1],c=f_new[2],d=f_new[3]),
             name=i,showscale=False,showlegend=showLegend,legendgroup=i)
 
             data.append(trace)
@@ -2013,10 +2001,7 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
             trace = go.Surface(x = x_new, y = y_new, z = z_new,
             colorscale=colorscale, opacity=0.75,
-            hovertext= "Study: " + i
-            + "<br />" +
-            "y = {a} * x<sup>{M}</sup> * y<sup>{N}</sup> + {d}".format(a=f_new[0],M=f_new[1],N=f_new[2],d=f_new[3]),
-            hoverinfo="text",
+            hovertemplate= "y = {a} * x<sup>{M}</sup> * y<sup>{N}</sup> + {d}".format(a=f_new[0],M=f_new[1],N=f_new[2],d=f_new[3]),
             name=i,showscale=False,showlegend=showLegend,legendgroup=i)
 
             data.append(trace)
@@ -2091,6 +2076,36 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
             name_array.sort_values(by=selected_x, inplace=True)
 
             if len(name_array[selected_x]) > 2:
+                if('Average Y-axis' in normalize):
+                    cats = np.unique(name_array[selected_x].values)
+                    for j in cats:
+                        rows_cat = name_array[name_array[selected_x] == j]
+                        first_row = rows_cat.iloc[[0],:]
+                        
+                        if len(list(dict.fromkeys((rows_cat["Gas"].values)))) > 1:
+                            first_row["Gas"] = "Refine Further"
+
+                        if len(list(dict.fromkeys((rows_cat["Surfactant"].values)))) > 1:
+                            first_row["Surfactant"] = "Refine Further"
+
+                        if len(list(dict.fromkeys((rows_cat["Surfactant Concentration"].values)))) > 1:
+                            first_row["Surfactant Concentration"] = "Refine Further"
+
+                        if len(list(dict.fromkeys((rows_cat["Additive"].values)))) > 1:
+                            first_row["Additive"] = "Refine Further"
+
+                        if len(list(dict.fromkeys((rows_cat["Additive Concentration"].values)))) > 1:
+                            first_row["Additive Concentration"] = "Refine Further"
+
+                        if len(list(dict.fromkeys((rows_cat["LiquidPhase"].values)))) > 1:
+                            first_row["LiquidPhase"] = "Refine Further"
+
+                        avg = rows_cat[selected_y].mean()
+                        first_row[selected_y] = avg
+
+                        name_array = name_array[name_array[selected_x] != j]
+                        name_array = name_array.append(first_row,ignore_index=True)
+
                 x = np.array(name_array[selected_x])
                 y = np.array(name_array[selected_y])
                 if "Normalize X" in normalize:
@@ -2106,6 +2121,7 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
                     else:
                         y = (y-min(y))/(max(y)-min(y))
                     y[y == 0] = 0.001
+
             else:
                 continue
         else:
@@ -2114,41 +2130,38 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
         if('Scatter' in fit):
             if('Line' in fit):
                 trace = go.Scattergl(x = x, y = y,
-                hovertext= "Study: " + i
-                + "<br />Gas: " + name_array.Gas
+                hovertemplate= "Gas: " + name_array.Gas
                 + "<br />Surfactant: " + name_array.Surfactant
                 + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"]
                 + "<br />Additive: " + name_array.Additive
                 + "<br />Concentration Additive: " + name_array['Additive Concentration']
                 + "<br />Liquid Phase: " + name_array.LiquidPhase,
-                hoverinfo='text',mode='lines+markers', line={'color' : name_array.Color.values[0]},
+                mode='lines+markers', line={'color' : name_array.Color.values[0]},
                 marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
                 name=i,legendgroup=i)
 
             else:
                 trace = go.Scattergl(x = x, y = y,
-                hovertext= "Study: " + i
-                + "<br />Gas: " + name_array.Gas
+                hovertemplate= "Gas: " + name_array.Gas
                 + "<br />Surfactant: " + name_array.Surfactant
                 + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"]
                 + "<br />Additive: " + name_array.Additive
                 + "<br />Concentration Additive: " + name_array['Additive Concentration']
                 + "<br />Liquid Phase: " + name_array.LiquidPhase,
-                hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
+                mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
                 name=i,legendgroup=i)
 
             data.append(trace)
 
         elif('Line' in fit):
             trace = go.Scattergl(x = x, y = y,
-            hovertext= "Study: " + i
-            + "<br />Gas: " + name_array.Gas
+            hovertemplate= "Gas: " + name_array.Gas
             + "<br />Surfactant: " + name_array.Surfactant
             + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"]
             + "<br />Additive: " + name_array.Additive
             + "<br />Concentration Additive: " + name_array['Additive Concentration']
             + "<br />Liquid Phase: " + name_array.LiquidPhase,
-            hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
+            mode='lines', line={'color' : name_array.Color.values[0]},
             name=i,legendgroup=i)
 
             data.append(trace)
@@ -2188,10 +2201,9 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
                 r_squared = "Non-Linear"
 
             trace = go.Scattergl(x = x_new, y = y_new,
-            hovertext= "Study: " + i
-            + "<br />" + equation
+            hovertemplate= equation
             + "<br />R Squared: " + r_squared,
-            hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
+            mode='lines', line={'color' : name_array.Color.values[0]},
             name=i,showlegend=showLegend,legendgroup=i)
 
             data.append(trace)
@@ -2218,10 +2230,8 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
                     f_new.append(np.round(num,3))
 
             trace = go.Scattergl(x = x_new, y = y_new,
-            hovertext= "Study: " + i
-            + "<br />" +
-            "y = {a} * log({b} * x) + {c}".format(a=f_new[0],b=f_new[1],c=f_new[2]),
-            hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
+            hovertemplate= "y = {a} * log({b} * x) + {c}".format(a=f_new[0],b=f_new[1],c=f_new[2]),
+            mode='lines', line={'color' : name_array.Color.values[0]},
             name=i,showlegend=showLegend,legendgroup=i)
 
             data.append(trace)
@@ -2248,10 +2258,8 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
                     f_new.append(np.round(num,3))
 
             trace = go.Scattergl(x = x_new, y = y_new,
-            hovertext= "Study: " + i
-            + "<br />" +
-            "y = {a} * e<sup>({b} * x)</sup> + {c}".format(a=f_new[0],b=f_new[1],c=f_new[2]),
-            hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
+            hovertemplate= "y = {a} * e<sup>({b} * x)</sup> + {c}".format(a=f_new[0],b=f_new[1],c=f_new[2]),
+            mode='lines', line={'color' : name_array.Color.values[0]},
             name=i,showlegend=showLegend,legendgroup=i)
 
             data.append(trace)
@@ -2278,10 +2286,8 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
                     f_new.append(np.round(num,3))
 
             trace = go.Scattergl(x = x_new, y = y_new,
-            hovertext= "Study: " + i
-            + "<br />" +
-            "y = {a} * x<sup>{N}</sup> + {c}".format(a=f_new[0],N=f_new[1],c=f_new[2]),
-            hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
+            hovertemplate= "y = {a} * x<sup>{N}</sup> + {c}".format(a=f_new[0],N=f_new[1],c=f_new[2]),
+            mode='lines', line={'color' : name_array.Color.values[0]},
             name=i,showlegend=showLegend,legendgroup=i)
 
             data.append(trace)
@@ -2365,6 +2371,36 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
             name_array.sort_values(by=selected_x, inplace=True)
 
             if len(name_array[selected_x]) > 2:
+                if('Average Y-axis' in normalize):
+                    cats = np.unique(name_array[selected_x].values)
+                    for j in cats:
+                        rows_cat = name_array[name_array[selected_x] == j]
+                        first_row = rows_cat.iloc[[0],:]
+                        
+                        if len(list(dict.fromkeys((rows_cat["Gas"].values)))) > 1:
+                            first_row["Gas"] = "Refine Further"
+
+                        if len(list(dict.fromkeys((rows_cat["Surfactant"].values)))) > 1:
+                            first_row["Surfactant"] = "Refine Further"
+
+                        if len(list(dict.fromkeys((rows_cat["Surfactant Concentration"].values)))) > 1:
+                            first_row["Surfactant Concentration"] = "Refine Further"
+
+                        if len(list(dict.fromkeys((rows_cat["Additive"].values)))) > 1:
+                            first_row["Additive"] = "Refine Further"
+
+                        if len(list(dict.fromkeys((rows_cat["Additive Concentration"].values)))) > 1:
+                            first_row["Additive Concentration"] = "Refine Further"
+
+                        if len(list(dict.fromkeys((rows_cat["LiquidPhase"].values)))) > 1:
+                            first_row["LiquidPhase"] = "Refine Further"
+
+                        avg = rows_cat[selected_y].mean()
+                        first_row[selected_y] = avg
+
+                        name_array = name_array[name_array[selected_x] != j]
+                        name_array = name_array.append(first_row,ignore_index=True)
+
                 x = np.array(name_array[selected_x])
                 y = np.array(name_array[selected_y])
                 if "Normalize X" in normalize:
@@ -2388,41 +2424,38 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
         if('Scatter' in fit):
             if('Line' in fit):
                 trace = go.Scattergl(x = x, y = y,
-                hovertext= "Study: " + i
-                + "<br />Gas: " + name_array.Gas
+                hovertemplate= "Gas: " + name_array.Gas
                 + "<br />Surfactant: " + name_array.Surfactant
                 + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"]
                 + "<br />Additive: " + name_array.Additive
                 + "<br />Concentration Additive: " + name_array['Additive Concentration']
                 + "<br />Liquid Phase: " + name_array.LiquidPhase,
-                hoverinfo='text',mode='lines+markers', line={'color' : name_array.Color.values[0]},
+                mode='lines+markers', line={'color' : name_array.Color.values[0]},
                 marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
                 name=i,legendgroup=i)
 
             else:
                 trace = go.Scattergl(x = x, y = y,
-                hovertext= "Study: " + i
-                + "<br />Gas: " + name_array.Gas
+                hovertemplate= "Gas: " + name_array.Gas
                 + "<br />Surfactant: " + name_array.Surfactant
                 + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"]
                 + "<br />Additive: " + name_array.Additive
                 + "<br />Concentration Additive: " + name_array['Additive Concentration']
                 + "<br />Liquid Phase: " + name_array.LiquidPhase,
-                hoverinfo='text',mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
+                mode='markers', marker={'size': 10, 'opacity': 0.8, 'color' : name_array.Color},
                 name=i,legendgroup=i)
 
             data.append(trace)
 
         elif('Line' in fit):
             trace = go.Scattergl(x = x, y = y,
-            hovertext= "Study: " + i
-            + "<br />Gas: " + name_array.Gas
+            hovertemplate= "Gas: " + name_array.Gas
             + "<br />Surfactant: " + name_array.Surfactant
             + "<br />Concentration Surfactant: " + name_array["Surfactant Concentration"]
             + "<br />Additive: " + name_array.Additive
             + "<br />Concentration Additive: " + name_array['Additive Concentration']
             + "<br />Liquid Phase: " + name_array.LiquidPhase,
-            hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
+            mode='lines', line={'color' : name_array.Color.values[0]},
             name=i,legendgroup=i)
 
             data.append(trace)
@@ -2462,10 +2495,9 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
                 r_squared = "Non-Linear"
 
             trace = go.Scattergl(x = x_new, y = y_new,
-            hovertext= "Study: " + i
-            + "<br />" + equation
+            hovertemplate= equation
             + "<br />R Squared: " + r_squared,
-            hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
+            mode='lines', line={'color' : name_array.Color.values[0]},
             name=i,showlegend=showLegend,legendgroup=i)
 
             data.append(trace)
@@ -2492,10 +2524,8 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
                     f_new.append(np.round(num,3))
 
             trace = go.Scattergl(x = x_new, y = y_new,
-            hovertext= "Study: " + i
-            + "<br />" +
-            "y = {a} * log({b} * x) + {c}".format(a=f_new[0],b=f_new[1],c=f_new[2]),
-            hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
+            hovertemplate= "y = {a} * log({b} * x) + {c}".format(a=f_new[0],b=f_new[1],c=f_new[2]),
+            mode='lines', line={'color' : name_array.Color.values[0]},
             name=i,showlegend=showLegend,legendgroup=i)
 
             data.append(trace)
@@ -2522,10 +2552,8 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
                     f_new.append(np.round(num,3))
 
             trace = go.Scattergl(x = x_new, y = y_new,
-            hovertext= "Study: " + i
-            + "<br />" +
-            "y = {a} * e<sup>({b} * x)</sup> + {c}".format(a=f_new[0],b=f_new[1],c=f_new[2]),
-            hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
+            hovertemplate= "y = {a} * e<sup>({b} * x)</sup> + {c}".format(a=f_new[0],b=f_new[1],c=f_new[2]),
+            mode='lines', line={'color' : name_array.Color.values[0]},
             name=i,showlegend=showLegend,legendgroup=i)
 
             data.append(trace)
@@ -2552,9 +2580,7 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
                     f_new.append(np.round(num,3))
 
             trace = go.Scattergl(x = x_new, y = y_new,
-            hovertext= "Study: " + i
-            + "<br />" +
-            "y = {a} * x<sup>{N}</sup> + {c}".format(a=f_new[0],N=f_new[1],c=f_new[2]),
+            hovertemplate= "y = {a} * x<sup>{N}</sup> + {c}".format(a=f_new[0],N=f_new[1],c=f_new[2]),
             hoverinfo='text',mode='lines', line={'color' : name_array.Color.values[0]},
             name=i,showlegend=showLegend,legendgroup=i)
 
