@@ -688,7 +688,7 @@ home = dbc.Row([
                             'format': 'png',
                             'filename': '3D_Plot_Comp1'}
                             })
-                    ]),
+                    ],style={"width":"50%"}),
 
                     dbc.Col([
                             dcc.Graph(id="comp2_3D_graph",
@@ -698,7 +698,7 @@ home = dbc.Row([
                             'format': 'png',
                             'filename': '3D_Plot_Comp2'}
                             })
-                    ],id="compare_graph",style={"display":"None"})
+                    ],id="compare_graph",style={"display":"None","width":"50%"})
                 ],no_gutters=True),
 
                 dbc.Row([
@@ -723,7 +723,7 @@ home = dbc.Row([
                             },
                             css=[{'selector': '.row', 'rule': 'margin: 0'}]
                         ),
-                    style={"padding-left":20,"padding-right":20}),
+                    style={"padding-left":20,"padding-right":20,"width":"50%"}),
 
                     dbc.Col(
                         dt.DataTable(
@@ -747,7 +747,7 @@ home = dbc.Row([
                             },
                             css=[{'selector': '.row', 'rule': 'margin: 0'}]
                         )
-                    ,style={"display":"None"},id="compare_table")
+                    ,style={"display":"None","width":"50%"},id="compare_table")
                 ],no_gutters=True)
             ]),
 
@@ -763,7 +763,7 @@ home = dbc.Row([
                             'filename': '2D_Plot_Comp1'}
                             })
                         ])
-                    ),
+                    ,style={"width":"50%"}),
 
                     dbc.Col(
                         html.Div([
@@ -775,7 +775,7 @@ home = dbc.Row([
                                 'filename': '2D_Plot_Comp2'}
                                 })
                             ])
-                    ,id="compare_graph_2D",style={"display":"None"})
+                    ,id="compare_graph_2D",style={"display":"None","width":"50%"})
                 ],no_gutters=True),
 
                 dbc.Row([
@@ -800,7 +800,7 @@ home = dbc.Row([
                                 'whiteSpace': 'normal'
                             },
                             css=[{'selector': '.row', 'rule': 'margin: 0'}]
-                        ),style={"padding-left":20,"padding-right":20}
+                        ),style={"padding-left":20,"padding-right":20,"width":"50%"}
                     ),
 
                     dbc.Col(
@@ -826,7 +826,7 @@ home = dbc.Row([
                             },
                             css=[{'selector': '.row', 'rule': 'margin: 0'}]
                         )
-                    ,style={"display":"None"},id="compare_table_2D")
+                    ,style={"display":"None","width":"50%"},id="compare_table_2D")
                 ],no_gutters=True)
             ]),
 
@@ -2182,7 +2182,7 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, normalize, fit, order, s
                     for j in cats:
                         rows_cat = name_array[name_array[selected_x] == j]
                         first_row = rows_cat.iloc[[0],:]
-                        
+
                         if len(list(dict.fromkeys((rows_cat["Gas"].values)))) > 1:
                             first_row["Gas"] = "Refine Further"
 
@@ -2479,7 +2479,7 @@ def update_comp2_2D_graph(selected_x, selected_y, comp, normalize, fit, order, s
                     for j in cats:
                         rows_cat = name_array[name_array[selected_x] == j]
                         first_row = rows_cat.iloc[[0],:]
-                        
+
                         if len(list(dict.fromkeys((rows_cat["Gas"].values)))) > 1:
                             first_row["Gas"] = "Refine Further"
 
