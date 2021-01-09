@@ -236,7 +236,30 @@ home = dbc.Row([
                 html.Hr(),
 
                 html.Details([
-                    html.Summary("Gasses"),
+                    html.Summary("Study"),
+
+                    dbc.Row([
+                        dbc.Col(
+                            dbc.Button('Select All', id='allstudies2', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                        ,style={"padding-right":"5px"}),
+
+                        dbc.Col(
+                            dbc.Button('Deselect All', id='dallstudies2', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                        ,style={"padding-left":"5px"}),
+                    ],style={"margin":"auto","padding-top":"10px","padding-left":"10px","padding-right":"10px"},no_gutters=True),
+
+                    dcc.Checklist(
+                        id = 'studies2',
+                        options= [{'label': stu, 'value': stu} for stu in sorted(list(dict.fromkeys(dv['Study'])))],
+                        value = list(dict.fromkeys(dv['Study'])),
+                        labelStyle={'display': 'block'}
+                    )
+                ]),
+
+                html.Hr(),
+
+                html.Details([
+                    html.Summary("Gas Used"),
 
                     dbc.Row([
                         dbc.Col(
@@ -259,7 +282,7 @@ home = dbc.Row([
                 html.Hr(),
 
                 html.Details([
-                    html.Summary("Surfactants"),
+                    html.Summary("Surfactant"),
 
                     dbc.Row([
                         dbc.Col(
@@ -282,7 +305,7 @@ home = dbc.Row([
                 html.Hr(),
 
                 html.Details([
-                    html.Summary("Surfactant Concentrations"),
+                    html.Summary("Surfactant Concentration"),
 
                     dbc.Row([
                         dbc.Col(
@@ -305,7 +328,7 @@ home = dbc.Row([
                 html.Hr(),
 
                 html.Details([
-                    html.Summary("Additives"),
+                    html.Summary("Additive"),
 
                     dbc.Row([
                         dbc.Col(
@@ -328,7 +351,7 @@ home = dbc.Row([
                 html.Hr(),
 
                 html.Details([
-                    html.Summary("Additive Concentrations"),
+                    html.Summary("Additive Concentration"),
 
                     dbc.Row([
                         dbc.Col(
@@ -484,7 +507,30 @@ home = dbc.Row([
                     html.Hr(),
 
                     html.Details([
-                        html.Summary("Gasses"),
+                        html.Summary("Study"),
+
+                        dbc.Row([
+                            dbc.Col(
+                                dbc.Button('Select All', id='allstudies', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                            ,style={"padding-right":"5px"}),
+
+                            dbc.Col(
+                                dbc.Button('Deselect All', id='dallstudies', n_clicks=0,size="sm",block=True,outline=True,color="dark")
+                            ,style={"padding-left":"5px"}),
+                        ],style={"margin":"auto","padding-top":"10px","padding-left":"10px","padding-right":"10px"},no_gutters=True),
+
+                        dcc.Checklist(
+                            id = 'studies',
+                            options= [{'label': stu, 'value': stu} for stu in sorted(list(dict.fromkeys(dv['Study'])))],
+                            value = list(dict.fromkeys(dv['Study'])),
+                            labelStyle={'display': 'block'}
+                        )
+                    ]),
+
+                    html.Hr(),
+
+                    html.Details([
+                        html.Summary("Gas Used"),
 
                         dbc.Row([
                             dbc.Col(
@@ -507,7 +553,7 @@ home = dbc.Row([
                     html.Hr(),
 
                     html.Details([
-                        html.Summary("Surfactants"),
+                        html.Summary("Surfactant"),
 
                         dbc.Row([
                             dbc.Col(
@@ -530,7 +576,7 @@ home = dbc.Row([
                     html.Hr(),
 
                     html.Details([
-                        html.Summary("Surfactant Concentrations"),
+                        html.Summary("Surfactant Concentration"),
 
                         dbc.Row([
                             dbc.Col(
@@ -553,7 +599,7 @@ home = dbc.Row([
                     html.Hr(),
 
                     html.Details([
-                        html.Summary("Additives"),
+                        html.Summary("Additive"),
 
                         dbc.Row([
                             dbc.Col(
@@ -576,7 +622,7 @@ home = dbc.Row([
                     html.Hr(),
 
                     html.Details([
-                        html.Summary("Additive Concentrations"),
+                        html.Summary("Additive Concentration"),
 
                         dbc.Row([
                             dbc.Col(
@@ -1127,6 +1173,40 @@ def toggle_showmore_container2(toggle_value):
         return {'display': 'none'}
 
 @app.callback(
+    [Output('studies', 'value')],
+    [Input('allstudies', 'n_clicks'),
+     Input('dallstudies', 'n_clicks')],
+    [State('studies', 'value'),
+     State('studies', 'options')]
+)
+def select_deselect_all_studies(allstudies,dallstudies,studies_value,studies_options):
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+
+    if changed_id == 'allstudies.n_clicks':
+        return([[value['value'] for value in studies_options]])
+    elif changed_id == 'dallstudies.n_clicks':
+        return([[]])
+    else:
+        return([studies_value])
+
+@app.callback(
+    [Output('studies2', 'value')],
+    [Input('allstudies2', 'n_clicks'),
+     Input('dallstudies2', 'n_clicks')],
+    [State('studies2', 'value'),
+     State('studies2', 'options')]
+)
+def select_deselect_all_studies2(allstudies,dallstudies,studies_value,studies_options):
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+
+    if changed_id == 'allstudies2.n_clicks':
+        return([[value['value'] for value in studies_options]])
+    elif changed_id == 'dallstudies2.n_clicks':
+        return([[]])
+    else:
+        return([studies_value])
+
+@app.callback(
     [Output('gasses', 'value')],
     [Input('allgas', 'n_clicks'),
      Input('dallgas', 'n_clicks')],
@@ -1393,6 +1473,7 @@ def update_master_table_styles(x,y,z):
      Input('normalize', 'value'),
      Input("bestfit", "value"),
      Input("input_fit", "value"),
+     Input('studies', 'value'),
      Input('gasses', 'value'),
      Input('surfactants', 'value'),
      Input('sconc', 'value'),
@@ -1400,9 +1481,10 @@ def update_master_table_styles(x,y,z):
      Input('aconc', 'value'),
      Input('lp', 'value')],
 )
-def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, fit, order, ga, sur, surc, add, addc, lp):
-    cl = dv[dv['Gas'].isin(ga)]
-    ea = cl[cl['Surfactant'].isin(sur)]
+def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, fit, order, stu, ga, sur, surc, add, addc, lp):
+    c = dv[dv['Study'].isin(stu)]
+    l = c[c['Gas'].isin(ga)]
+    ea = l[l['Surfactant'].isin(sur)]
     n = ea[ea["Surfactant Concentration"].isin(surc)]
     e = n[n['Additive'].isin(add)]
     d = e[e['Additive Concentration'].isin(addc)]
@@ -1731,6 +1813,7 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
      Input("normalize2","value"),
      Input("bestfit2", "value"),
      Input("input_fit2", "value"),
+     Input('studies2', 'value'),
      Input('gasses2', 'value'),
      Input('surfactants2', 'value'),
      Input('sconc2', 'value'),
@@ -1738,12 +1821,13 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
      Input('aconc2', 'value'),
      Input('lp2', 'value')],
 )
-def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, fit, order, ga, sur, surc, add, addc, lp):
+def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, fit, order, stu, ga, sur, surc, add, addc, lp):
     if comp == "No Compare":
         return [{},[],[]]
 
-    cl = dv[dv['Gas'].isin(ga)]
-    ea = cl[cl['Surfactant'].isin(sur)]
+    c = dv[dv['Study'].isin(stu)]
+    l = c[c['Gas'].isin(ga)]
+    ea = l[l['Surfactant'].isin(sur)]
     n = ea[ea["Surfactant Concentration"].isin(surc)]
     e = n[n['Additive'].isin(add)]
     d = e[e['Additive Concentration'].isin(addc)]
@@ -2064,6 +2148,7 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
      Input('normalize', 'value'),
      Input("bestfit", "value"),
      Input("input_fit", "value"),
+     Input('studies', 'value'),
      Input('gasses', 'value'),
      Input('surfactants', 'value'),
      Input('sconc', 'value'),
@@ -2071,9 +2156,10 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
      Input('aconc', 'value'),
      Input('lp', 'value')],
 )
-def update_comp1_2D_graph(selected_x, selected_y, comp, normalize, fit, order, ga, sur, surc, add, addc, lp):
-    cl = dv[dv['Gas'].isin(ga)]
-    ea = cl[cl['Surfactant'].isin(sur)]
+def update_comp1_2D_graph(selected_x, selected_y, comp, normalize, fit, order, stu, ga, sur, surc, add, addc, lp):
+    c = dv[dv['Study'].isin(stu)]
+    l = c[c['Gas'].isin(ga)]
+    ea = l[l['Surfactant'].isin(sur)]
     n = ea[ea["Surfactant Concentration"].isin(surc)]
     e = n[n['Additive'].isin(add)]
     d = e[e['Additive Concentration'].isin(addc)]
@@ -2357,6 +2443,7 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
      Input('normalize2', 'value'),
      Input("bestfit2", "value"),
      Input("input_fit2", "value"),
+     Input('studies2', 'value'),
      Input('gasses2', 'value'),
      Input('surfactants2', 'value'),
      Input('sconc2', 'value'),
@@ -2364,12 +2451,13 @@ def update_comp1_2D_graph(selected_x, selected_y, comp, normalize, fit, order, g
      Input('aconc2', 'value'),
      Input('lp2', 'value')],
 )
-def update_comp2_2D_graph(selected_x, selected_y, comp, normalize, fit, order, ga, sur, surc, add, addc, lp):
+def update_comp2_2D_graph(selected_x, selected_y, comp, normalize, fit, order, stu, ga, sur, surc, add, addc, lp):
     if comp == "No Compare":
         return [{},[],[]]
 
-    cl = dv[dv['Gas'].isin(ga)]
-    ea = cl[cl['Surfactant'].isin(sur)]
+    c = dv[dv['Study'].isin(stu)]
+    l = c[c['Gas'].isin(ga)]
+    ea = l[l['Surfactant'].isin(sur)]
     n = ea[ea["Surfactant Concentration"].isin(surc)]
     e = n[n['Additive'].isin(add)]
     d = e[e['Additive Concentration'].isin(addc)]
