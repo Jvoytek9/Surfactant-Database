@@ -182,6 +182,10 @@ home = dbc.Row([
                 html.Div(id='controls-container2', children=[
                     html.Hr(),
 
+                    html.H5("Configurations:"),
+
+                    html.Hr(),
+
                     html.Details([
                         html.Summary("Data Formatting"),
                         html.Div(
@@ -224,6 +228,10 @@ home = dbc.Row([
                             )
                         ])
                     ]),
+
+                html.Hr(),
+
+                html.H5("Filter By:"),
 
                 html.Hr(),
 
@@ -420,6 +428,9 @@ home = dbc.Row([
                 ],style={'text-align':"center","margin-left": "auto", "margin-right": "auto"}),
 
                 html.Div(id='controls-container', children=[
+                    html.Hr(),
+
+                    html.H5("Configurations:"),
 
                     html.Hr(),
 
@@ -465,6 +476,10 @@ home = dbc.Row([
                             )
                         ])
                     ]),
+
+                    html.Hr(),
+
+                    html.H5("Filter By:"),
 
                     html.Hr(),
 
