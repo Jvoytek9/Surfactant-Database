@@ -136,6 +136,24 @@ for i in names:
     color_index += 1
 #print(dv[dv.Study == "Kruss 2019"]) #check for colors you do not like
 
+unique_studies = np.sort(np.unique(dv['Study']))
+unique_gasses = np.sort(np.unique(dv['Gas']))
+unique_surfactants = np.sort(np.unique(dv['Surfactant']))
+unique_surfconcs = np.sort(np.unique(dv['Surfactant Concentration']))
+unique_additives = np.sort(np.unique(dv['Additive']))
+unique_addconcs = np.sort(np.unique(dv['Additive Concentration']))
+unique_liquidphase = np.sort(np.unique(dv['LiquidPhase']))
+
+if "None" in unique_additives:
+    unique_additives = np.delete(unique_additives,np.where(unique_additives == "None"))
+    unique_additives = np.append(unique_additives,"None")
+if "None" in unique_addconcs:
+    unique_addconcs = np.delete(unique_addconcs,np.where(unique_addconcs == "None"))
+    unique_addconcs = np.append(unique_addconcs,"None")
+if "None" in unique_liquidphase:
+    unique_liquidphase = np.delete(unique_liquidphase,np.where(unique_liquidphase == "None"))
+    unique_liquidphase = np.append(unique_liquidphase,"None")
+
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
     html.Div(id='page-content'),
@@ -250,8 +268,8 @@ home = dbc.Row([
 
                     dcc.Checklist(
                         id = 'studies2',
-                        options= [{'label': stu, 'value': stu} for stu in sorted(list(dict.fromkeys(dv['Study'])))],
-                        value = list(dict.fromkeys(dv['Study'])),
+                        options= [{'label': study, 'value': study} for study in unique_studies],
+                        value = unique_studies,
                         labelStyle={'display': 'block'}
                     )
                 ]),
@@ -273,8 +291,8 @@ home = dbc.Row([
 
                     dcc.Checklist(
                         id = 'gasses2',
-                        options= [{'label': gas, 'value': gas} for gas in sorted(list(dict.fromkeys(dv['Gas'])))],
-                        value = list(dict.fromkeys(dv['Gas'])),
+                        options= [{'label': gas, 'value': gas} for gas in unique_gasses],
+                        value = unique_gasses,
                         labelStyle={'display': 'block'}
                     )
                 ]),
@@ -296,8 +314,8 @@ home = dbc.Row([
 
                     dcc.Checklist(
                         id = 'surfactants2',
-                        options= [{'label': surfactant, 'value': surfactant} for surfactant in sorted(list(dict.fromkeys(dv['Surfactant'])))],
-                        value = list(dict.fromkeys(dv['Surfactant'])),
+                        options= [{'label': surfactant, 'value': surfactant} for surfactant in unique_surfactants],
+                        value = unique_surfactants,
                         labelStyle={'display': 'block'}
                     ),
                 ]),
@@ -319,8 +337,8 @@ home = dbc.Row([
 
                     dcc.Checklist(
                         id = 'sconc2',
-                        options= [{'label': sc, 'value': sc} for sc in sorted(list(dict.fromkeys(dv['Surfactant Concentration'])))],
-                        value = list(dict.fromkeys(dv['Surfactant Concentration'])),
+                        options= [{'label': sc, 'value': sc} for sc in unique_surfconcs],
+                        value = unique_surfconcs,
                         labelStyle={'display': 'block'}
                     ),
                 ]),
@@ -342,8 +360,8 @@ home = dbc.Row([
 
                     dcc.Checklist(
                         id = 'additives2',
-                        options= [{'label': ad, 'value': ad} for ad in sorted(list(dict.fromkeys(dv['Additive'])))],
-                        value = list(dict.fromkeys(dv['Additive'])),
+                        options= [{'label': ad, 'value': ad} for ad in unique_additives],
+                        value = unique_additives,
                         labelStyle={'display': 'block'}
                     ),
                 ]),
@@ -365,8 +383,8 @@ home = dbc.Row([
 
                     dcc.Checklist(
                         id = 'aconc2',
-                        options= [{'label': adc, 'value': adc} for adc in sorted(list(dict.fromkeys(dv['Additive Concentration'])))],
-                        value = list(dict.fromkeys(dv['Additive Concentration'])),
+                        options= [{'label': adc, 'value': adc} for adc in unique_addconcs],
+                        value = unique_addconcs,
                         labelStyle={'display': 'block'}
                     ),
                 ]),
@@ -388,8 +406,8 @@ home = dbc.Row([
 
                     dcc.Checklist(
                         id = 'lp2',
-                        options= [{'label': li, 'value': li} for li in sorted(list(dict.fromkeys(dv['LiquidPhase'])))],
-                        value = list(dict.fromkeys(dv['LiquidPhase'])),
+                        options= [{'label': li, 'value': li} for li in unique_liquidphase],
+                        value = unique_liquidphase,
                         labelStyle={'display': 'block'}
                     ),
                 ]),
@@ -521,8 +539,8 @@ home = dbc.Row([
 
                         dcc.Checklist(
                             id = 'studies',
-                            options= [{'label': stu, 'value': stu} for stu in sorted(list(dict.fromkeys(dv['Study'])))],
-                            value = list(dict.fromkeys(dv['Study'])),
+                            options= [{'label': study, 'value': study} for study in unique_studies],
+                            value = unique_studies,
                             labelStyle={'display': 'block'}
                         )
                     ]),
@@ -544,8 +562,8 @@ home = dbc.Row([
 
                         dcc.Checklist(
                             id = 'gasses',
-                            options= [{'label': gas, 'value': gas} for gas in sorted(list(dict.fromkeys(dv['Gas'])))],
-                            value = list(dict.fromkeys(dv['Gas'])),
+                            options= [{'label': gas, 'value': gas} for gas in unique_gasses],
+                            value = unique_gasses,
                             labelStyle={'display': 'block'}
                         )
                     ]),
@@ -567,8 +585,8 @@ home = dbc.Row([
 
                         dcc.Checklist(
                             id = 'surfactants',
-                            options= [{'label': surfactant, 'value': surfactant} for surfactant in sorted(list(dict.fromkeys(dv['Surfactant'])))],
-                            value = list(dict.fromkeys(dv['Surfactant'])),
+                            options= [{'label': surfactant, 'value': surfactant} for surfactant in unique_surfactants],
+                            value = unique_surfactants,
                             labelStyle={'display': 'block'}
                         ),
                     ]),
@@ -590,8 +608,8 @@ home = dbc.Row([
 
                         dcc.Checklist(
                             id = 'sconc',
-                            options= [{'label': sc, 'value': sc} for sc in sorted(list(dict.fromkeys(dv['Surfactant Concentration'])))],
-                            value = list(dict.fromkeys(dv['Surfactant Concentration'])),
+                            options= [{'label': sc, 'value': sc} for sc in unique_surfconcs],
+                            value = unique_surfconcs,
                             labelStyle={'display': 'block'}
                         ),
                     ]),
@@ -613,8 +631,8 @@ home = dbc.Row([
 
                         dcc.Checklist(
                             id = 'additives',
-                            options= [{'label': ad, 'value': ad} for ad in sorted(list(dict.fromkeys(dv['Additive'])))],
-                            value = list(dict.fromkeys(dv['Additive'])),
+                            options= [{'label': ad, 'value': ad} for ad in unique_additives],
+                            value = unique_additives,
                             labelStyle={'display': 'block'}
                         ),
                     ]),
@@ -636,8 +654,8 @@ home = dbc.Row([
 
                         dcc.Checklist(
                             id = 'aconc',
-                            options= [{'label': adc, 'value': adc} for adc in sorted(list(dict.fromkeys(dv['Additive Concentration'])))],
-                            value = list(dict.fromkeys(dv['Additive Concentration'])),
+                            options= [{'label': adc, 'value': adc} for adc in unique_addconcs],
+                            value = unique_addconcs,
                             labelStyle={'display': 'block'}
                         ),
                     ]),
@@ -659,8 +677,8 @@ home = dbc.Row([
 
                         dcc.Checklist(
                             id = 'lp',
-                            options= [{'label': li, 'value': li} for li in sorted(list(dict.fromkeys(dv['LiquidPhase'])))],
-                            value = list(dict.fromkeys(dv['LiquidPhase'])),
+                            options= [{'label': li, 'value': li} for li in unique_liquidphase],
+                            value = unique_liquidphase,
                             labelStyle={'display': 'block'}
                         ),
                     ]),
