@@ -45,7 +45,7 @@ app = dash.Dash(__name__,
                     {
                         'name' : 'image',
                         'property' : 'og:image',
-                        'content' : 'assets/thumbnail.png'
+                        'content' : 'assets/thumbnail.PNG'
                     },
                     {
                         'name' : 'keywords',
@@ -60,7 +60,7 @@ register_about_callbacks(app)
 
 server = app.server
 app.config.suppress_callback_exceptions = True
-app.title = "Foam Database"
+app.title = "Foam Literature"
 
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),

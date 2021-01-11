@@ -1,5 +1,5 @@
-Scripts/amazing-insight.json
 venv
 *.pyc
 .DS_Store
 .env
+app/key/amazing-insight.json
