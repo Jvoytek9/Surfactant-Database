@@ -1079,42 +1079,39 @@ def register_home_callbacks(app):
         d = e[e['Additive Concentration'].isin(addc)]
         cleaned = d[d['LiquidPhase'].isin(lp)]
 
+        cleaned = cleaned.dropna(subset=[selected_x, selected_y, selected_z],axis="rows")
+        cleaned.reset_index(drop=True)
+        cleaned.sort_values(by=selected_x, inplace=True)
+
         data = []
 
         for i in unique_studies:
             name_array = cleaned[cleaned.Study == i]
 
-            if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0 and len(name_array[selected_z].values) != 0:
-                name_array = name_array.dropna(subset=[selected_x, selected_y, selected_z],axis="rows")
-                name_array.reset_index(drop=True)
-                name_array.sort_values(by=selected_x, inplace=True)
+            if len(name_array[selected_x]) > 2:
+                x = np.array(name_array[selected_x])
+                y = np.array(name_array[selected_y])
+                z = np.array(name_array[selected_z])
+                if "Normalize X" in normalize:
+                    if max(x) == min(x):
+                        x = np.full_like(x, 0.5)
+                    else:
+                        x = (x-min(x))/(max(x)-min(x))
+                    x[x == 0] = 0.001
 
-                if len(name_array[selected_x]) > 2:
-                    x = np.array(name_array[selected_x])
-                    y = np.array(name_array[selected_y])
-                    z = np.array(name_array[selected_z])
-                    if "Normalize X" in normalize:
-                        if max(x) == min(x):
-                            x = np.full_like(x, 0.5)
-                        else:
-                            x = (x-min(x))/(max(x)-min(x))
-                        x[x == 0] = 0.001
+                if "Normalize Y" in normalize:
+                    if max(y) == min(y):
+                        y = np.full_like(y, 0.5)
+                    else:
+                        y = (y-min(y))/(max(y)-min(y))
+                    y[y == 0] = 0.001
 
-                    if "Normalize Y" in normalize:
-                        if max(y) == min(y):
-                            y = np.full_like(y, 0.5)
-                        else:
-                            y = (y-min(y))/(max(y)-min(y))
-                        y[y == 0] = 0.001
-
-                    if "Normalize Z" in normalize:
-                        if max(z) == min(z):
-                            z = np.full_like(z, 0.5)
-                        else:
-                            z = (z-min(z))/(max(z)-min(z))
-                        z[z == 0] = 0.001
-                else:
-                    continue
+                if "Normalize Z" in normalize:
+                    if max(z) == min(z):
+                        z = np.full_like(z, 0.5)
+                    else:
+                        z = (z-min(z))/(max(z)-min(z))
+                    z[z == 0] = 0.001
             else:
                 continue
 
@@ -1350,7 +1347,6 @@ def register_home_callbacks(app):
 
                 data.append(trace)
 
-        cleaned.dropna(subset=[selected_x, selected_y, selected_z],axis="rows", inplace=True)
         cleaned = cleaned[[selected_x,selected_y, selected_z]]
 
         if(comp == "No Compare"):
@@ -1369,27 +1365,32 @@ def register_home_callbacks(app):
                     "font_size": 20,
             }
 
-        return [{"data": data,
-                "layout": go.Layout(
-                    hovermode="closest",
-                    legend=legend_orientation,
-                    font={
-                        "size": 16,
-                        "family": "Times New Roman",
-                    },
-                    scene={
-                        "camera":{"center":dict(x=0.05,y=0,z=-0.25)},
-                        "xaxis": {"title": f"{selected_x.title()}"},
-                        "yaxis": {"title": f"{selected_y.title()}"},
-                        "zaxis": {"title": f"{selected_z.title()}"}
-                    },
-                    margin={
-                        "b":0,
-                        "l":0,
-                        "r":0
-                    },
-                    height=Graph_Height
-                )},cleaned.to_dict('records'), [{'id': c, 'name': c} for c in cleaned.columns]]
+        return [
+            {"data": data,
+            "layout": go.Layout(
+                hovermode="closest",
+                legend=legend_orientation,
+                font={
+                    "size": 16,
+                    "family": "Times New Roman",
+                },
+                scene={
+                    "camera":{"center":dict(x=0.05,y=0,z=-0.25)},
+                    "xaxis": {"title": f"{selected_x.title()}"},
+                    "yaxis": {"title": f"{selected_y.title()}"},
+                    "zaxis": {"title": f"{selected_z.title()}"}
+                },
+                margin={
+                    "b":0,
+                    "l":0,
+                    "r":0
+                },
+                height=Graph_Height
+            )},
+            
+            cleaned.to_dict('records'), 
+            [{'id': c, 'name': c} for c in cleaned.columns]
+        ]
 
     @app.callback(
         [Output("comp2_3D_graph", "figure"),
@@ -1422,42 +1423,39 @@ def register_home_callbacks(app):
         d = e[e['Additive Concentration'].isin(addc)]
         cleaned = d[d['LiquidPhase'].isin(lp)]
 
+        cleaned = cleaned.dropna(subset=[selected_x, selected_y, selected_z],axis="rows")
+        cleaned.reset_index(drop=True)
+        cleaned.sort_values(by=selected_x, inplace=True)
+
         data = []
 
         for i in unique_studies:
             name_array = cleaned[cleaned.Study == i]
 
-            if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0 and len(name_array[selected_z].values) != 0:
-                name_array = name_array.dropna(subset=[selected_x, selected_y, selected_z],axis="rows")
-                name_array.reset_index(drop=True)
-                name_array.sort_values(by=selected_x, inplace=True)
+            if len(name_array[selected_x]) > 2:
+                x = np.array(name_array[selected_x])
+                y = np.array(name_array[selected_y])
+                z = np.array(name_array[selected_z])
+                if "Normalize X" in normalize:
+                    if max(x) == min(x):
+                        x = np.full_like(x, 0.5)
+                    else:
+                        x = (x-min(x))/(max(x)-min(x))
+                    x[x == 0] = 0.001
 
-                if len(name_array[selected_x]) > 2:
-                    x = np.array(name_array[selected_x])
-                    y = np.array(name_array[selected_y])
-                    z = np.array(name_array[selected_z])
-                    if "Normalize X" in normalize:
-                        if max(x) == min(x):
-                            x = np.full_like(x, 0.5)
-                        else:
-                            x = (x-min(x))/(max(x)-min(x))
-                        x[x == 0] = 0.001
+                if "Normalize Y" in normalize:
+                    if max(y) == min(y):
+                        y = np.full_like(y, 0.5)
+                    else:
+                        y = (y-min(y))/(max(y)-min(y))
+                    y[y == 0] = 0.001
 
-                    if "Normalize Y" in normalize:
-                        if max(y) == min(y):
-                            y = np.full_like(y, 0.5)
-                        else:
-                            y = (y-min(y))/(max(y)-min(y))
-                        y[y == 0] = 0.001
-
-                    if "Normalize Z" in normalize:
-                        if max(z) == min(z):
-                            z = np.full_like(z, 0.5)
-                        else:
-                            z = (z-min(z))/(max(z)-min(z))
-                        z[z == 0] = 0.001
-                else:
-                    continue
+                if "Normalize Z" in normalize:
+                    if max(z) == min(z):
+                        z = np.full_like(z, 0.5)
+                    else:
+                        z = (z-min(z))/(max(z)-min(z))
+                    z[z == 0] = 0.001
             else:
                 continue
 
@@ -1694,38 +1692,42 @@ def register_home_callbacks(app):
 
                 data.append(trace)
 
-        cleaned.dropna(subset=[selected_x, selected_y, selected_z],axis="rows", inplace=True)
         cleaned = cleaned[[selected_x,selected_y, selected_z]]
 
-        return [{"data": data,
-                "layout": go.Layout(
-                    hovermode="closest",
-                    legend={
-                        "orientation":"h",
-                        "xanchor":"center",
-                        "x":0.5,
-                        "yanchor":"bottom",
-                        "y":1,
-                        "valign":"middle",
-                        "font_size": 20,
-                    },
-                    font={
-                        "size": 16,
-                        "family": "Times New Roman",
-                    },
-                    scene={
-                        "camera":{"center":dict(x=0.05,y=0,z=-0.25)},
-                        "xaxis": {"title": f"{selected_x.title()}"},
-                        "yaxis": {"title": f"{selected_y.title()}"},
-                        "zaxis": {"title": f"{selected_z.title()}"}
-                    },
-                    margin={
-                        "b":0,
-                        "l":0,
-                        "r":0
-                    },
-                    height=Graph_Height
-                )},cleaned.to_dict('records'), [{'id': c, 'name': c} for c in cleaned.columns]]
+        return [
+            {"data": data,
+            "layout": go.Layout(
+                hovermode="closest",
+                legend={
+                    "orientation":"h",
+                    "xanchor":"center",
+                    "x":0.5,
+                    "yanchor":"bottom",
+                    "y":1,
+                    "valign":"middle",
+                    "font_size": 20,
+                },
+                font={
+                    "size": 16,
+                    "family": "Times New Roman",
+                },
+                scene={
+                    "camera":{"center":dict(x=0.05,y=0,z=-0.25)},
+                    "xaxis": {"title": f"{selected_x.title()}"},
+                    "yaxis": {"title": f"{selected_y.title()}"},
+                    "zaxis": {"title": f"{selected_z.title()}"}
+                },
+                margin={
+                    "b":0,
+                    "l":0,
+                    "r":0
+                },
+                height=Graph_Height
+            )},
+            
+            cleaned.to_dict('records'), 
+            [{'id': c, 'name': c} for c in cleaned.columns]
+        ]
 
     @app.callback(
         [Output("comp1_2D_graph", "figure"),
@@ -1754,66 +1756,61 @@ def register_home_callbacks(app):
         d = e[e['Additive Concentration'].isin(addc)]
         cleaned = d[d['LiquidPhase'].isin(lp)]
 
+        cleaned = cleaned.dropna(subset=[selected_x, selected_y],axis="rows")
+        cleaned.reset_index(drop=True)
+        cleaned.sort_values(by=selected_x, inplace=True)
+
         data = []
-        legend_orientation = {}
 
         for i in unique_studies:
             name_array = cleaned[cleaned.Study == i]
 
-            if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0:
-                name_array.dropna(subset=[selected_x, selected_y],axis="rows", inplace=True)
-                name_array.reset_index(drop=True)
-                name_array.sort_values(by=selected_x, inplace=True)
+            if len(name_array[selected_x]) > 2:
+                if('Average Y-axis' in normalize):
+                    cats = np.unique(name_array[selected_x].values)
+                    for j in cats:
+                        rows_cat = name_array[name_array[selected_x] == j]
+                        first_row = rows_cat.iloc[[0],:]
 
-                if len(name_array[selected_x]) > 2:
-                    if('Average Y-axis' in normalize):
-                        cats = np.unique(name_array[selected_x].values)
-                        for j in cats:
-                            rows_cat = name_array[name_array[selected_x] == j]
-                            first_row = rows_cat.iloc[[0],:]
+                        if len(list(dict.fromkeys((rows_cat["Gas"].values)))) > 1:
+                            first_row["Gas"] = "Refine Further"
 
-                            if len(list(dict.fromkeys((rows_cat["Gas"].values)))) > 1:
-                                first_row["Gas"] = "Refine Further"
+                        if len(list(dict.fromkeys((rows_cat["Surfactant"].values)))) > 1:
+                            first_row["Surfactant"] = "Refine Further"
 
-                            if len(list(dict.fromkeys((rows_cat["Surfactant"].values)))) > 1:
-                                first_row["Surfactant"] = "Refine Further"
+                        if len(list(dict.fromkeys((rows_cat["Surfactant Concentration"].values)))) > 1:
+                            first_row["Surfactant Concentration"] = "Refine Further"
 
-                            if len(list(dict.fromkeys((rows_cat["Surfactant Concentration"].values)))) > 1:
-                                first_row["Surfactant Concentration"] = "Refine Further"
+                        if len(list(dict.fromkeys((rows_cat["Additive"].values)))) > 1:
+                            first_row["Additive"] = "Refine Further"
 
-                            if len(list(dict.fromkeys((rows_cat["Additive"].values)))) > 1:
-                                first_row["Additive"] = "Refine Further"
+                        if len(list(dict.fromkeys((rows_cat["Additive Concentration"].values)))) > 1:
+                            first_row["Additive Concentration"] = "Refine Further"
 
-                            if len(list(dict.fromkeys((rows_cat["Additive Concentration"].values)))) > 1:
-                                first_row["Additive Concentration"] = "Refine Further"
+                        if len(list(dict.fromkeys((rows_cat["LiquidPhase"].values)))) > 1:
+                            first_row["LiquidPhase"] = "Refine Further"
 
-                            if len(list(dict.fromkeys((rows_cat["LiquidPhase"].values)))) > 1:
-                                first_row["LiquidPhase"] = "Refine Further"
+                        avg = rows_cat[selected_y].mean()
+                        first_row[selected_y] = avg
 
-                            avg = rows_cat[selected_y].mean()
-                            first_row[selected_y] = avg
+                        name_array = name_array[name_array[selected_x] != j]
+                        name_array = name_array.append(first_row,ignore_index=True)
 
-                            name_array = name_array[name_array[selected_x] != j]
-                            name_array = name_array.append(first_row,ignore_index=True)
+                x = np.array(name_array[selected_x])
+                y = np.array(name_array[selected_y])
+                if "Normalize X" in normalize:
+                    if max(x) == min(x):
+                        x = np.full_like(x, 0.5)
+                    else:
+                        x = (x-min(x))/(max(x)-min(x))
+                    x[x == 0] = 0.001
 
-                    x = np.array(name_array[selected_x])
-                    y = np.array(name_array[selected_y])
-                    if "Normalize X" in normalize:
-                        if max(x) == min(x):
-                            x = np.full_like(x, 0.5)
-                        else:
-                            x = (x-min(x))/(max(x)-min(x))
-                        x[x == 0] = 0.001
-
-                    if "Normalize Y" in normalize:
-                        if max(y) == min(y):
-                            y = np.full_like(y, 0.5)
-                        else:
-                            y = (y-min(y))/(max(y)-min(y))
-                        y[y == 0] = 0.001
-
-                else:
-                    continue
+                if "Normalize Y" in normalize:
+                    if max(y) == min(y):
+                        y = np.full_like(y, 0.5)
+                    else:
+                        y = (y-min(y))/(max(y)-min(y))
+                    y[y == 0] = 0.001
             else:
                 continue
 
@@ -1997,11 +1994,10 @@ def register_home_callbacks(app):
                     "font_size": 20,
             }
 
-        cleaned.dropna(subset=[selected_x, selected_y],axis="rows", inplace=True)
         cleaned = cleaned[[selected_x,selected_y]]
 
-        return [{
-            'data': data,
+        return [
+            {'data': data,
             'layout': go.Layout(
                 yaxis={
                     "title":selected_y,
@@ -2019,8 +2015,11 @@ def register_home_callbacks(app):
                 },
                 hovermode="closest",
                 height=Graph_Height
-            )
-        },cleaned.to_dict('records'), [{'id': c, 'name': c} for c in cleaned.columns]]
+            )},
+        
+            cleaned.to_dict('records'), 
+            [{'id': c, 'name': c} for c in cleaned.columns]
+        ]
 
     @app.callback(
         [Output("comp2_2D_graph", "figure"),
@@ -2052,64 +2051,61 @@ def register_home_callbacks(app):
         d = e[e['Additive Concentration'].isin(addc)]
         cleaned = d[d['LiquidPhase'].isin(lp)]
 
+        cleaned = cleaned.dropna(subset=[selected_x, selected_y],axis="rows")
+        cleaned.reset_index(drop=True)
+        cleaned.sort_values(by=selected_x, inplace=True)
+
         data = []
 
         for i in unique_studies:
             name_array = cleaned[cleaned.Study == i]
 
-            if len(name_array[selected_x].values) != 0 and len(name_array[selected_y].values) != 0:
-                name_array = name_array.dropna(subset=[selected_x, selected_y],axis="rows")
-                name_array.reset_index(drop=True)
-                name_array.sort_values(by=selected_x, inplace=True)
+            if len(name_array[selected_x]) > 2:
+                if('Average Y-axis' in normalize):
+                    cats = np.unique(name_array[selected_x].values)
+                    for j in cats:
+                        rows_cat = name_array[name_array[selected_x] == j]
+                        first_row = rows_cat.iloc[[0],:]
 
-                if len(name_array[selected_x]) > 2:
-                    if('Average Y-axis' in normalize):
-                        cats = np.unique(name_array[selected_x].values)
-                        for j in cats:
-                            rows_cat = name_array[name_array[selected_x] == j]
-                            first_row = rows_cat.iloc[[0],:]
+                        if len(list(dict.fromkeys((rows_cat["Gas"].values)))) > 1:
+                            first_row["Gas"] = "Refine Further"
 
-                            if len(list(dict.fromkeys((rows_cat["Gas"].values)))) > 1:
-                                first_row["Gas"] = "Refine Further"
+                        if len(list(dict.fromkeys((rows_cat["Surfactant"].values)))) > 1:
+                            first_row["Surfactant"] = "Refine Further"
 
-                            if len(list(dict.fromkeys((rows_cat["Surfactant"].values)))) > 1:
-                                first_row["Surfactant"] = "Refine Further"
+                        if len(list(dict.fromkeys((rows_cat["Surfactant Concentration"].values)))) > 1:
+                            first_row["Surfactant Concentration"] = "Refine Further"
 
-                            if len(list(dict.fromkeys((rows_cat["Surfactant Concentration"].values)))) > 1:
-                                first_row["Surfactant Concentration"] = "Refine Further"
+                        if len(list(dict.fromkeys((rows_cat["Additive"].values)))) > 1:
+                            first_row["Additive"] = "Refine Further"
 
-                            if len(list(dict.fromkeys((rows_cat["Additive"].values)))) > 1:
-                                first_row["Additive"] = "Refine Further"
+                        if len(list(dict.fromkeys((rows_cat["Additive Concentration"].values)))) > 1:
+                            first_row["Additive Concentration"] = "Refine Further"
 
-                            if len(list(dict.fromkeys((rows_cat["Additive Concentration"].values)))) > 1:
-                                first_row["Additive Concentration"] = "Refine Further"
+                        if len(list(dict.fromkeys((rows_cat["LiquidPhase"].values)))) > 1:
+                            first_row["LiquidPhase"] = "Refine Further"
 
-                            if len(list(dict.fromkeys((rows_cat["LiquidPhase"].values)))) > 1:
-                                first_row["LiquidPhase"] = "Refine Further"
+                        avg = rows_cat[selected_y].mean()
+                        first_row[selected_y] = avg
 
-                            avg = rows_cat[selected_y].mean()
-                            first_row[selected_y] = avg
+                        name_array = name_array[name_array[selected_x] != j]
+                        name_array = name_array.append(first_row,ignore_index=True)
 
-                            name_array = name_array[name_array[selected_x] != j]
-                            name_array = name_array.append(first_row,ignore_index=True)
+                x = np.array(name_array[selected_x])
+                y = np.array(name_array[selected_y])
+                if "Normalize X" in normalize:
+                    if max(x) == min(x):
+                        x = np.full_like(x, 0.5)
+                    else:
+                        x = (x-min(x))/(max(x)-min(x))
+                    x[x == 0] = 0.001
 
-                    x = np.array(name_array[selected_x])
-                    y = np.array(name_array[selected_y])
-                    if "Normalize X" in normalize:
-                        if max(x) == min(x):
-                            x = np.full_like(x, 0.5)
-                        else:
-                            x = (x-min(x))/(max(x)-min(x))
-                        x[x == 0] = 0.001
-
-                    if "Normalize Y" in normalize:
-                        if max(y) == min(y):
-                            y = np.full_like(y, 0.5)
-                        else:
-                            y = (y-min(y))/(max(y)-min(y))
-                        y[y == 0] = 0.001
-                else:
-                    continue
+                if "Normalize Y" in normalize:
+                    if max(y) == min(y):
+                        y = np.full_like(y, 0.5)
+                    else:
+                        y = (y-min(y))/(max(y)-min(y))
+                    y[y == 0] = 0.001
             else:
                 continue
 
@@ -2278,11 +2274,10 @@ def register_home_callbacks(app):
 
                 data.append(trace)
 
-        cleaned.dropna(subset=[selected_x, selected_y],axis="rows", inplace=True)
         cleaned = cleaned[[selected_x,selected_y]]
 
-        return [{
-            'data': data,
+        return [
+            {'data': data,
             'layout': go.Layout(
                 yaxis={
                     "title":selected_y,
@@ -2308,8 +2303,11 @@ def register_home_callbacks(app):
                 },
                 hovermode="closest",
                 height=Graph_Height
-            )
-        },cleaned.to_dict('records'), [{'id': c, 'name': c} for c in cleaned.columns]]
+            )},
+        
+            cleaned.to_dict('records'), 
+            [{'id': c, 'name': c} for c in cleaned.columns]
+        ]
 
 def Home():
     return home
