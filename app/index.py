@@ -1,8 +1,5 @@
 import os
 from datetime import date
-import gspread
-from gspread_dataframe import get_as_dataframe
-from oauth2client.service_account import ServiceAccountCredentials
 import numpy as np
 import pandas as pd
 np.warnings.filterwarnings('ignore')

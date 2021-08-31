@@ -1,25 +1,12 @@
 import os
 from datetime import date
-import gspread
-from gspread_dataframe import get_as_dataframe
-from oauth2client.service_account import ServiceAccountCredentials
 import numpy as np
 import pandas as pd
 np.warnings.filterwarnings('ignore')
 from color import color
 #pylint: disable=unused-variable
 
-scope = ['https://spreadsheets.google.com/feeds',
-'https://www.googleapis.com/auth/drive']
-
-basedir = os.path.abspath(os.path.dirname(__file__))
-data_json = basedir+'/key/amazing-insight.json'
-
-creds = ServiceAccountCredentials.from_json_keyfile_name(data_json, scope)
-connection = gspread.authorize(creds)
-
-worksheet = connection.open("Surfactant_Database").sheet1
-dv = get_as_dataframe(worksheet)
+dv = pd.read_csv("data/Surfactant_Database.xlsx")
 dv = dv.loc[:, ~dv.columns.str.contains('^Unnamed')]
 
 dv.dropna(
