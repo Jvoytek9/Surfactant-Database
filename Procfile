@@ -1,2 +1,1 @@
-heroku ps:scale web=1
-web:web: gunicorn app:server
+web: gunicorn --pythonpath app app:server --preload
