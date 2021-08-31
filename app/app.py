@@ -1,19 +1,8 @@
-import os
-from datetime import date
-import numpy as np
-import pandas as pd
-from scipy.optimize import curve_fit
-
 import dash
-from dash.dependencies import Input, Output, State
+from dash.dependencies import Input, Output
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
-import dash_table as dt
-import plotly.graph_objs as go
-from cv2 import cv2
-import base64
-import tempfile
 
 from home import Home, register_home_callbacks
 from about import About, register_about_callbacks
@@ -60,8 +49,8 @@ app.layout = html.Div([
     html.Div(id='page-content'),
 ])
 
-@app.callback(dash.dependencies.Output('page-content', 'children'),
-              [dash.dependencies.Input('url', 'pathname')])
+@app.callback(Output('page-content', 'children'),
+              [Input('url', 'pathname')])
 def display_page(pathname):
     if pathname == '/about':
         return About()

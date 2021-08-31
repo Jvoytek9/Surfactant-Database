@@ -1,9 +1,5 @@
 import numpy as np
-import pandas as pd
-np.warnings.filterwarnings('ignore')
 from scipy.optimize import curve_fit
-#pylint: disable=unbalanced-tuple-unpacking
-#pylint: disable=unused-variable
 
 import dash
 from dash.dependencies import Input, Output, State

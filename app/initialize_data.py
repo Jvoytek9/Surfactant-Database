@@ -1,10 +1,7 @@
 import os
-from datetime import date
 import numpy as np
 import pandas as pd
-np.warnings.filterwarnings('ignore')
 from color import color
-#pylint: disable=unused-variable
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 dv = pd.read_csv(basedir + '/data/dv.csv')

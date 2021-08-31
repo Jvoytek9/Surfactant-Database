@@ -4,16 +4,12 @@ import base64
 import tempfile
 import numpy as np
 import pandas as pd
-np.warnings.filterwarnings('ignore')
-#pylint: disable=unbalanced-tuple-unpacking
-#pylint: disable=unused-variable
 
 import dash
-from dash.dependencies import Input, Output, State
+from dash.dependencies import Input, Output
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
-import dash_table as dt
 import plotly.graph_objs as go
 
 today = date.today()
