@@ -28,6 +28,10 @@ app = dash.Dash(__name__,
                         'name' : 'keywords',
                         'property' : 'og:keywords',
                         'content' : 'Python, Plotly, Dash, Waterless, Geothermal, Fracking'
+                    },
+                    {
+                        'name':'viewport',
+                        'content':'width=device-width,  initial-scale=1.0'
                     }
                 ]
             )
