@@ -6,8 +6,8 @@ np.warnings.filterwarnings('ignore')
 from color import color
 #pylint: disable=unused-variable
 
-dv = pd.read_csv("data/Surfactant_Database.xlsx")
-dv = dv.loc[:, ~dv.columns.str.contains('^Unnamed')]
+basedir = os.path.abspath(os.path.dirname(__file__))
+dv = pd.read_csv(basedir + '\data\dv.csv')
 
 dv.dropna(
     axis=0,
