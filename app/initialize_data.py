@@ -4,7 +4,10 @@ import pandas as pd
 from color import color
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-dv = pd.read_csv(basedir + '/data/dv.csv')
+dv = pd.DataFrame(columns=['Study', 'Gas', 'Surfactant', 'Surfactant Concentration', 'Additive',
+       'Additive Concentration', 'LiquidPhase', 'Quality', 'Pressure (Psi)',
+       'Temperature (C)', 'Shear Rate (/Sec)', 'Halflife (Min)',
+       'Viscosity(cP)'])
 
 dv.dropna(
     axis=0,
