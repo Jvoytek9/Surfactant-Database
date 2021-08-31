@@ -52,8 +52,7 @@ app = dash.Dash(__name__,
                 ]
             )
 
-register_home_callbacks(app)
-register_about_callbacks(app)
+
 
 server = app.server
 app.config.suppress_callback_exceptions = True
