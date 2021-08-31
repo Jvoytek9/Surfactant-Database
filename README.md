@@ -12,4 +12,4 @@ The name of your venv should appear next to the command prompt. Now type: cd ..
 
 And finally: pip install requirements.txt. If this does not work, packages need to be installed manually.
 
-Then, running the app/app.py file in your editor of choice will boot up a local Flask server, which you can then do as you please with.
+Then, running the app/index.py file in your editor of choice will boot up a local Flask server, which you can then do as you please with.
