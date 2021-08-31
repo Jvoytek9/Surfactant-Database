@@ -1,5 +1,4 @@
 from app import app
-from app import server
 
 from datetime import date
 from cv2 import cv2
@@ -18,7 +17,7 @@ import plotly.graph_objs as go
 today = date.today()
 today = today.strftime("%m/%d/%Y")
 
-about = html.Div([
+layout = html.Div([
     dbc.Row([
         dbc.Col(dcc.Link('Home', href='/',style={'position':'absolute','top':0, 'left':0,"padding":5,"color":"white","font-size":18,'width':'20%'})),
         dbc.Col([
@@ -141,142 +140,111 @@ about = html.Div([
     ],style={'backgroundColor': '#9E1B34',"height":"100%"},no_gutters=True)
 ])
 
-def register_about_callbacks(app):
+@app.callback([Output('output-data-upload', 'figure'),
+            Output('continue', 'style'),
+            Output('upload-container', 'style')],
+            [Input('upload-data', 'contents'),
+            Input('continue', 'n_clicks')])
+def update_output(list_of_contents,conbut):
+    if list_of_contents is not None:
+        list_of_contents = list_of_contents.split(",")
+        list_of_contents = list_of_contents[1].strip()
+        if len(list_of_contents) % 4:
+            list_of_contents += '=' * (4 - len(list_of_contents) % 4)
 
-    @app.callback([Output('output-data-upload', 'figure'),
-                Output('continue', 'style'),
-                Output('upload-container', 'style')],
-                [Input('upload-data', 'contents'),
-                Input('continue', 'n_clicks')])
-    def update_output(list_of_contents,conbut):
-        if list_of_contents is not None:
-            list_of_contents = list_of_contents.split(",")
-            list_of_contents = list_of_contents[1].strip()
-            if len(list_of_contents) % 4:
-                list_of_contents += '=' * (4 - len(list_of_contents) % 4)
+        temp_path = tempfile.gettempdir()
+        decoded_string = base64.b64decode(list_of_contents)
 
-            temp_path = tempfile.gettempdir()
-            decoded_string = base64.b64decode(list_of_contents)
+        with open(temp_path+'/video.mp4', 'wb') as wfile:
+            wfile.write(decoded_string)
 
-            with open(temp_path+'/video.mp4', 'wb') as wfile:
-                wfile.write(decoded_string)
+        vidObj = cv2.VideoCapture(temp_path+'/video.mp4')
 
-            vidObj = cv2.VideoCapture(temp_path+'/video.mp4')
+        changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
 
-            changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+        final_data= []
+        data = []
+        data2 = []
+        iteration = 0
+        success = True
+        tracked = False
+        multiTracker = cv2.MultiTracker_create()
 
-            final_data= []
-            data = []
-            data2 = []
-            iteration = 0
-            success = True
-            tracked = False
-            multiTracker = cv2.MultiTracker_create()
+        def Find_Circles(img):
+            # Convert to gray-scale
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            # Blur the image to reduce noise
+            img_blur = cv2.bilateralFilter(gray, 7, 50, 50)
+            # Apply hough transform on the image
+            circles = cv2.HoughCircles(img_blur, cv2.HOUGH_GRADIENT, 1, 70, param1=110, param2=10, minRadius=20, maxRadius=100)
 
-            def Find_Circles(img):
-                # Convert to gray-scale
-                gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                # Blur the image to reduce noise
-                img_blur = cv2.bilateralFilter(gray, 7, 50, 50)
-                # Apply hough transform on the image
-                circles = cv2.HoughCircles(img_blur, cv2.HOUGH_GRADIENT, 1, 70, param1=110, param2=10, minRadius=20, maxRadius=100)
+            return circles
 
-                return circles
+        def Draw_and_Track_Circles(img,circles,tracked,count,iteration):
+            if circles is not None:
+                circles = np.int16(np.around(circles))
 
-            def Draw_and_Track_Circles(img,circles,tracked,count,iteration):
-                if circles is not None:
-                    circles = np.int16(np.around(circles))
+                if tracked is False:
+                    for i in circles[0, :]:
+                        cv2.circle(img, (i[0], i[1]), i[2], (0, 255, 0),2)
+                        cv2.putText(img,str(count),(i[0], i[1]),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255),2)
 
-                    if tracked is False:
-                        for i in circles[0, :]:
-                            cv2.circle(img, (i[0], i[1]), i[2], (0, 255, 0),2)
-                            cv2.putText(img,str(count),(i[0], i[1]),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255),2)
-
-                            box = (i[0], i[1], 2*i[2], 2*i[2])
-                            multiTracker.add(cv2.TrackerCSRT_create(), img, box)
-                            final_data.append([count,iteration,i[0]/100,i[1]/100,(np.pi*i[2]**2)/(100**2)])
-                            count += 1
-
-                    else:
-                        (_, circles) = multiTracker.update(img)
-                        circles = np.int16(np.around(circles))
-                        for circle in circles:
-                            radius = int(circle[2]/2)
-
-                            cv2.circle(img, (circle[0], circle[1]), radius, (0, 255, 0),2)
-                            cv2.putText(img,str(count),(circle[0], circle[1]),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255),2)
-
-                            final_data.append([count,iteration,circle[0]/100,circle[1]/100,(np.pi * radius**2)/(100**2)])
-
-                            count += 1
-
-                    return(None)
+                        box = (i[0], i[1], 2*i[2], 2*i[2])
+                        multiTracker.add(cv2.TrackerCSRT_create(), img, box)
+                        final_data.append([count,iteration,i[0]/100,i[1]/100,(np.pi*i[2]**2)/(100**2)])
+                        count += 1
 
                 else:
-                    return(final_data)
+                    (_, circles) = multiTracker.update(img)
+                    circles = np.int16(np.around(circles))
+                    for circle in circles:
+                        radius = int(circle[2]/2)
 
-            if changed_id == 'continue.n_clicks':
+                        cv2.circle(img, (circle[0], circle[1]), radius, (0, 255, 0),2)
+                        cv2.putText(img,str(count),(circle[0], circle[1]),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255),2)
 
-                while success:
-                    iteration += 1
-                    success, img = vidObj.read()
+                        final_data.append([count,iteration,circle[0]/100,circle[1]/100,(np.pi * radius**2)/(100**2)])
 
-                    if img is not None:
-                        _ = Draw_and_Track_Circles(img, Find_Circles(img),tracked,1,iteration)
-                        tracked = True
+                        count += 1
 
-                    else:
-                        success = False
-                        final_data = Draw_and_Track_Circles(np.array([]), None,tracked,0,iteration)
-                        df = pd.DataFrame(final_data, columns =['Number', 'Iterations', 'X', 'Y', 'Area'])
-
-                        numbers = sorted(list(dict.fromkeys(df['Number'])))
-
-                        for i in numbers:
-                            num_array = df[df.Number == i]
-                            trace = go.Scattergl(x = num_array['Iterations'], y = num_array['Area'],name="Bubble " + str(i))
-                            data2.append(trace)
-
-                        return[
-                        {
-                            'data': data2,
-                            'layout': go.Layout(
-                                yaxis={
-                                    "title":"Area(mm²)",
-                                    "titlefont_size":20,
-                                    "tickfont_size":18,
-                                },
-                                xaxis={
-                                    "title":"Iterations(frames)",
-                                    "titlefont_size":20,
-                                    "tickfont_size":18
-                                },
-                                font={
-                                    "family":"Times New Roman",
-                                },
-                                hovermode="closest",
-                                height=610
-                            ),
-                        },
-                        {"display":"None"},
-                        {"display":"block"}]
+                return(None)
 
             else:
-                _, img = vidObj.read()
-                _ = Draw_and_Track_Circles(img, Find_Circles(img),False,1,1)
-                trace = go.Image(z=img)
-                data.append(trace)
-                return(
+                return(final_data)
+
+        if changed_id == 'continue.n_clicks':
+
+            while success:
+                iteration += 1
+                success, img = vidObj.read()
+
+                if img is not None:
+                    _ = Draw_and_Track_Circles(img, Find_Circles(img),tracked,1,iteration)
+                    tracked = True
+
+                else:
+                    success = False
+                    final_data = Draw_and_Track_Circles(np.array([]), None,tracked,0,iteration)
+                    df = pd.DataFrame(final_data, columns =['Number', 'Iterations', 'X', 'Y', 'Area'])
+
+                    numbers = sorted(list(dict.fromkeys(df['Number'])))
+
+                    for i in numbers:
+                        num_array = df[df.Number == i]
+                        trace = go.Scattergl(x = num_array['Iterations'], y = num_array['Area'],name="Bubble " + str(i))
+                        data2.append(trace)
+
+                    return[
                     {
-                        'data': data,
+                        'data': data2,
                         'layout': go.Layout(
                             yaxis={
-                                "title":"Y Position(mm)",
+                                "title":"Area(mm²)",
                                 "titlefont_size":20,
-                                "tickfont_size":18
+                                "tickfont_size":18,
                             },
                             xaxis={
-                                "title":"X Position(mm)",
+                                "title":"Iterations(frames)",
                                 "titlefont_size":20,
                                 "tickfont_size":18
                             },
@@ -287,19 +255,45 @@ def register_about_callbacks(app):
                             height=610
                         ),
                     },
-                    {"display":"block"},
-                    {"display":"None"},)
+                    {"display":"None"},
+                    {"display":"block"}]
 
         else:
-            return[
-            {
-                'data': [],
-                'layout': go.Layout(
-                    height=610
-                )
-            },
-            {"display":"None"},
-            {"display":"block"}]
+            _, img = vidObj.read()
+            _ = Draw_and_Track_Circles(img, Find_Circles(img),False,1,1)
+            trace = go.Image(z=img)
+            data.append(trace)
+            return(
+                {
+                    'data': data,
+                    'layout': go.Layout(
+                        yaxis={
+                            "title":"Y Position(mm)",
+                            "titlefont_size":20,
+                            "tickfont_size":18
+                        },
+                        xaxis={
+                            "title":"X Position(mm)",
+                            "titlefont_size":20,
+                            "tickfont_size":18
+                        },
+                        font={
+                            "family":"Times New Roman",
+                        },
+                        hovermode="closest",
+                        height=610
+                    ),
+                },
+                {"display":"block"},
+                {"display":"None"},)
 
-def About():
-    return about
+    else:
+        return[
+        {
+            'data': [],
+            'layout': go.Layout(
+                height=610
+            )
+        },
+        {"display":"None"},
+        {"display":"block"}]
