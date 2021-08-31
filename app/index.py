@@ -1,5 +1,6 @@
 from app import app
 from app import server
+from pages import home, about
 
 from dash.dependencies import Input, Output
 import dash_core_components as dcc
@@ -13,7 +14,10 @@ app.layout = html.Div([
 @app.callback(Output('page-content', 'children'),
               [Input('url', 'pathname')])
 def display_page(pathname):
-    return html.H1("HELLO")
+    if pathname == '/about':
+        return about.layout
+    else:
+        return home.layout
 
 if __name__ == '__main__':
-    app.run_server(debug=False)
+    app.run_server(host='0.0.0.0', debug=False)
