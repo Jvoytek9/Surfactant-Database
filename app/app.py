@@ -2,10 +2,7 @@ import os
 from datetime import date
 import numpy as np
 import pandas as pd
-np.warnings.filterwarnings('ignore')
 from scipy.optimize import curve_fit
-#pylint: disable=unbalanced-tuple-unpacking
-#pylint: disable=unused-variable
 
 import dash
 from dash.dependencies import Input, Output, State
@@ -56,7 +53,6 @@ register_home_callbacks(app)
 register_about_callbacks(app)
 
 server = app.server
-app.config.suppress_callback_exceptions = True
 app.title = "Foam Literature"
 
 app.layout = html.Div([
