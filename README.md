@@ -4,7 +4,7 @@ The first implementation, out of 3 (1/3), of the portable dashboard I had been w
 # Installation
 If interested in running a local version, clone this repo and make sure to have pip installed.
 
-Then, make a separate virtualenv like so (this example makes a virtual environment named venv at the given path): python -m venv c:\path\to\myenv
+Then, make a separate virtualenv like so (this example makes a virtual environment named myvenv at the given path): python -m venv c:\path\to\myenv
 
 copy the contents of the cloned repo into this new venv folder. Activate the venv like so: cd venv\path\to\myenv\Scripts then type "activate" and hit enter
 
