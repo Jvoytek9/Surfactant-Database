@@ -1,6 +1,5 @@
 from app import app
 from app import server
-
 from pages import home, about
 
 from dash.dependencies import Input, Output
@@ -15,10 +14,7 @@ app.layout = html.Div([
 @app.callback(Output('page-content', 'children'),
               [Input('url', 'pathname')])
 def display_page(pathname):
-    if pathname == '/about':
-        return about.layout
-    else:
-        return home.layout
+    return about.layout
 
 if __name__ == '__main__':
     app.run_server(debug=False)
