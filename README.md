@@ -1,5 +1,5 @@
 # What is this
-The first implementation of the portable dashboard I had been working on, which was asked of me during a research project I had been working on. This was the first project I had ever coded, start to finish, and also created a website from.
+The first implementation, out of 3 (1/3), of the portable dashboard I had been working on, which was asked of me during a research project I had been working on. This was the first project I had ever coded, start to finish, and also created a website from.
 
 # Installation
 If interested in running a local version, clone this repo and make sure to have pip installed.
