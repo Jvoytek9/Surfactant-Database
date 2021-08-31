@@ -7,7 +7,7 @@ from color import color
 #pylint: disable=unused-variable
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-dv = pd.read_csv(basedir + '\data\dv.csv')
+dv = pd.read_csv(basedir + '/data/dv.csv')
 
 dv.dropna(
     axis=0,
