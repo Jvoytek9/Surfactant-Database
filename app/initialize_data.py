@@ -4,10 +4,9 @@ import pandas as pd
 from color import color
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-dv = pd.DataFrame(columns=['Study', 'Gas', 'Surfactant', 'Surfactant Concentration', 'Additive',
-       'Additive Concentration', 'LiquidPhase', 'Quality', 'Pressure (Psi)',
-       'Temperature (C)', 'Shear Rate (/Sec)', 'Halflife (Min)',
-       'Viscosity(cP)'])
+dv = pd.read_csv(basedir + '/data/dv.csv')
+dv = dv.loc[:, ~dv.columns.str.contains('^Unnamed')]
+print(dv.columns)
 
 dv.dropna(
     axis=0,
@@ -39,4 +38,3 @@ if "None" in unique_liquidphase:
 dv['Color'] = "any"
 for i in range(0,len(unique_studies)):
     dv.loc[dv.Study == unique_studies[i], 'Color'] = color[i]
-#print(dv[dv.Study == "Kruss 2019"]) #check for colors you do not like

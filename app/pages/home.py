@@ -1157,7 +1157,6 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
             d = np.c_[x,y,z]
 
-            # regular grid covering the domain of the data
             mn = np.min(d, axis=0)
             mx = np.max(d, axis=0)
             X,Y = np.meshgrid(np.linspace(mn[0], mx[0], 20), np.linspace(mn[1], mx[1], 20))
@@ -1165,9 +1164,8 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
             YY = Y.flatten()
 
             if order == 1:
-                # Poly-Fit linear plane
                 A = np.c_[d[:,0], d[:,1], np.ones(d.shape[0])]
-                C,_,_,_ = np.linalg.lstsq(A, d[:,2])    # coefficients
+                C,_,_,_ = np.linalg.lstsq(A, d[:,2])
 
                 f_new = []
                 for num in C:
@@ -1176,17 +1174,11 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
                     else:
                         f_new.append(np.round(num,3))
 
-                # evaluate it on grid
-                # Z = C[0]*X + C[1]*Y + C[2]
-
                 equation = "z = {a}x + {b}y + {c}".format(a=f_new[0], b=f_new[1], c=f_new[2])
 
-                # or expressed using matrix/vector product
                 Z = np.dot(np.c_[XX, YY, np.ones(XX.shape)], C).reshape(X.shape)
 
             elif order == 2:
-                # Poly-Fit quadratic curve
-                # M = [ones(size(x)), x, y, x.*y, x.^2 y.^2]
                 A = np.c_[np.ones(d.shape[0]), d[:,:2], np.prod(d[:,:2], axis=1), d[:,:2]**2]
                 C,_,_,_ = np.linalg.lstsq(A, d[:,2])
 
@@ -1199,11 +1191,9 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
                 equation = "z = {a}x² + {b}y² + {c}xy + {d}x + {e}y + {f}".format(a=f_new[0],b=f_new[1],c=f_new[2],d=f_new[3],e=f_new[4],f=f_new[5])
 
-                # evaluate it on a grid
                 Z = np.dot(np.c_[np.ones(XX.shape), XX, YY, XX*YY, XX**2, YY**2], C).reshape(X.shape)
 
             elif order == 3:
-                # M = [ones(size(x)), x, y, x.^2, x.*y, y.^2, x.^3, x.^2.*y, x.*y.^2, y.^3]
                 A = np.c_[np.ones(d.shape[0]), d[:,:2], d[:,0]**2, np.prod(d[:,:2], axis=1), \
                         d[:,1]**2, d[:,0]**3, np.prod(np.c_[d[:,0]**2,d[:,1]],axis=1), \
                         np.prod(np.c_[d[:,0],d[:,1]**2],axis=1), d[:,2]**3]
@@ -1240,15 +1230,11 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
             popt, _ = curve_fit(logarithmic, [x, y], z, maxfev = 999999999)
 
-            # create surface function model
-            # setup data points for calculating surface model
             X = np.linspace(min(x), max(x), 20)
             Y = np.linspace(min(y), max(y), 20)
 
-            # create coordinate arrays for vectorized evaluations
             x_new, y_new = np.meshgrid(X, Y)
 
-            # calculate Z coordinate array
             z_new = logarithmic(np.array([x_new, y_new]), *popt)
 
             f_new = []
@@ -1278,15 +1264,11 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
             popt, _ = curve_fit(exponential, [x, y], z, p0=(1, 1e-6, 1e-6, 1), maxfev = 999999999)
 
-            # create surface function model
-            # setup data points for calculating surface model
             X = np.linspace(min(x), max(x), 20)
             Y = np.linspace(min(y), max(y), 20)
 
-            # create coordinate arrays for vectorized evaluations
             x_new, y_new = np.meshgrid(X, Y)
 
-            # calculate Z coordinate array
             z_new = exponential(np.array([x_new, y_new]), *popt)
 
             f_new = []
@@ -1316,15 +1298,11 @@ def update_comp1_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
             popt, _ = curve_fit(power, [x, y], z, maxfev = 999999999)
 
-            # create surface function model
-            # setup data points for calculating surface model
             X = np.linspace(min(x), max(x), 20)
             Y = np.linspace(min(y), max(y), 20)
 
-            # create coordinate arrays for vectorized evaluations
             x_new, y_new = np.meshgrid(X, Y)
 
-            # calculate Z coordinate array
             z_new = power(np.array([x_new, y_new]), *popt)
 
             f_new = []
@@ -1502,7 +1480,6 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
             d = np.c_[x,y,z]
 
-            # regular grid covering the domain of the data
             mn = np.min(d, axis=0)
             mx = np.max(d, axis=0)
             X,Y = np.meshgrid(np.linspace(mn[0], mx[0], 20), np.linspace(mn[1], mx[1], 20))
@@ -1510,9 +1487,8 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
             YY = Y.flatten()
 
             if order == 1:
-                # Poly-Fit linear plane
                 A = np.c_[d[:,0], d[:,1], np.ones(d.shape[0])]
-                C,_,_,_ = np.linalg.lstsq(A, d[:,2])    # coefficients
+                C,_,_,_ = np.linalg.lstsq(A, d[:,2])
 
                 f_new = []
                 for num in C:
@@ -1521,17 +1497,11 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
                     else:
                         f_new.append(np.round(num,3))
 
-                # evaluate it on grid
-                # Z = C[0]*X + C[1]*Y + C[2]
-
                 equation = "z = {a}x + {b}y + {c}".format(a=f_new[0], b=f_new[1], c=f_new[2])
 
-                # or expressed using matrix/vector product
                 Z = np.dot(np.c_[XX, YY, np.ones(XX.shape)], C).reshape(X.shape)
 
             elif order == 2:
-                # Poly-Fit quadratic curve
-                # M = [ones(size(x)), x, y, x.*y, x.^2 y.^2]
                 A = np.c_[np.ones(d.shape[0]), d[:,:2], np.prod(d[:,:2], axis=1), d[:,:2]**2]
                 C,_,_,_ = np.linalg.lstsq(A, d[:,2])
 
@@ -1544,11 +1514,9 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
                 equation = "z = {a}x² + {b}y² + {c}xy + {d}x + {e}y + {f}".format(a=f_new[0],b=f_new[1],c=f_new[2],d=f_new[3],e=f_new[4],f=f_new[5])
 
-                # evaluate it on a grid
                 Z = np.dot(np.c_[np.ones(XX.shape), XX, YY, XX*YY, XX**2, YY**2], C).reshape(X.shape)
 
             elif order == 3:
-                # M = [ones(size(x)), x, y, x.^2, x.*y, y.^2, x.^3, x.^2.*y, x.*y.^2, y.^3]
                 A = np.c_[np.ones(d.shape[0]), d[:,:2], d[:,0]**2, np.prod(d[:,:2], axis=1), \
                         d[:,1]**2, d[:,0]**3, np.prod(np.c_[d[:,0]**2,d[:,1]],axis=1), \
                         np.prod(np.c_[d[:,0],d[:,1]**2],axis=1), d[:,2]**3]
@@ -1585,15 +1553,11 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
             popt, _ = curve_fit(logarithmic, [x, y], z, maxfev = 999999999)
 
-            # create surface function model
-            # setup data points for calculating surface model
             X = np.linspace(min(x), max(x), 20)
             Y = np.linspace(min(y), max(y), 20)
 
-            # create coordinate arrays for vectorized evaluations
             x_new, y_new = np.meshgrid(X, Y)
 
-            # calculate Z coordinate array
             z_new = logarithmic(np.array([x_new, y_new]), *popt)
 
             f_new = []
@@ -1623,15 +1587,11 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
             popt, _ = curve_fit(exponential, [x, y], z, p0=(1, 1e-6, 1e-6, 1), maxfev = 999999999)
 
-            # create surface function model
-            # setup data points for calculating surface model
             X = np.linspace(min(x), max(x), 20)
             Y = np.linspace(min(y), max(y), 20)
 
-            # create coordinate arrays for vectorized evaluations
             x_new, y_new = np.meshgrid(X, Y)
 
-            # calculate Z coordinate array
             z_new = exponential(np.array([x_new, y_new]), *popt)
 
             f_new = []
@@ -1661,15 +1621,11 @@ def update_comp2_3D_graph(selected_x, selected_y, selected_z, comp, normalize, f
 
             popt, _ = curve_fit(power, [x, y], z, maxfev = 999999999)
 
-            # create surface function model
-            # setup data points for calculating surface model
             X = np.linspace(min(x), max(x), 20)
             Y = np.linspace(min(y), max(y), 20)
 
-            # create coordinate arrays for vectorized evaluations
             x_new, y_new = np.meshgrid(X, Y)
 
-            # calculate Z coordinate array
             z_new = power(np.array([x_new, y_new]), *popt)
 
             f_new = []

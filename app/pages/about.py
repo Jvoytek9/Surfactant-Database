@@ -50,7 +50,6 @@ layout = html.Div([
                                 'margin': '10px',
                                 'cursor': 'pointer'
                             },
-                            # Allow multiple files to be uploaded
                             multiple=False,
                             max_size = 10000000,
                             accept = "video/*"
@@ -171,11 +170,8 @@ def update_output(list_of_contents,conbut):
         multiTracker = cv2.MultiTracker_create()
 
         def Find_Circles(img):
-            # Convert to gray-scale
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            # Blur the image to reduce noise
             img_blur = cv2.bilateralFilter(gray, 7, 50, 50)
-            # Apply hough transform on the image
             circles = cv2.HoughCircles(img_blur, cv2.HOUGH_GRADIENT, 1, 70, param1=110, param2=10, minRadius=20, maxRadius=100)
 
             return circles
