@@ -1,3 +1,6 @@
+from app import app
+from app import server
+
 import numpy as np
 from scipy.optimize import curve_fit
 
