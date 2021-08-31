@@ -37,6 +37,3 @@ dv['Color'] = "any"
 for i in range(0,len(unique_studies)):
     dv.loc[dv.Study == unique_studies[i], 'Color'] = color[i]
 #print(dv[dv.Study == "Kruss 2019"]) #check for colors you do not like
-
-def Return_Data():
-    return dv

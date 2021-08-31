@@ -11,9 +11,7 @@ import dash_bootstrap_components as dbc
 import dash_table as dt
 import plotly.graph_objs as go
 
-from initialize_data import Return_Data, unique_studies, unique_gasses, unique_surfactants, unique_surfconcs, unique_additives, unique_addconcs, unique_liquidphase
-
-dv = Return_Data()
+from initialize_data import dv, unique_studies, unique_gasses, unique_surfactants, unique_surfconcs, unique_additives, unique_addconcs, unique_liquidphase
 
 Graph_Height = 605
 
