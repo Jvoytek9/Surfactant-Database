@@ -11,6 +11,7 @@ import dash_bootstrap_components as dbc
 import dash_table as dt
 import plotly.graph_objs as go
 
+import datetime
 from initialize_data import dv, unique_studies, unique_gasses, unique_surfactants, unique_surfconcs, unique_additives, unique_addconcs, unique_liquidphase
 
 Graph_Height = 605
@@ -288,6 +289,7 @@ layout = dbc.Row([
             ,style={"margin":"auto"}),
 
             dbc.Row([
+                html.Div(html.H1(str(datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo))),
                 dbc.Col(html.H6("X: "),style={"margin":"auto","width":"10%","height":"100%"}),
                 html.Div(dcc.Dropdown(id="select-xaxis", placeholder = "Select x-axis", value = "Pressure (Psi)",
                 options=[{'label': i.title(), 'value': i} for i in dv.columns[7:-1]], clearable=False),
